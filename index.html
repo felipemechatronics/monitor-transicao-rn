@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Monitor da Transição RN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:wght@400&display=swap" rel="stylesheet">
+<style>:root{--color-fg:#1d1f22;--color-fg-muted:#5d6268;--color-bg:#ffffff;--color-panel:#f7f7f5;--color-border-line:#e2e2de;--color-ok:#2f8f55;--color-warn:#d08a1c;--color-bad:#c8473a;--cds-chart-muted:#b8b8b4;--cds-chart-grid:#d9d9d5;--cds-chart-reference:#4d5156;--cds-text-secondary:#5d6268;--cds-surface-popover:#ffffff;--cds-border:#d9d9d5;--cds-shadow-popover:0 4px 14px rgba(0,0,0,.14);--c1:#2f62a8;--c2:#c2742a;--c3:#4f9468;--c4:#8b5aa8;
+--font-anthropic-sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;--font-anthropic-serif:"Source Serif 4",Georgia,serif;--cds-font-size-caption:12px;--cds-font-size-body:14px;--cds-font-size-heading:18px;--cds-font-size-title:32px;--cds-font-weight-medium:600;--cds-gap-xs:4px;--cds-gap-sm:8px;--cds-gap-md:12px;--cds-gap-lg:16px;--cds-gap-xl:28px;--cds-pad-md:12px;--cds-pad-lg:16px;--cds-radius:10px;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--color-fg:#ececea;--color-fg-muted:#a3a7ab;--color-bg:#16181b;--color-panel:#1f2226;--color-border-line:#33373c;--color-ok:#4fb877;--color-warn:#e2a443;--color-bad:#e0685b;--cds-chart-muted:#5c6066;--cds-chart-grid:#3a3e44;--cds-chart-reference:#c9ccd0;--cds-text-secondary:#a3a7ab;--cds-surface-popover:#262a2f;--cds-border:#3a3e44;--cds-shadow-popover:0 4px 14px rgba(0,0,0,.5);--c1:#6f9be0;--c2:#e09a52;--c3:#6fbf8c;--c4:#b48ad0;color-scheme:dark}}
+html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:var(--font-anthropic-sans);font-size:14px}
+#dash-root{max-width:1280px;margin:0 auto;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+select.dash-select{appearance:auto;background-color:var(--color-panel);color:var(--color-fg);border:1px solid var(--color-border-line);border-radius:8px;padding:6px 8px}
+.tx-loading{color:var(--color-fg-muted);padding:40px 0}</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+(function(){
+  const SRC=['pastas','controle','contratos','obras','convenios','financas','pessoal','patrimonio','precatorios','programas','sistemas','pendencias','tac_tag','atos','previdencia','incentivos','malha'];
+  const DS={}, ST={}, calcs={}, draws={}, ons=[];
+  const P={pasta:''};
+  const run=()=>{ons.forEach(f=>{try{f()}catch(e){console.error(e)}});Object.keys(draws).forEach(n=>document.querySelectorAll('[data-draw="'+n+'"]').forEach(el=>{if(el.closest('[hidden]'))return;try{draws[n](el)}catch(e){console.error(n,e)}}));};
+  window.dash={
+    colors:['var(--c1)','var(--c2)','var(--c3)','var(--c4)'],
+    params:()=>P, setParams(o){Object.assign(P,o);run()}, resetParams(){P.pasta='';run()},
+    setLink(n){try{history.replaceState(null,'','#'+n)}catch(e){}},
+    data(id){ if(id in DS) return {status:'ok',data:DS[id]}; if(calcs[id]){ if(!SRC.every(s=>s in DS)) return {status:'loading',data:null}; const c=calcs[id]; if(!('v' in c)) c.v=c.fn(...c.inputs.map(i=>dash.data(i).data)); return {status:'ok',data:c.v}; } return {status:ST[id]||'loading',data:[]}; },
+    calc(id,o){calcs[id]=o}, loader(){}, refresh(){}, onData(fn){ons.push(fn)},
+    draw(name,fn){ if(typeof fn==='function'||(fn&&fn.update)){draws[name]=typeof fn==='function'?fn:fn.update} else document.querySelectorAll('[data-draw="'+name+'"]').forEach(el=>{try{draws[name](el)}catch(e){console.error(e)}}); }
+  };
+  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
+  let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,150)});
+  window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));const v=h==='geral'?'':h;if(v!==P.pasta){P.pasta=v;run()}});
+})();
+</script>
+</head>
+<body>
+<div id="dash-root">
+<style>
+.tx{--tx-a1:#0ea5a5;--tx-a2:#6366f1;--tx-acc:color-mix(in srgb,var(--tx-a1) 72%,var(--color-fg));--tx-acc2:color-mix(in srgb,var(--tx-a2) 75%,var(--color-fg));--tx-tint:color-mix(in srgb,var(--tx-a1) 6%,var(--color-panel));--tx-line:color-mix(in srgb,var(--tx-a1) 35%,var(--color-border-line));--tx-mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;--tx-r:14px;--tx-gap:var(--cds-gap-lg);display:flex;flex-direction:column;gap:var(--cds-gap-xl);font-family:var(--font-anthropic-sans);color:var(--color-fg)}
+.tx h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0;text-wrap:balance}
+.tx h2{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:0 0 var(--cds-gap-sm);text-wrap:balance}
+.tx h3{font-size:var(--cds-font-size-body);font-weight:var(--cds-font-weight-medium);margin:0 0 var(--cds-gap-xs)}
+.tx-muted{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.tx-head{display:flex;flex-wrap:wrap;gap:var(--cds-gap-md);align-items:flex-end;justify-content:space-between}
+.tx-head>div{min-width:0;flex:1 1 320px}
+.tx-pick{position:relative;display:flex;flex-direction:column;gap:var(--cds-gap-xs);min-width:240px}
+.tx-pick label{font-family:var(--tx-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx-acc)}
+.tx-pick select{font-size:var(--cds-font-size-body);min-height:40px}
+.tx-lede{font-size:var(--cds-font-size-heading);line-height:1.45;margin:0;max-width:70ch}
+.tx-lede b{font-weight:var(--cds-font-weight-medium);color:var(--tx-acc);font-family:var(--tx-mono);font-size:.92em;font-variant-numeric:tabular-nums}
+.tx-card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg);min-width:0}
+.tx-kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:var(--cds-gap-md)}
+.tx-kpi{display:flex;flex-direction:column;gap:2px}
+.tx-kpi .v{font-family:var(--tx-mono);font-weight:500;letter-spacing:-.03em;font-size:clamp(19px,2vw,23px);white-space:nowrap;line-height:1.25;font-variant-numeric:tabular-nums}
+.tx-kpi .s{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);font-variant-numeric:tabular-nums}
+.tx-grid2{display:grid;align-items:start;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:var(--cds-gap-lg)}
+.tx-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:var(--cds-gap-md)}
+.tx-pc{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:6px;background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-md)}
+.tx-pc:hover,.tx-pc:focus-visible{border-color:var(--color-fg-muted)}
+.tx-pc:focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
+.tx-pc .sig{font-weight:var(--cds-font-weight-medium);font-size:var(--cds-font-size-heading)}
+.tx-pc .nm{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);line-height:1.3;min-height:2.6em}
+.tx-pc dl{display:grid;grid-template-columns:1fr auto;gap:2px 8px;margin:0;font-size:var(--cds-font-size-caption);font-variant-numeric:tabular-nums}
+.tx-pc dt{color:var(--color-fg-muted)}.tx-pc dd{margin:0;text-align:right}
+.tx-meter{height:6px;border-radius:3px;background:var(--color-border-line);overflow:hidden}
+.tx-meter i{display:block;height:100%;background:linear-gradient(90deg,var(--tx-a1),var(--tx-a2))}
+.tx-chart{position:relative;min-height:120px;width:100%}
+.tx-chart svg{display:block;overflow:visible}
+.tx-chart text{fill:var(--cds-text-secondary);font-size:var(--cds-font-size-caption);font-family:var(--font-anthropic-sans)}
+.tx-chart .lbl{fill:var(--color-fg)}
+.tx-tip{position:absolute;pointer-events:none;background:var(--cds-surface-popover);border:1px solid var(--cds-border);box-shadow:var(--cds-shadow-popover);border-radius:var(--cds-radius);padding:6px 9px;font-size:var(--cds-font-size-caption);color:var(--color-fg);max-width:260px;z-index:5;line-height:1.4}
+.tx-tip b{font-weight:var(--cds-font-weight-medium)}
+.tx-map{min-height:260px}
+.tx-legend{display:flex;flex-wrap:wrap;gap:var(--cds-gap-md);font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin-top:var(--cds-gap-sm)}
+.tx-legend span{display:inline-flex;align-items:center;gap:6px}
+.tx-legend i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.tx-scroll{overflow-x:auto;max-width:100%}
+.tx table{border-collapse:collapse;width:100%;font-size:var(--cds-font-size-caption);font-variant-numeric:tabular-nums}
+.tx th{text-align:left;font-weight:500;font-family:var(--tx-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-fg-muted);border-bottom:1px solid var(--color-border-line);padding:6px 8px;white-space:nowrap;position:sticky;top:0;background:var(--color-panel)}
+.tx td{border-bottom:1px solid var(--color-border-line);padding:6px 8px;vertical-align:top}
+.tx td.n,.tx th.n{text-align:right;white-space:nowrap}
+.tx td.w{min-width:220px;max-width:420px}
+.tx-tbl{max-height:480px;overflow:auto}
+.tx-heat td{text-align:center;min-width:44px;padding:5px 4px}
+.tx-heat th{text-align:center;white-space:normal;min-width:44px;font-size:11px;vertical-align:bottom}
+.tx-heat th:first-child,.tx-heat td:first-child{text-align:left;white-space:nowrap;position:sticky;left:0;background:var(--color-panel);z-index:1}
+.tx-heat td button{all:unset;cursor:pointer;font-weight:var(--cds-font-weight-medium)}
+.tx-heat td button:focus-visible{outline:2px solid var(--color-fg)}
+.tx-pill{display:inline-block;font-family:var(--tx-mono);letter-spacing:.01em;padding:1px 8px;border-radius:999px;font-size:11px;white-space:nowrap;border:1px solid var(--color-border-line)}
+.tx-pill.ok{background:color-mix(in srgb,var(--color-ok) 18%,transparent);border-color:transparent}
+.tx-pill.warn{background:color-mix(in srgb,var(--color-warn) 22%,transparent);border-color:transparent}
+.tx-pill.bad{background:color-mix(in srgb,var(--color-bad) 20%,transparent);border-color:transparent}
+.tx-ctrl{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.tx-inc{border-radius:calc(var(--cds-radius) - 2px);padding:8px;border:1px solid var(--color-border-line);display:flex;flex-direction:column;gap:3px;min-height:74px;position:relative;cursor:default}
+.tx-inc .r{font-weight:500;font-family:var(--tx-mono);font-size:11.5px;letter-spacing:.02em}
+.tx-inc .d{font-size:11px;line-height:1.3;color:var(--color-fg-muted)}
+.tx-inc .st{font-size:11px;margin-top:auto}
+.tx-inc.s-ok{background:color-mix(in srgb,var(--color-ok) 16%,transparent);border-color:color-mix(in srgb,var(--color-ok) 45%,transparent)}
+.tx-inc.s-warn{background:color-mix(in srgb,var(--color-warn) 18%,transparent);border-color:color-mix(in srgb,var(--color-warn) 50%,transparent)}
+.tx-inc.s-bad{background:color-mix(in srgb,var(--color-bad) 16%,transparent);border-color:color-mix(in srgb,var(--color-bad) 45%,transparent)}
+.tx-inc.s-na{opacity:.7}
+.tx-inc.s-none{border-style:dashed;opacity:.75}
+.tx-ident{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--cds-gap-sm) var(--cds-gap-lg);margin:0}
+.tx-ident div{min-width:0}.tx-ident dt{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}.tx-ident dd{margin:0;overflow-wrap:anywhere}
+.tx-links{display:flex;flex-wrap:wrap;gap:var(--cds-gap-md);font-size:var(--cds-font-size-caption)}
+.tx-links a{color:var(--color-fg)}
+.tx-btn{all:unset;cursor:pointer;font-size:var(--cds-font-size-caption);border:1px solid var(--color-border-line);border-radius:999px;padding:4px 12px}
+.tx-btn:focus-visible{outline:2px solid var(--color-fg)}
+.tx-bar{display:inline-block;height:8px;border-radius:4px;background:var(--color-border-line);width:80px;vertical-align:middle;overflow:hidden;margin-right:6px}
+.tx-bar i{display:block;height:100%}
+.tx-sec{display:flex;flex-direction:column;gap:var(--cds-gap-md)}
+.tx-row{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);align-items:center;justify-content:space-between}
+.tx details summary{cursor:pointer;color:var(--color-fg-muted)}
+.tx details p,.tx details li{max-width:75ch;line-height:1.5}
+[data-dash-source-state=refreshing]{opacity:.5}
+.tx-head{position:relative;overflow:hidden;padding:22px 22px 20px;border:1px solid var(--color-border-line);border-radius:var(--tx-r);background-color:var(--color-panel);background-image:radial-gradient(color-mix(in srgb,var(--tx-a1) 22%,transparent) 1px,transparent 1.3px),linear-gradient(120deg,color-mix(in srgb,var(--tx-a1) 9%,transparent),transparent 45%,color-mix(in srgb,var(--tx-a2) 8%,transparent));background-size:18px 18px,100% 100%}
+.tx-head::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--tx-a1),var(--tx-a2))}
+.tx-eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--tx-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx-acc)}
+.tx-dot{width:7px;height:7px;border-radius:50%;background:var(--tx-a1);box-shadow:0 0 0 3px color-mix(in srgb,var(--tx-a1) 22%,transparent);display:inline-block}
+@media (prefers-reduced-motion:no-preference){.tx-dot{animation:txpulse 2.4s var(--cds-ease-out,ease-out) infinite}@keyframes txpulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--tx-a1) 45%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}.tx-pc,.tx-kpi,.tx-inc{transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}}
+.tx-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tx-chip{font-family:var(--tx-mono);font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--tx-line);background:color-mix(in srgb,var(--color-panel) 80%,transparent);color:var(--color-fg-muted)}
+.tx-sechead{display:flex;flex-direction:column;gap:4px}
+.tx-eyebrow+h2{margin-top:-4px}
+.tx-sec>.tx-eyebrow{margin-bottom:-8px}
+.tx-card{border-radius:var(--tx-r)}
+.tx-kpi{position:relative;background:linear-gradient(160deg,var(--tx-tint),var(--color-panel) 60%)}
+.tx-kpi:hover{border-color:var(--tx-line);transform:translateY(-1px)}
+.tx-kpi::after{content:"";position:absolute;right:14px;top:14px;width:6px;height:6px;border-radius:2px;background:linear-gradient(135deg,var(--tx-a1),var(--tx-a2));opacity:.8}
+.tx-pc:hover{transform:translateY(-2px);border-color:var(--tx-line);box-shadow:0 6px 18px -10px color-mix(in srgb,var(--tx-a2) 55%,transparent)}
+.tx-pc .sig{font-family:var(--tx-mono);letter-spacing:-.01em;color:var(--tx-acc)}
+.tx tbody tr:hover td{background:var(--tx-tint)}
+.tx-btn:hover{border-color:var(--tx-line);color:var(--tx-acc)}
+#pick:focus-visible{outline:2px solid var(--tx-a1);outline-offset:1px}
+.tx-legend i.acc{background:linear-gradient(135deg,var(--tx-a1),var(--tx-a2))}
+
+.tx [hidden],.tx[hidden]{display:none!important}
+</style>
+
+<div class="tx" id="monitor">
+  <header class="tx-head" id="topo">
+    <div>
+      <span class="tx-eyebrow"><i class="tx-dot"></i>Governo do RN · Transição 2026 · Art. 4º da IN</span>
+      <h1>Monitor da Transição RN</h1>
+      <p class="tx-muted">Formulários do Relatório Consolidado Setorial lidos das pastas do Google Drive.</p>
+      <div class="tx-chips"><span class="tx-chip">leitura · 10/11/2026</span><span class="tx-chip">23 pastas · 15 abas</span><span class="tx-chip">incisos I–XXVI</span></div>
+    </div>
+    <div class="tx-pick">
+      <label for="pick">Escolha a pasta</label>
+      <select id="pick" class="dash-select" data-draw="pick" data-source="pastas" aria-label="Pasta"></select>
+    </div>
+  </header>
+
+  <p class="tx-lede" id="resumo" data-draw="lede">—</p>
+
+  <!-- VISÃO GERAL -->
+  <div id="geral" class="tx-sec">
+    <div class="tx-kpis" id="kpis-geral">
+      <div class="tx-card tx-kpi"><span class="tx-muted">Valor contratado declarado</span><span class="v" data-draw="g" data-source="c_geral" data-field="contratos_valor" data-row="0" data-fmt="brl">—</span><span class="s"><span data-draw="g" data-source="c_geral" data-field="contratos" data-row="0" data-fmt="n">—</span> contratos</span></div>
+      <div class="tx-card tx-kpi"><span class="tx-muted">Obras informadas</span><span class="v" data-draw="g" data-source="c_geral" data-field="obras" data-row="0" data-fmt="n">—</span><span class="s"><span data-draw="g" data-source="c_geral" data-field="obras_paralisadas" data-row="0" data-fmt="n">—</span> paralisadas ou inacabadas</span></div>
+      <div class="tx-card tx-kpi"><span class="tx-muted">Patrimônio e estoque</span><span class="v" data-draw="g" data-source="c_geral" data-field="patrimonio_valor" data-row="0" data-fmt="brl">—</span><span class="s"><span data-draw="g" data-source="c_geral" data-field="patrimonio" data-row="0" data-fmt="n">—</span> itens</span></div>
+      <div class="tx-card tx-kpi"><span class="tx-muted">Pessoal informado</span><span class="v" data-draw="g" data-source="c_geral" data-field="pessoal" data-row="0" data-fmt="n">—</span><span class="s">servidores e colaboradores</span></div>
+      <div class="tx-card tx-kpi"><span class="tx-muted">Precatórios</span><span class="v" data-draw="g" data-source="c_geral" data-field="precatorios_valor" data-row="0" data-fmt="brl">—</span><span class="s"><span data-draw="g" data-source="c_geral" data-field="precatorios" data-row="0" data-fmt="n">—</span> registros</span></div>
+    </div>
+
+    <section class="tx-sec" id="pastas-lista">
+      <span class="tx-eyebrow">Visão geral</span><h2>Pastas com formulário preenchido</h2>
+      <p class="tx-muted">Clique numa pasta para abrir seus dados. A barra mostra quantos dos 26 incisos do art. 4º tiveram aplicabilidade informada.</p>
+      <div class="tx-cards" data-draw="cards" data-source="pastas"></div>
+    </section>
+
+    <div class="tx-grid2">
+      <section class="tx-card" id="ranking-contratos">
+        <span class="tx-eyebrow">Ranking</span><h2>Valor contratado por pasta</h2>
+        <p class="tx-muted">Soma do valor contratado na aba Contratos.</p>
+        <div class="tx-chart" data-draw="rank" data-source="pastas" style="min-height:520px"></div>
+      </section>
+      <section class="tx-card" id="mapa-geral">
+        <span class="tx-eyebrow">Geo · municípios do RN</span><h2>Onde estão as obras</h2>
+        <p class="tx-muted">Obras de todas as pastas por município informado. O tamanho do círculo é o valor total.</p>
+        <div class="tx-chart tx-map" data-draw="mapall" data-source="c_geo_obras malha" style="min-height:380px"></div>
+        <div class="tx-legend"><span><i style="background:var(--color-warn)"></i>Obras</span><span><i style="background:var(--color-bad)"></i>Com obra paralisada ou inacabada</span><span><i style="border-radius:3px;background:color-mix(in srgb,var(--tx-a1) 30%,var(--color-panel))"></i>Município com obra</span></div>
+      </section>
+    </div>
+
+    <section class="tx-card" id="preenchimento">
+      <span class="tx-eyebrow">Cobertura do formulário</span><h2>Preenchimento por aba</h2>
+      <p class="tx-muted">Linhas preenchidas em cada aba do formulário. Células vazias indicam aba sem dados.</p>
+      <div class="tx-scroll">
+        <table class="tx-heat" data-source="pastas" data-row-key="pasta">
+          <thead><tr><th data-field="sigla">Pasta</th><th data-field="incisos_informados" class="n">Incisos informados</th><th data-field="programas">Programas</th><th data-field="financas">Finanças</th><th data-field="contratos">Contratos</th><th data-field="convenios">Convênios</th><th data-field="obras">Obras</th><th data-field="pessoal">Pessoal (qtd.)</th><th data-field="patrimonio">Patrimônio</th><th data-field="tac">TAC/TAG</th><th data-field="precatorios">Precatórios</th><th data-field="previdencia">Previdência</th><th data-field="sistemas">Sistemas TI</th><th data-field="incentivos">Incentivos</th><th data-field="pendencias">Pendências</th><th data-field="atos">Atos</th></tr></thead>
+          <tbody data-draw="heat"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- PASTA -->
+  <div id="pasta" class="tx-sec" hidden>
+    <section class="tx-card tx-sec" id="identificacao">
+      <div class="tx-row"><h2 data-draw="pnome" data-source="pastas" data-field="nome">—</h2><button class="tx-btn" type="button" id="voltar">Voltar à visão geral</button></div>
+      <dl class="tx-ident">
+        <div><dt>Órgão informante</dt><dd data-draw="pf" data-source="pastas" data-field="orgao_informado">—</dd></div>
+        <div><dt>Data-base</dt><dd data-draw="pf" data-source="pastas" data-field="data_base">—</dd></div>
+        <div><dt>Responsável pelo preenchimento</dt><dd data-draw="pf" data-source="pastas" data-field="responsavel">—</dd></div>
+        <div><dt>Cargo</dt><dd data-draw="pf" data-source="pastas" data-field="cargo">—</dd></div>
+        <div><dt>Processo SEI</dt><dd data-draw="pf" data-source="pastas" data-field="sei">—</dd></div>
+        <div><dt>Titular (ciência)</dt><dd data-draw="pf" data-source="pastas" data-field="titular">—</dd></div>
+        <div><dt>Arquivo lido</dt><dd data-draw="pf" data-source="pastas" data-field="arquivos">—</dd></div>
+      </dl>
+      <div class="tx-links" data-draw="plinks"></div>
+    </section>
+
+    <div class="tx-kpis" id="kpis-pasta">
+      <div class="tx-card tx-kpi"><span class="tx-muted">Valor contratado</span><span class="v" data-draw="k" data-source="pastas" data-field="contratos_valor" data-fmt="brl">—</span><span class="s"><span data-draw="k" data-source="pastas" data-field="contratos" data-fmt="n">—</span> contratos</span></div>
+      <div class="tx-card tx-kpi"><span class="tx-muted">Saldo a pagar (contratos)</span><span class="v" data-draw="k" data-source="pastas" data-field="contratos_saldo" data-fmt="brl">—</span><span class="s">pago: <span data-draw="k" data-source="pastas" data-field="contratos_pago" data-fmt="brl">—</span></span></div>
+      <div class="tx-card tx-kpi"><span class="tx-muted">Obras</span><span class="v" data-draw="k" data-source="pastas" data-field="obras" data-fmt="n">—</span><span class="s"><span data-draw="k" data-source="pastas" data-field="obras_paralisadas" data-fmt="n">—</span> paralisadas/inacabadas · <span data-draw="k" data-source="pastas" data-field="obras_valor" data-fmt="brl">—</span></span></div>
+      <div class="tx-card tx-kpi"><span class="tx-muted">Patrimônio e estoque</span><span class="v" data-draw="k" data-source="pastas" data-field="patrimonio_valor" data-fmt="brl">—</span><span class="s"><span data-draw="k" data-source="pastas" data-field="patrimonio" data-fmt="n">—</span> itens</span></div>
+      <div class="tx-card tx-kpi"><span class="tx-muted">Pessoal informado</span><span class="v" data-draw="k" data-source="pastas" data-field="pessoal" data-fmt="n">—</span><span class="s">soma dos quantitativos</span></div>
+      <div class="tx-card tx-kpi"><span class="tx-muted">Incisos com aplicabilidade</span><span class="v"><span data-draw="k" data-source="pastas" data-field="incisos_informados" data-fmt="n">—</span><span class="tx-muted"> de 26</span></span><span class="s"><span data-draw="k" data-source="pastas" data-field="incisos_atendidos" data-fmt="n">—</span> aplicáveis e atendidos</span></div>
+    </div>
+
+    <section class="tx-card tx-sec" id="controle" data-sec="controle">
+      <span class="tx-eyebrow">Conformidade</span><h2>Controle do art. 4º, incisos I a XXVI</h2>
+      <p class="tx-muted">Cada quadro é um inciso, colorido pela situação informada. Tracejado: aplicabilidade não informada.</p>
+      <div class="tx-legend"><span><i style="background:var(--color-ok)"></i>Atendido</span><span><i style="background:var(--color-warn)"></i>Parcial ou em andamento</span><span><i style="background:var(--color-bad)"></i>Pendente</span><span><i style="background:var(--cds-chart-muted)"></i>Não aplicável</span></div>
+      <div class="tx-ctrl" data-draw="ctrl" data-source="controle"></div>
+    </section>
+
+    <section class="tx-sec" id="contratos" data-sec="contratos">
+      <span class="tx-eyebrow">Incisos V e XII</span><h2>Contratos</h2>
+      <div class="tx-grid2">
+        <div class="tx-card"><h3>Valor por situação</h3><div class="tx-chart" data-draw="csit" data-source="c_contr_sit"></div></div>
+        <div class="tx-card"><h3>Fim da vigência dos contratos não encerrados</h3><div class="tx-chart" data-draw="cvenc" data-source="c_contr_venc"></div></div>
+      </div>
+      <div class="tx-card"><h3>Maiores contratados</h3><div class="tx-chart" data-draw="cforn" data-source="c_contr_forn"></div></div>
+      <div class="tx-card">
+        <div class="tx-row"><h3>Lista de contratos</h3><button class="tx-btn" type="button" id="mais-contratos">Mostrar todos</button><button class="tx-btn" type="button" id="menos-contratos" hidden>Mostrar só os 25 maiores</button></div>
+        <div class="tx-scroll tx-tbl">
+          <table data-source="contratos" data-row-key="id">
+            <thead><tr><th data-field="numero">Nº / SEI</th><th data-field="objeto">Objeto</th><th data-field="contratado">Contratado</th><th data-field="fim">Fim vigência</th><th data-field="valor_contratado" class="n">Contratado</th><th data-field="valor_pago" class="n">Pago</th><th data-field="saldo" class="n">Saldo</th><th data-field="situacao">Situação</th></tr></thead>
+            <tbody data-draw="tcontr"></tbody>
+          </table>
+        </div>
+        <p class="tx-muted" data-draw="ncontr">—</p>
+      </div>
+    </section>
+
+    <section class="tx-sec" id="obras" data-sec="obras">
+      <span class="tx-eyebrow">Inciso XIV</span><h2>Obras</h2>
+      <div class="tx-grid2">
+        <div class="tx-card"><h3>Mapa da pasta</h3><div class="tx-chart tx-map" data-draw="map" data-source="c_geo malha" style="min-height:340px"></div>
+          <div class="tx-legend"><span><i style="background:var(--color-warn)"></i>Obras</span><span><i style="background:var(--color-bad)"></i>Paralisada/inacabada</span><span><i style="border:2px solid var(--cds-chart-reference);box-sizing:border-box"></i>Bens patrimoniais localizados</span></div></div>
+        <div class="tx-card"><h3>Situação das obras</h3><div class="tx-chart" data-draw="osit" data-source="c_obras_sit"></div></div>
+      </div>
+      <div class="tx-card tx-scroll tx-tbl">
+        <table data-source="obras" data-row-key="id">
+          <thead><tr><th data-field="objeto">Obra</th><th data-field="municipio_informado">Município</th><th data-field="situacao">Situação</th><th data-field="execucao_pct" class="n">Execução física</th><th data-field="valor_total" class="n">Valor total</th><th data-field="saldo" class="n">Saldo</th><th data-field="motivo_paralisacao">Motivo da paralisação</th><th data-field="providencia">Providência</th></tr></thead>
+          <tbody data-draw="tobras"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="tx-grid2">
+      <section class="tx-card tx-sec" id="financas" data-sec="financas"><span class="tx-eyebrow">Incisos II e III</span><h2>Finanças e saldos</h2><p class="tx-muted">Soma do valor por tipo de registro.</p><div class="tx-chart" data-draw="fin" data-source="c_fin_tipo"></div></section>
+      <section class="tx-card tx-sec" id="pessoal" data-sec="pessoal"><span class="tx-eyebrow">Incisos VIII e IX</span><h2>Pessoal</h2><p class="tx-muted">Quantitativo por categoria.</p><div class="tx-chart" data-draw="pes" data-source="c_pes_cat"></div></section>
+    </div>
+
+    <section class="tx-sec" id="patrimonio" data-sec="patrimonio">
+      <span class="tx-eyebrow">Incisos VI e VII</span><h2>Patrimônio e estoque</h2>
+      <div class="tx-grid2">
+        <div class="tx-card"><h3>Valor contábil por tipo</h3><div class="tx-chart" data-draw="pat" data-source="c_pat_tipo"></div></div>
+        <div class="tx-card tx-scroll tx-tbl"><h3>Itens de maior valor</h3>
+          <table data-source="patrimonio" data-row-key="id">
+            <thead><tr><th data-field="descricao">Descrição</th><th data-field="localizacao">Localização</th><th data-field="valor" class="n">Valor</th><th data-field="conservacao">Conservação</th></tr></thead>
+            <tbody data-draw="tpat"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="tx-card tx-sec" id="convenios" data-sec="convenios">
+      <span class="tx-eyebrow">Inciso XIII</span><h2>Convênios e transferências</h2>
+      <div class="tx-scroll tx-tbl"><table data-source="convenios" data-row-key="id">
+        <thead><tr><th data-field="numero">Nº</th><th data-field="tipo">Tipo</th><th data-field="partes">Partes</th><th data-field="objeto">Objeto</th><th data-field="fim">Fim</th><th data-field="valor_global" class="n">Valor global</th><th data-field="valor_executado" class="n">Executado</th><th data-field="prestacao_contas">Prestação de contas</th></tr></thead>
+        <tbody data-draw="tconv"></tbody></table></div>
+    </section>
+
+    <section class="tx-card tx-sec" id="programas" data-sec="programas">
+      <span class="tx-eyebrow">Planejamento</span><h2>Programas e projetos</h2>
+      <div class="tx-scroll tx-tbl"><table data-source="programas" data-row-key="id">
+        <thead><tr><th data-field="programa">Programa ou projeto</th><th data-field="situacao">Situação</th><th data-field="valor_previsto" class="n">Previsto</th><th data-field="valor_executado" class="n">Executado</th><th data-field="proximo_marco">Próximo marco</th><th data-field="risco">Risco</th></tr></thead>
+        <tbody data-draw="tprog"></tbody></table></div>
+    </section>
+
+    <section class="tx-card tx-sec" id="pendencias" data-sec="pendencias">
+      <span class="tx-eyebrow">Riscos</span><h2>Pendências e riscos</h2>
+      <div class="tx-scroll tx-tbl"><table data-source="pendencias" data-row-key="id">
+        <thead><tr><th data-field="prioridade">Prioridade</th><th data-field="eixo">Eixo</th><th data-field="descricao">Descrição</th><th data-field="impacto">Impacto</th><th data-field="providencia">Providência</th><th data-field="prazo">Prazo</th></tr></thead>
+        <tbody data-draw="tpend"></tbody></table></div>
+    </section>
+
+    <div class="tx-grid2">
+      <section class="tx-card tx-sec" id="precatorios" data-sec="precatorios">
+        <span class="tx-eyebrow">Inciso XV</span><h2>Precatórios</h2>
+        <div class="tx-scroll tx-tbl"><table data-source="precatorios" data-row-key="id">
+          <thead><tr><th data-field="natureza">Natureza</th><th data-field="numero">Nº</th><th data-field="valor" class="n">Valor</th><th data-field="situacao">Situação</th></tr></thead>
+          <tbody data-draw="tprec"></tbody></table></div>
+      </section>
+      <section class="tx-card tx-sec" id="sistemas" data-sec="sistemas">
+        <span class="tx-eyebrow">Inciso XXI</span><h2>Sistemas de TI</h2>
+        <div class="tx-scroll tx-tbl"><table data-source="sistemas" data-row-key="id">
+          <thead><tr><th data-field="sistema">Sistema</th><th data-field="finalidade">Finalidade</th><th data-field="vigencia">Vigência</th><th data-field="risco">Dependência / risco</th></tr></thead>
+          <tbody data-draw="tsis"></tbody></table></div>
+      </section>
+    </div>
+
+    <div class="tx-grid2">
+      <section class="tx-card tx-sec" id="tac" data-sec="tac">
+        <span class="tx-eyebrow">Inciso XVI</span><h2>TAC e TAG</h2>
+        <div class="tx-scroll tx-tbl"><table data-source="tac_tag" data-row-key="id">
+          <thead><tr><th data-field="tipo">Tipo</th><th data-field="objeto">Objeto</th><th data-field="situacao">Situação</th><th data-field="orgao_externo">Órgão externo</th></tr></thead>
+          <tbody data-draw="ttac"></tbody></table></div>
+      </section>
+      <section class="tx-card tx-sec" id="atos" data-sec="atos">
+        <span class="tx-eyebrow">Evidências</span><h2>Atos e evidências</h2>
+        <div class="tx-scroll tx-tbl"><table data-source="atos" data-row-key="id">
+          <thead><tr><th data-field="tipo">Tipo</th><th data-field="tema">Tema</th><th data-field="descricao">Descrição</th><th data-field="sei">SEI / link</th></tr></thead>
+          <tbody data-draw="tatos"></tbody></table></div>
+      </section>
+    </div>
+
+    <div class="tx-grid2">
+      <section class="tx-card tx-sec" id="previdencia" data-sec="previdencia">
+        <span class="tx-eyebrow">Incisos XIX e XX</span><h2>Previdência</h2>
+        <div class="tx-scroll"><table data-source="previdencia" data-row-key="id">
+          <thead><tr><th data-field="regime">Regime</th><th data-field="tipo">Tipo</th><th data-field="situacao">Situação</th><th data-field="valor">Valor ou indicador</th></tr></thead>
+          <tbody data-draw="tprev"></tbody></table></div>
+      </section>
+      <section class="tx-card tx-sec" id="incentivos" data-sec="incentivos">
+        <span class="tx-eyebrow">Inciso XXV</span><h2>Incentivos fiscais</h2>
+        <div class="tx-scroll"><table data-source="incentivos" data-row-key="id">
+          <thead><tr><th data-field="programa">Programa</th><th data-field="tributo">Tributo</th><th data-field="situacao">Situação</th></tr></thead>
+          <tbody data-draw="tinc"></tbody></table></div>
+      </section>
+    </div>
+  </div>
+
+  <details id="notas">
+    <summary>Como os dados foram lidos e tratados</summary>
+    <ul>
+      <li>Foram lidas as planilhas de 23 das 24 pastas indicadas. A SIN (Secretaria de Estado da Infraestrutura) não tem pasta em "DADOS - IN - ART. 4º" e por isso não aparece.</li>
+      <li>Quando uma pasta tinha mais de uma planilha (cópias, versões convertidas para Google Planilhas), cada aba vem da versão com mais linhas preenchidas.</li>
+      <li>Situações escritas livremente foram agrupadas (por exemplo "ATENDIDO", "Disponibilizado" e "Concluída" contam como Atendido). O texto original continua na fonte.</li>
+      <li>Obras e bens são localizados pela sede do município informado. Textos que não citam um município do RN ficam fora do mapa.</li>
+      <li>Valores em branco contam como não informados, não como zero. "Saldo a pagar" usa o saldo informado ou, sem ele, contratado menos pago.</li>
+      <li>Os dados são uma cópia de 10/11/2026. Alterações feitas depois nas planilhas só aparecem quando os arquivos forem lidos de novo.</li>
+    </ul>
+  </details>
+</div>
+</div>
+<script>
+window.TX = (function () {
+  const L = 'pt-BR';
+  const brl = (v) => {
+    if (v == null || isNaN(v)) return '—';
+    const a = Math.abs(v), s = v < 0 ? '−' : '';
+    if (a >= 1e9) return s + 'R$ ' + (a / 1e9).toLocaleString(L, { maximumFractionDigits: 2 }) + ' bi';
+    if (a >= 1e6) return s + 'R$ ' + (a / 1e6).toLocaleString(L, { maximumFractionDigits: 1 }) + ' mi';
+    if (a >= 1e4) return s + 'R$ ' + (a / 1e3).toLocaleString(L, { maximumFractionDigits: 0 }) + ' mil';
+    return s + 'R$ ' + a.toLocaleString(L, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  const brlFull = (v) => v == null ? '—' : 'R$ ' + v.toLocaleString(L, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const n = (v) => v == null || isNaN(v) ? '—' : Number(v).toLocaleString(L, { maximumFractionDigits: 1 });
+  const fmt = (v, f) => f === 'brl' ? brl(v) : f === 'n' ? n(v) : (v == null || v === '' ? '—' : String(v));
+  const pasta = () => dash.params().pasta || '';
+  const enc = (s) => encodeURIComponent(String(s));
+  const rowsOf = (id) => { const d = dash.data(id); return d.status === 'ok' && Array.isArray(d.data) ? d.data : null; };
+  const statusOf = (id) => dash.data(id).status;
+  const sitClass = (s) => ({ 'Atendido': 'ok', 'Atendido parcialmente': 'warn', 'Em andamento': 'warn', 'Pendente': 'bad', 'Em execução': 'ok', 'Concluída': 'ok', 'Paralisada': 'bad', 'Inacabada': 'bad', 'Encerrado': '', 'Vence em até 90 dias': 'warn', 'Em rescisão': 'bad', 'Suspenso': 'warn', 'Alta': 'bad', 'Média': 'warn', 'Baixa': 'ok' }[s] || '');
+  function tip(el) {
+    let t = el.querySelector(':scope > .tx-tip');
+    if (!t) { t = document.createElement('div'); t.className = 'tx-tip'; t.hidden = true; el.appendChild(t); }
+    return {
+      show(ev, parts) {
+        t.replaceChildren(...parts.map(([b, s]) => { const d = document.createElement('div'); if (b) { const bb = document.createElement('b'); bb.textContent = b; d.append(bb, s ? ' ' : ''); } if (s) d.append(s); return d; }));
+        t.hidden = false;
+        const r = el.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight;
+        let x = ev.clientX - r.left + 12, y = ev.clientY - r.top + 12;
+        if (x + w > r.width) x = Math.max(0, ev.clientX - r.left - w - 12);
+        if (y + h > r.height + 40) y = Math.max(0, ev.clientY - r.top - h - 12);
+        t.style.left = x + 'px'; t.style.top = y + 'px';
+      },
+      hide() { t.hidden = true; }
+    };
+  }
+  function placeholder(el, msg) {
+    el.replaceChildren();
+    const p = document.createElement('p'); p.className = 'tx-muted'; p.textContent = msg; el.appendChild(p);
+  }
+  // horizontal bar chart
+  function hbar(el, rows, o) {
+    const st = statusOf(o.source);
+    if (st !== 'ok') { placeholder(el, st === 'error' ? 'Não carregou' : '—'); return; }
+    if (!rows.length) { placeholder(el, 'Sem dados informados.'); return; }
+    el.querySelectorAll('svg').forEach((s) => s.remove());
+    el.querySelectorAll(':scope > p').forEach((s) => s.remove());
+    const W = el.clientWidth || 360, bh = 22, gap = 6;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('role', 'img').attr('aria-label', o.aria);
+    const gid = 'txg' + Math.random().toString(36).slice(2, 8);
+    const lg = svg.append('defs').append('linearGradient').attr('id', gid).attr('x1', '0').attr('x2', '1');
+    lg.append('stop').attr('offset', '0').style('stop-color', 'var(--tx-a1)');
+    lg.append('stop').attr('offset', '1').style('stop-color', 'var(--tx-a2)');
+    const g = svg.append('g');
+    const labels = rows.map((r) => String(r[o.label] ?? '—'));
+    const tmp = g.append('text').attr('class', 'lbl');
+    let lw = 0; const maxLw = Math.min(W * 0.42, 220);
+    const short = labels.map((s) => { let t = s; tmp.text(t); while (tmp.node().getComputedTextLength() > maxLw && t.length > 4) { t = t.slice(0, -2); tmp.text(t + '…'); } lw = Math.max(lw, tmp.node().getComputedTextLength()); return t === s ? s : t + '…'; });
+    tmp.text(o.fmt(d3.max(rows, (r) => r[o.value]))); const vw = tmp.node().getComputedTextLength() + 8; tmp.remove();
+    const x0 = lw + 10, x1 = Math.max(x0 + 40, W - vw);
+    const x = d3.scaleLinear().domain([0, d3.max(rows, (r) => Math.max(0, r[o.value] || 0)) || 1]).range([x0, x1]);
+    const H = rows.length * (bh + gap);
+    svg.attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+    const t = tip(el);
+    const row = g.selectAll('g.r').data(rows).join('g').attr('class', 'r').attr('transform', (d, i) => `translate(0,${i * (bh + gap)})`);
+    row.append('text').attr('class', 'lbl').attr('x', 0).attr('y', bh / 2).attr('dy', '0.35em').text((d, i) => short[i]);
+    row.append('rect').attr('x', x0).attr('y', 2).attr('height', bh - 4).attr('rx', 3).attr('width', (d) => Math.max(1, x(Math.max(0, d[o.value] || 0)) - x0)).style('fill', (d, i) => (o.color && o.color(d, i)) || `url(#${gid})`);
+    row.append('text').attr('x', (d) => x(Math.max(0, d[o.value] || 0)) + 6).attr('y', bh / 2).attr('dy', '0.35em').text((d) => o.fmt(d[o.value]));
+    row.append('rect').attr('x', 0).attr('width', W).attr('height', bh).style('fill', 'transparent').style('cursor', o.click ? 'pointer' : 'default')
+      .on('mousemove', (ev, d) => t.show(ev, o.tip(d))).on('mouseleave', () => t.hide())
+      .on('click', (ev, d) => o.click && o.click(d));
+  }
+  // map
+  function map(el, geo, pts, o) {
+    el.querySelectorAll('svg').forEach((s) => s.remove());
+    el.querySelectorAll(':scope > p').forEach((s) => s.remove());
+    const W = el.clientWidth || 360, H = Math.max(240, Math.min(W * 0.62, 420));
+    const proj = d3.geoMercator().fitSize([W, H], geo), path = d3.geoPath(proj);
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', o.aria);
+    const has = new Set(pts.filter((p) => p.obras > 0).map((p) => p.municipio));
+    const t = tip(el);
+    svg.append('g').selectAll('path').data(geo.features).join('path').attr('d', path)
+      .style('fill', (f) => has.has(f.properties.nome) ? 'color-mix(in srgb, var(--tx-a1) 22%, var(--color-panel))' : 'color-mix(in srgb, var(--tx-a2) 3%, var(--color-panel))')
+      .style('stroke', 'color-mix(in srgb, var(--tx-a1) 25%, var(--cds-chart-grid))').style('stroke-width', 0.6)
+      .on('mousemove', (ev, f) => { const p = pts.find((q) => q.municipio === f.properties.nome); t.show(ev, o.tip(f.properties.nome, p)); })
+      .on('mouseleave', () => t.hide());
+    const r = d3.scaleSqrt().domain([0, d3.max(pts, (p) => p.obras_valor || 0) || 1]).range([3, Math.max(10, W / 28)]);
+    const ob = pts.filter((p) => p.obras > 0).sort((a, b) => (b.obras_valor || 0) - (a.obras_valor || 0));
+    svg.append('g').selectAll('circle.o').data(ob).join('circle').attr('class', 'o')
+      .attr('cx', (p) => proj([p.lon, p.lat])[0]).attr('cy', (p) => proj([p.lon, p.lat])[1]).attr('r', (p) => r(p.obras_valor || 0))
+      .style('fill', (p) => p.paralisadas > 0 ? 'var(--color-bad)' : 'var(--color-warn)').style('fill-opacity', 0.7).style('stroke', 'var(--color-bg)').style('stroke-width', 1)
+      .on('mousemove', (ev, p) => t.show(ev, o.tip(p.municipio, p))).on('mouseleave', () => t.hide());
+    if (o.bens) {
+      const bp = pts.filter((p) => p.bens > 0);
+      const rb = d3.scaleSqrt().domain([0, d3.max(bp, (p) => p.bens) || 1]).range([3, 9]);
+      svg.append('g').selectAll('circle.b').data(bp).join('circle').attr('class', 'b')
+        .attr('cx', (p) => proj([p.lon, p.lat])[0]).attr('cy', (p) => proj([p.lon, p.lat])[1]).attr('r', (p) => rb(p.bens))
+        .style('fill', 'none').style('stroke', 'var(--cds-chart-reference)').style('stroke-width', 1.5)
+        .on('mousemove', (ev, p) => t.show(ev, o.tip(p.municipio, p))).on('mouseleave', () => t.hide());
+    }
+  }
+  function geoTip(nome, p) {
+    const out = [[nome, '']];
+    if (!p) { out.push(['', 'Nada informado neste município']); return out; }
+    if (p.obras) out.push(['Obras:', n(p.obras) + ' · ' + brl(p.obras_valor)]);
+    if (p.paralisadas) out.push(['Paralisadas/inacabadas:', n(p.paralisadas)]);
+    if (p.bens) out.push(['Bens localizados:', n(p.bens) + ' · ' + brl(p.bens_valor)]);
+    if (p.pastas) out.push(['Pastas:', p.pastas]);
+    return out;
+  }
+  // generic table body
+  function tbody(el, src, cols, rowsFn, opts) {
+    const st = statusOf(src);
+    if (st !== 'ok') { el.replaceChildren(); return; }
+    const rows = rowsFn(rowsOf(src) || []);
+    el.replaceChildren(...rows.map((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.id;
+      cols.forEach(([f, kind]) => {
+        const td = document.createElement('td');
+        const v = r[f];
+        if (kind === 'brl') { td.className = 'n'; td.textContent = v == null ? '—' : brlFull(v); }
+        else if (kind === 'pct') { td.className = 'n'; if (v == null) td.textContent = '—'; else { const b = document.createElement('span'); b.className = 'tx-bar'; const i = document.createElement('i'); i.style.width = v + '%'; i.style.background = v >= 100 ? 'var(--color-ok)' : 'var(--color-warn)'; b.appendChild(i); td.append(b, n(v) + '%'); } }
+        else if (kind === 'pill') { const s = document.createElement('span'); s.className = 'tx-pill ' + sitClass(v); s.textContent = v || '—'; td.appendChild(s); }
+        else { if (kind === 'w') td.className = 'w'; td.textContent = v == null || v === '' ? '—' : v; }
+        tr.appendChild(td);
+      });
+      return tr;
+    }));
+  }
+  return { brl, brlFull, n, fmt, pasta, enc, rowsOf, statusOf, sitClass, tip, hbar, map, geoTip, tbody, placeholder };
+})();
+</script>
+<script>
+// Valores calculados a partir das fontes. Cada um tem a coluna "pasta" para o filtro da página.
+dash.calc('c_geral', {
+  title: 'Totais de todas as pastas', description: 'Somas da tabela de pastas.',
+  inputs: ['pastas'],
+  fn: (pastas) => {
+    const s = (f) => pastas.reduce((a, r) => a + (Number(r[f]) || 0), 0);
+    return [{ pastas: pastas.length, contratos: s('contratos'), contratos_valor: s('contratos_valor'), obras: s('obras'), obras_paralisadas: s('obras_paralisadas'), patrimonio: s('patrimonio'), patrimonio_valor: s('patrimonio_valor'), pessoal: s('pessoal'), precatorios: s('precatorios'), precatorios_valor: s('precatorios_valor') }];
+  }
+});
+dash.calc('c_contr_sit', {
+  title: 'Contratos por situação', description: 'Quantidade e valor contratado por pasta e situação agrupada.',
+  inputs: ['contratos'],
+  fn: (contratos) => {
+    const m = new Map();
+    for (const c of contratos) { const k = c.pasta + '|' + c.situacao; const r = m.get(k) || { pasta: c.pasta, situacao: c.situacao, contratos: 0, valor: 0 }; r.contratos++; r.valor += Number(c.valor_contratado) || 0; m.set(k, r); }
+    return [...m.values()];
+  }
+});
+dash.calc('c_contr_venc', {
+  title: 'Fim de vigência dos contratos', description: 'Contratos não encerrados por faixa da data de fim de vigência, tomando 10/11/2026 (data da leitura) como referência.',
+  inputs: ['contratos'],
+  fn: (contratos) => {
+    const faixas = ['Já vencido', 'Até 31/12/2026', '1º semestre de 2027', 'Depois de jun/2027', 'Sem data de fim'];
+    const m = new Map();
+    for (const c of contratos) {
+      if (c.situacao === 'Encerrado') continue;
+      const f = !c.fim_iso ? faixas[4] : c.fim_iso < '2026-11-10' ? faixas[0] : c.fim_iso <= '2026-12-31' ? faixas[1] : c.fim_iso <= '2027-06-30' ? faixas[2] : faixas[3];
+      const k = c.pasta + '|' + f; const r = m.get(k) || { pasta: c.pasta, faixa: f, ordem: faixas.indexOf(f), contratos: 0, valor: 0 }; r.contratos++; r.valor += Number(c.valor_contratado) || 0; m.set(k, r);
+    }
+    return [...m.values()];
+  }
+});
+dash.calc('c_contr_forn', {
+  title: 'Maiores contratados', description: 'Valor contratado somado por contratado, os 8 maiores de cada pasta.',
+  inputs: ['contratos'],
+  fn: (contratos) => {
+    const m = new Map();
+    for (const c of contratos) { const nome = (c.contratado || 'Não informado').trim(); const k = c.pasta + '|' + nome.toUpperCase(); const r = m.get(k) || { pasta: c.pasta, contratado: nome, contratos: 0, valor: 0 }; r.contratos++; r.valor += Number(c.valor_contratado) || 0; m.set(k, r); }
+    const by = d3.group([...m.values()], (r) => r.pasta);
+    return [...by.values()].flatMap((rs) => rs.sort((a, b) => b.valor - a.valor).slice(0, 8));
+  }
+});
+dash.calc('c_obras_sit', {
+  title: 'Obras por situação', description: 'Quantidade e valor total por pasta e situação agrupada.',
+  inputs: ['obras'],
+  fn: (obras) => {
+    const m = new Map();
+    for (const o of obras) { const k = o.pasta + '|' + o.situacao; const r = m.get(k) || { pasta: o.pasta, situacao: o.situacao, obras: 0, valor: 0 }; r.obras++; r.valor += Number(o.valor_total) || 0; m.set(k, r); }
+    return [...m.values()];
+  }
+});
+dash.calc('c_fin_tipo', {
+  title: 'Finanças por tipo', description: 'Valor somado por pasta e tipo de registro.',
+  inputs: ['financas'],
+  fn: (financas) => {
+    const m = new Map();
+    for (const f of financas) { if (f.valor == null) continue; const k = f.pasta + '|' + f.tipo; const r = m.get(k) || { pasta: f.pasta, tipo: f.tipo, registros: 0, valor: 0 }; r.registros++; r.valor += Number(f.valor); m.set(k, r); }
+    return [...m.values()];
+  }
+});
+dash.calc('c_pes_cat', {
+  title: 'Pessoal por categoria', description: 'Quantitativo somado por pasta e categoria.',
+  inputs: ['pessoal'],
+  fn: (pessoal) => {
+    const m = new Map();
+    for (const p of pessoal) { if (p.quantidade == null) continue; const k = p.pasta + '|' + p.categoria; const r = m.get(k) || { pasta: p.pasta, categoria: p.categoria, quantidade: 0 }; r.quantidade += Number(p.quantidade); m.set(k, r); }
+    return [...m.values()];
+  }
+});
+dash.calc('c_pat_tipo', {
+  title: 'Patrimônio por tipo', description: 'Valor contábil somado por pasta e tipo de bem.',
+  inputs: ['patrimonio'],
+  fn: (patrimonio) => {
+    const m = new Map();
+    for (const p of patrimonio) { const k = p.pasta + '|' + p.tipo; const r = m.get(k) || { pasta: p.pasta, tipo: p.tipo, itens: 0, valor: 0 }; r.itens++; r.valor += Number(p.valor) || 0; m.set(k, r); }
+    return [...m.values()];
+  }
+});
+dash.calc('c_geo', {
+  title: 'Obras e bens por município', description: 'Obras e bens patrimoniais agrupados por pasta e município da sede.',
+  inputs: ['obras', 'patrimonio'],
+  fn: (obras, patrimonio) => {
+    const m = new Map();
+    const get = (p, mun, lat, lon) => { const k = p + '|' + mun; if (!m.has(k)) m.set(k, { pasta: p, municipio: mun, lat, lon, obras: 0, obras_valor: 0, paralisadas: 0, bens: 0, bens_valor: 0 }); return m.get(k); };
+    for (const o of obras) { if (o.lat == null) continue; const r = get(o.pasta, o.municipio, o.lat, o.lon); r.obras++; r.obras_valor += Number(o.valor_total) || 0; if (o.situacao === 'Paralisada' || o.situacao === 'Inacabada') r.paralisadas++; }
+    for (const b of patrimonio) { if (b.lat == null) continue; const r = get(b.pasta, b.municipio, b.lat, b.lon); r.bens++; r.bens_valor += Number(b.valor) || 0; }
+    return [...m.values()];
+  }
+});
+dash.calc('c_geo_obras', {
+  title: 'Obras por município (todas as pastas)', description: 'Obras de todas as pastas agrupadas pelo município da sede.',
+  inputs: ['obras'],
+  fn: (obras) => {
+    const m = new Map();
+    for (const o of obras) { if (o.lat == null) continue; const r = m.get(o.municipio) || { municipio: o.municipio, lat: o.lat, lon: o.lon, obras: 0, obras_valor: 0, paralisadas: 0, pastas: new Set() }; r.obras++; r.obras_valor += Number(o.valor_total) || 0; if (o.situacao === 'Paralisada' || o.situacao === 'Inacabada') r.paralisadas++; r.pastas.add(o.pasta); m.set(o.municipio, r); }
+    return [...m.values()].map((r) => ({ ...r, pastas: [...r.pastas].join(', ') }));
+  }
+});
+</script>
+<script>
+(function () {
+  const h = decodeURIComponent((location.hash || '').slice(1));
+  if (h && h !== 'geral') dash.setParams({ pasta: h });
+})();
+
+// Mostra a visão geral ou a pasta, e esconde as seções sem dados.
+dash.onData(() => {
+  const p = TX.pasta();
+  document.querySelectorAll('#geral').forEach((e) => { e.hidden = !!p; });
+  document.querySelectorAll('#pasta').forEach((e) => { e.hidden = !p; });
+  const rows = TX.rowsOf('pastas');
+  const r = rows && rows.find((x) => x.pasta === p);
+  const counts = r ? { controle: 26, contratos: r.contratos, obras: r.obras, financas: r.financas, pessoal: r.pessoal || 0, patrimonio: r.patrimonio, convenios: r.convenios, programas: r.programas, pendencias: r.pendencias, precatorios: r.precatorios, sistemas: r.sistemas, tac: r.tac, atos: r.atos, previdencia: r.previdencia, incentivos: r.incentivos } : null;
+  document.querySelectorAll('[data-sec]').forEach((e) => { e.hidden = !!(counts && !counts[e.dataset.sec]); });
+  if (r && r.pessoal === 0) document.querySelectorAll('#pessoal').forEach((e) => { e.hidden = true; });
+});
+
+document.querySelectorAll('#voltar').forEach((b) => b.addEventListener('click', () => { dash.setParams({ pasta: '' }); dash.setLink('geral'); window.scrollTo({ top: 0 }); }));
+window.__txAll = false;
+const txToggle = (all) => { window.__txAll = all; document.querySelectorAll('#mais-contratos').forEach((e) => { e.hidden = all; }); document.querySelectorAll('#menos-contratos').forEach((e) => { e.hidden = !all; }); dash.draw('tcontr'); dash.draw('ncontr'); };
+document.querySelectorAll('#mais-contratos').forEach((b) => b.addEventListener('click', () => txToggle(true)));
+document.querySelectorAll('#menos-contratos').forEach((b) => b.addEventListener('click', () => txToggle(false)));
+window.TX.go = (p) => { dash.setParams({ pasta: p }); dash.setLink(p); document.querySelectorAll('#topo').forEach((e) => e.scrollIntoView({ block: 'start' })); };
+
+dash.draw('pick', (sel) => {
+  const rows = TX.rowsOf('pastas') || [];
+  sel.replaceChildren(new Option('Visão geral — todas as pastas', ''), ...rows.map((r) => new Option(r.sigla + ' — ' + r.nome, r.pasta)));
+  sel.value = TX.pasta();
+  sel.onchange = () => TX.go(sel.value);
+});
+
+dash.draw('lede', (el) => {
+  const p = TX.pasta();
+  const mk = (src, field, fmt, where) => { const b = document.createElement('b'); b.dataset.source = src; b.dataset.field = field; if (where) b.dataset.where = where; else b.dataset.row = '0'; b.textContent = TX.fmt(where ? (TX.rowsOf(src) || []).find((r) => r.pasta === p)?.[field] : (dash.data(src).data || [])[0]?.[field], fmt); return b; };
+  if (!p) {
+    const g = dash.data('c_geral');
+    if (g.status !== 'ok' || !g.data || !g.data.length) { el.textContent = '—'; return; }
+    el.replaceChildren(mk('c_geral', 'pastas', 'n'), ' pastas enviaram o formulário. Juntas, declaram ', mk('c_geral', 'contratos', 'n'), ' contratos que somam ', mk('c_geral', 'contratos_valor', 'brl'), ' e ', mk('c_geral', 'obras', 'n'), ' obras, das quais ', mk('c_geral', 'obras_paralisadas', 'n'), ' estão paralisadas ou inacabadas.');
+    return;
+  }
+  const rows = TX.rowsOf('pastas'); const r = rows && rows.find((x) => x.pasta === p);
+  if (!r) { el.textContent = '—'; return; }
+  const w = 'pasta=' + TX.enc(p);
+  const parts = [r.sigla + ' preencheu ', mk('pastas', 'abas_preenchidas', 'n', w), ' das 14 abas de detalhamento e informou a aplicabilidade de ', mk('pastas', 'incisos_informados', 'n', w), ' dos 26 incisos.'];
+  if (r.contratos) parts.push(' Declarou ', mk('pastas', 'contratos', 'n', w), ' contratos (', mk('pastas', 'contratos_valor', 'brl', w), ')');
+  if (r.contratos && r.obras) parts.push(' e ', mk('pastas', 'obras', 'n', w), ' obras'); else if (r.obras) parts.push(' Declarou ', mk('pastas', 'obras', 'n', w), ' obras');
+  if (r.contratos || r.obras) parts.push('.');
+  if (r.obras_paralisadas) parts.push(' ', mk('pastas', 'obras_paralisadas', 'n', w), ' obras estão paralisadas ou inacabadas.');
+  el.replaceChildren(...parts);
+});
+
+// Visão geral
+dash.draw('g', (el) => {
+  const d = dash.data('c_geral');
+  el.textContent = d.status === 'ok' && d.data && d.data[0] ? TX.fmt(d.data[0][el.dataset.field], el.dataset.fmt) : '—';
+});
+dash.draw('cards', (el) => {
+  const rows = TX.rowsOf('pastas');
+  if (!rows) { TX.placeholder(el, '—'); return; }
+  const sorted = [...rows].sort((a, b) => a.sigla.localeCompare(b.sigla, 'pt-BR'));
+  el.replaceChildren(...sorted.map((r) => {
+    const w = 'pasta=' + TX.enc(r.pasta);
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'tx-pc'; b.setAttribute('aria-label', 'Abrir ' + r.sigla);
+    const s = document.createElement('span'); s.className = 'sig'; s.textContent = r.sigla;
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = r.nome;
+    const dl = document.createElement('dl');
+    const add = (lab, f, fmt) => { const dt = document.createElement('dt'); dt.textContent = lab; const dd = document.createElement('dd'); dd.dataset.source = 'pastas'; dd.dataset.field = f; dd.dataset.where = w; dd.textContent = TX.fmt(r[f], fmt); dl.append(dt, dd); };
+    add('Contratado', 'contratos_valor', 'brl'); add('Obras', 'obras', 'n'); add('Abas preenchidas', 'abas_preenchidas', 'n');
+    const m = document.createElement('div'); m.className = 'tx-meter'; const i = document.createElement('i'); i.style.width = (100 * (r.incisos_informados || 0) / 26) + '%'; m.appendChild(i);
+    const cap = document.createElement('span'); cap.className = 'nm'; cap.style.minHeight = '0'; const ci = document.createElement('span'); ci.dataset.source = 'pastas'; ci.dataset.field = 'incisos_informados'; ci.dataset.where = w; ci.textContent = TX.n(r.incisos_informados); cap.append(ci, ' de 26 incisos informados');
+    b.append(s, nm, dl, m, cap);
+    b.addEventListener('click', () => TX.go(r.pasta));
+    return b;
+  }));
+});
+dash.draw('rank', (el) => {
+  const rows = TX.rowsOf('pastas') || [];
+  TX.hbar(el, [...rows].filter((r) => r.contratos_valor > 0).sort((a, b) => b.contratos_valor - a.contratos_valor), {
+    source: 'pastas', label: 'sigla', value: 'contratos_valor', fmt: TX.brl, aria: 'Valor contratado por pasta, em barras horizontais',
+    tip: (d) => [[d.sigla, ''], ['Contratado:', TX.brlFull(d.contratos_valor)], ['Contratos:', TX.n(d.contratos)], ['Saldo a pagar:', TX.brl(d.contratos_saldo)]],
+    click: (d) => TX.go(d.pasta)
+  });
+});
+dash.draw('mapall', (el) => {
+  const g = dash.data('malha'), c = dash.data('c_geo_obras');
+  if (g.status !== 'ok' || c.status !== 'ok' || !g.data || !g.data.features) { TX.placeholder(el, g.status === 'error' ? 'Não carregou' : '—'); return; }
+  TX.map(el, g.data, c.data || [], { aria: 'Mapa do Rio Grande do Norte com as obras informadas por município', tip: TX.geoTip });
+});
+dash.draw('heat', (el) => {
+  const rows = TX.rowsOf('pastas');
+  if (!rows) { el.replaceChildren(); return; }
+  const fields = ['incisos_informados', 'programas', 'financas', 'contratos', 'convenios', 'obras', 'pessoal', 'patrimonio', 'tac', 'precatorios', 'previdencia', 'sistemas', 'incentivos', 'pendencias', 'atos'];
+  const mx = {}; fields.forEach((f) => { mx[f] = d3.max(rows, (r) => r[f] || 0) || 1; });
+  el.replaceChildren(...[...rows].sort((a, b) => a.sigla.localeCompare(b.sigla, 'pt-BR')).map((r) => {
+    const tr = document.createElement('tr'); tr.dataset.key = r.pasta;
+    const th = document.createElement('td'); const b = document.createElement('button'); b.type = 'button'; b.textContent = r.sigla; b.addEventListener('click', () => TX.go(r.pasta)); th.appendChild(b); tr.appendChild(th);
+    fields.forEach((f) => {
+      const td = document.createElement('td'); const v = r[f] || 0;
+      td.textContent = v ? TX.n(v) : '';
+      if (v) { const k = f === 'incisos_informados' ? v / 26 : Math.log1p(v) / Math.log1p(mx[f]); td.style.background = `color-mix(in srgb, ${k > 0.5 ? 'var(--tx-a2)' : 'var(--tx-a1)'} ${Math.round(10 + 55 * k)}%, transparent)`; }
+      tr.appendChild(td);
+    });
+    return tr;
+  }));
+});
+
+// Pasta selecionada
+const curRow = () => (TX.rowsOf('pastas') || []).find((r) => r.pasta === TX.pasta());
+dash.draw('pnome', (el) => { const r = curRow(); el.dataset.where = 'pasta=' + TX.enc(TX.pasta()); el.textContent = r ? r.sigla + ' — ' + r.nome : '—'; });
+dash.draw('pf', (el) => { const r = curRow(); el.dataset.where = 'pasta=' + TX.enc(TX.pasta()); el.textContent = r ? (r[el.dataset.field] || 'Não informado') : '—'; });
+dash.draw('k', (el) => { const r = curRow(); el.dataset.where = 'pasta=' + TX.enc(TX.pasta()); el.textContent = r ? TX.fmt(r[el.dataset.field], el.dataset.fmt) : '—'; });
+dash.draw('plinks', (el) => {
+  const r = curRow(); if (!r) { el.replaceChildren(); return; }
+  const a1 = document.createElement('a'); a1.href = r.pasta_url; a1.target = '_blank'; a1.rel = 'noopener'; a1.textContent = 'Abrir a pasta no Google Drive';
+  const a2 = document.createElement('a'); a2.href = r.arquivo_url; a2.target = '_blank'; a2.rel = 'noopener'; a2.textContent = 'Abrir a planilha';
+  el.replaceChildren(a1, a2);
+});
+dash.draw('ctrl', (el) => {
+  const rows = TX.rowsOf('controle'); const p = TX.pasta();
+  if (!rows) { TX.placeholder(el, '—'); return; }
+  const cls = { 'Atendido': 's-ok', 'Atendido parcialmente': 's-warn', 'Em andamento': 's-warn', 'Pendente': 's-bad', 'Não aplicável': 's-na', 'Outro': 's-warn' };
+  let t;
+  el.replaceChildren(...rows.filter((r) => r.pasta === p).map((r) => {
+    const d = document.createElement('div');
+    d.className = 'tx-inc ' + (r.aplicabilidade === 'Não informado' && r.situacao === 'Sem situação' ? 's-none' : r.aplicabilidade === 'Não' && r.situacao === 'Sem situação' ? 's-na' : (cls[r.situacao] || 's-none'));
+    d.tabIndex = 0;
+    const a = document.createElement('span'); a.className = 'r'; a.textContent = 'Inciso ' + r.inciso;
+    const b = document.createElement('span'); b.className = 'd'; b.textContent = r.item;
+    const c = document.createElement('span'); c.className = 'st'; c.dataset.source = 'controle'; c.dataset.field = 'situacao'; c.dataset.where = 'id=' + TX.enc(r.id);
+    c.textContent = r.situacao === 'Sem situação' ? (r.aplicabilidade === 'Não' ? 'Não se aplica' : r.aplicabilidade === 'Não informado' ? 'Não informado' : 'Aplicável, sem situação') : r.situacao;
+    d.append(a, b, c);
+    const tp = () => [['Inciso ' + r.inciso + ':', r.item], ['Aplicável:', r.aplicabilidade], ['Situação informada:', r.situacao_informada || '—'], ['Fonte:', r.fonte || '—'], ['SEI:', r.sei || '—'], ['Pendência:', r.pendencia || '—']];
+    d.addEventListener('mousemove', (ev) => t.show(ev, tp())); d.addEventListener('mouseleave', () => t.hide());
+    d.addEventListener('focus', () => { const r2 = d.getBoundingClientRect(); t.show({ clientX: r2.left, clientY: r2.bottom }, tp()); }); d.addEventListener('blur', () => t.hide());
+    return d;
+  }));
+  t = TX.tip(el);
+});
+const forP = (id) => (TX.rowsOf(id) || []).filter((r) => r.pasta === TX.pasta());
+dash.draw('csit', (el) => TX.hbar(el, forP('c_contr_sit').sort((a, b) => b.valor - a.valor), { source: 'c_contr_sit', label: 'situacao', value: 'valor', fmt: TX.brl, aria: 'Valor contratado por situação', color: (d) => ({ ok: 'var(--color-ok)', warn: 'var(--color-warn)', bad: 'var(--color-bad)' }[TX.sitClass(d.situacao)] || null), tip: (d) => [[d.situacao, ''], ['Valor:', TX.brlFull(d.valor)], ['Contratos:', TX.n(d.contratos)]] }));
+dash.draw('cvenc', (el) => TX.hbar(el, forP('c_contr_venc').sort((a, b) => a.ordem - b.ordem), { source: 'c_contr_venc', label: 'faixa', value: 'contratos', fmt: (v) => TX.n(v) + ' contr.', aria: 'Contratos não encerrados por faixa de fim de vigência', color: (d) => d.ordem === 0 ? 'var(--color-bad)' : d.ordem === 1 ? 'var(--color-warn)' : d.ordem === 4 ? 'var(--cds-chart-muted)' : null, tip: (d) => [[d.faixa, ''], ['Contratos:', TX.n(d.contratos)], ['Valor:', TX.brlFull(d.valor)]] }));
+dash.draw('cforn', (el) => TX.hbar(el, forP('c_contr_forn'), { source: 'c_contr_forn', label: 'contratado', value: 'valor', fmt: TX.brl, aria: 'Maiores contratados por valor', tip: (d) => [[d.contratado, ''], ['Valor:', TX.brlFull(d.valor)], ['Contratos:', TX.n(d.contratos)]] }));
+dash.draw('tcontr', (el) => TX.tbody(el, 'contratos', [['numero'], ['objeto', 'w'], ['contratado'], ['fim'], ['valor_contratado', 'brl'], ['valor_pago', 'brl'], ['saldo', 'brl'], ['situacao', 'pill']], (rows) => { const r = rows.filter((x) => x.pasta === TX.pasta()).sort((a, b) => (b.valor_contratado || 0) - (a.valor_contratado || 0)); return window.__txAll ? r : r.slice(0, 25); }));
+dash.draw('ncontr', (el) => { const n = forP('contratos').length; el.textContent = n ? (window.__txAll || n <= 25 ? `Mostrando ${n} contratos, do maior para o menor valor.` : `Mostrando os 25 maiores de ${n} contratos.`) : '—'; });
+dash.draw('map', (el) => {
+  const g = dash.data('malha'), c = dash.data('c_geo');
+  if (g.status !== 'ok' || c.status !== 'ok' || !g.data || !g.data.features) { TX.placeholder(el, g.status === 'error' ? 'Não carregou' : '—'); return; }
+  const pts = (c.data || []).filter((r) => r.pasta === TX.pasta());
+  TX.map(el, g.data, pts, { bens: true, aria: 'Mapa do Rio Grande do Norte com obras e bens da pasta', tip: TX.geoTip });
+  if (!pts.length) { const p = document.createElement('p'); p.className = 'tx-muted'; p.textContent = 'Nenhuma obra ou bem desta pasta cita um município do RN.'; el.appendChild(p); }
+});
+dash.draw('osit', (el) => TX.hbar(el, forP('c_obras_sit').sort((a, b) => b.obras - a.obras), { source: 'c_obras_sit', label: 'situacao', value: 'obras', fmt: (v) => TX.n(v) + ' obras', aria: 'Obras por situação', color: (d) => ({ ok: 'var(--color-ok)', warn: 'var(--color-warn)', bad: 'var(--color-bad)' }[TX.sitClass(d.situacao)] || null), tip: (d) => [[d.situacao, ''], ['Obras:', TX.n(d.obras)], ['Valor:', TX.brlFull(d.valor)]] }));
+dash.draw('tobras', (el) => TX.tbody(el, 'obras', [['objeto', 'w'], ['municipio_informado'], ['situacao', 'pill'], ['execucao_pct', 'pct'], ['valor_total', 'brl'], ['saldo', 'brl'], ['motivo_paralisacao', 'w'], ['providencia', 'w']], (rows) => rows.filter((x) => x.pasta === TX.pasta()).sort((a, b) => (b.valor_total || 0) - (a.valor_total || 0))));
+dash.draw('fin', (el) => TX.hbar(el, forP('c_fin_tipo').sort((a, b) => Math.abs(b.valor) - Math.abs(a.valor)), { source: 'c_fin_tipo', label: 'tipo', value: 'valor', fmt: TX.brl, aria: 'Valores financeiros por tipo', tip: (d) => [[d.tipo, ''], ['Valor:', TX.brlFull(d.valor)], ['Registros:', TX.n(d.registros)]] }));
+dash.draw('pes', (el) => TX.hbar(el, forP('c_pes_cat').sort((a, b) => b.quantidade - a.quantidade), { source: 'c_pes_cat', label: 'categoria', value: 'quantidade', fmt: TX.n, aria: 'Pessoal por categoria', tip: (d) => [[d.categoria, ''], ['Quantidade:', TX.n(d.quantidade)]] }));
+dash.draw('pat', (el) => TX.hbar(el, forP('c_pat_tipo').sort((a, b) => b.valor - a.valor), { source: 'c_pat_tipo', label: 'tipo', value: 'valor', fmt: TX.brl, aria: 'Valor contábil por tipo de bem', tip: (d) => [[d.tipo, ''], ['Valor:', TX.brlFull(d.valor)], ['Itens:', TX.n(d.itens)]] }));
+dash.draw('tpat', (el) => TX.tbody(el, 'patrimonio', [['descricao', 'w'], ['localizacao'], ['valor', 'brl'], ['conservacao']], (rows) => rows.filter((x) => x.pasta === TX.pasta()).sort((a, b) => (b.valor || 0) - (a.valor || 0)).slice(0, 30)));
+dash.draw('tconv', (el) => TX.tbody(el, 'convenios', [['numero'], ['tipo'], ['partes', 'w'], ['objeto', 'w'], ['fim'], ['valor_global', 'brl'], ['valor_executado', 'brl'], ['prestacao_contas']], (rows) => rows.filter((x) => x.pasta === TX.pasta()).sort((a, b) => (b.valor_global || 0) - (a.valor_global || 0))));
+dash.draw('tprog', (el) => TX.tbody(el, 'programas', [['programa', 'w'], ['situacao'], ['valor_previsto', 'brl'], ['valor_executado', 'brl'], ['proximo_marco', 'w'], ['risco', 'w']], (rows) => rows.filter((x) => x.pasta === TX.pasta())));
+dash.draw('tpend', (el) => TX.tbody(el, 'pendencias', [['prioridade', 'pill'], ['eixo'], ['descricao', 'w'], ['impacto', 'w'], ['providencia', 'w'], ['prazo']], (rows) => { const o = { 'Alta': 0, 'Média': 1, 'Baixa': 2 }; return rows.filter((x) => x.pasta === TX.pasta()).sort((a, b) => (o[a.prioridade] ?? 3) - (o[b.prioridade] ?? 3)); }));
+dash.draw('tprec', (el) => TX.tbody(el, 'precatorios', [['natureza'], ['numero'], ['valor', 'brl'], ['situacao']], (rows) => rows.filter((x) => x.pasta === TX.pasta()).sort((a, b) => (b.valor || 0) - (a.valor || 0))));
+dash.draw('tsis', (el) => TX.tbody(el, 'sistemas', [['sistema'], ['finalidade', 'w'], ['vigencia'], ['risco', 'w']], (rows) => rows.filter((x) => x.pasta === TX.pasta())));
+dash.draw('ttac', (el) => TX.tbody(el, 'tac_tag', [['tipo'], ['objeto', 'w'], ['situacao'], ['orgao_externo']], (rows) => rows.filter((x) => x.pasta === TX.pasta())));
+dash.draw('tatos', (el) => TX.tbody(el, 'atos', [['tipo'], ['tema'], ['descricao', 'w'], ['sei']], (rows) => rows.filter((x) => x.pasta === TX.pasta())));
+dash.draw('tprev', (el) => TX.tbody(el, 'previdencia', [['regime'], ['tipo'], ['situacao'], ['valor']], (rows) => rows.filter((x) => x.pasta === TX.pasta())));
+dash.draw('tinc', (el) => TX.tbody(el, 'incentivos', [['programa', 'w'], ['tributo'], ['situacao']], (rows) => rows.filter((x) => x.pasta === TX.pasta())));
+</script>
+<script>window.__txStart();</script>
+</body>
+</html>
