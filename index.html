@@ -16,9 +16,9 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 (function(){
-  const SRC=['pastas','controle','contratos','obras','convenios','financas','pessoal','patrimonio','precatorios','programas','sistemas','pendencias','tac_tag','atos','previdencia','incentivos','malha'];
+  const SRC=['pastas','controle','contratos','obras','convenios','financas','pessoal','patrimonio','precatorios','programas','sistemas','pendencias','tac_tag','atos','previdencia','incentivos','malha','eixos'];
   const DS={}, ST={}, calcs={}, draws={}, ons=[];
-  const P={pasta:''};
+  const P={pasta:'',aba:'',feixo:''};
   const run=()=>{ons.forEach(f=>{try{f()}catch(e){console.error(e)}});Object.keys(draws).forEach(n=>document.querySelectorAll('[data-draw="'+n+'"]').forEach(el=>{if(el.closest('[hidden]'))return;try{draws[n](el)}catch(e){console.error(n,e)}}));};
   window.dash={
     colors:['var(--c1)','var(--c2)','var(--c3)','var(--c4)'],
@@ -30,7 +30,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
   };
   window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
   let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,150)});
-  window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));const v=h==='geral'?'':h;if(v!==P.pasta){P.pasta=v;run()}});
+  window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));const m=h.match(/^eixo-([1-6])$/);if(m){if(P.aba!==m[1]||P.pasta){P.aba=m[1];P.pasta='';run()}return}const v=h==='geral'?'':h;if(h==='geral'&&(P.aba||P.pasta)){P.aba='';P.pasta='';run();return}if(v!==P.pasta){P.pasta=v;run()}});
 })();
 </script>
 </head>
@@ -133,6 +133,26 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 .tx tbody tr:hover td{background:var(--tx-tint)}
 .tx-btn:hover{border-color:var(--tx-line);color:var(--tx-acc)}
 #pick:focus-visible{outline:2px solid var(--tx-a1);outline-offset:1px}
+.tx-tabs{display:flex;gap:6px;overflow-x:auto;padding:4px;border:1px solid var(--color-border-line);border-radius:12px;background:var(--color-panel);scrollbar-width:thin}
+.tx-tab{all:unset;cursor:pointer;flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:9px;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);white-space:nowrap;border:1px solid transparent}
+.tx-tab b{font-family:var(--tx-mono);font-weight:500;font-size:11px;letter-spacing:.04em;color:var(--tx-acc)}
+.tx-tab .c{font-family:var(--tx-mono);font-size:10.5px;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--tx-a1) 12%,transparent);color:var(--color-fg)}
+.tx-tab:hover{color:var(--color-fg);background:var(--tx-tint)}
+.tx-tab:focus-visible{outline:2px solid var(--tx-a1)}
+.tx-tab.on{color:var(--color-fg);background:linear-gradient(135deg,color-mix(in srgb,var(--tx-a1) 16%,var(--color-panel)),color-mix(in srgb,var(--tx-a2) 12%,var(--color-panel)));border-color:var(--tx-line)}
+.tx-filter{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.tx-fchip{all:unset;cursor:pointer;font-size:var(--cds-font-size-caption);padding:5px 12px;border-radius:999px;border:1px solid var(--color-border-line);background:var(--color-panel)}
+.tx-fchip b{font-family:var(--tx-mono);font-weight:500;color:var(--tx-acc);margin-right:4px}
+.tx-fchip:hover{border-color:var(--tx-line)}
+.tx-fchip:focus-visible{outline:2px solid var(--tx-a1)}
+.tx-fchip.on{background:linear-gradient(135deg,var(--tx-a1),var(--tx-a2));border-color:transparent;color:#fff}
+.tx-fchip.on b{color:#fff}
+.tx-eixohead{position:relative;overflow:hidden;padding:20px 22px;border-radius:var(--tx-r);border:1px solid var(--tx-line);background:linear-gradient(120deg,color-mix(in srgb,var(--tx-a1) 10%,var(--color-panel)),var(--color-panel) 55%,color-mix(in srgb,var(--tx-a2) 9%,var(--color-panel)))}
+.tx-eixohead .num{position:absolute;right:18px;top:-6px;font-family:var(--tx-mono);font-size:84px;font-weight:600;line-height:1;color:color-mix(in srgb,var(--tx-a2) 14%,transparent);pointer-events:none}
+.tx-ugs{display:flex;flex-wrap:wrap;gap:6px}
+.tx-ugs span{font-family:var(--tx-mono);font-size:11px;padding:3px 9px;border-radius:999px;border:1px dashed var(--color-border-line);color:var(--color-fg-muted)}
+.tx-ech{all:unset;cursor:pointer;display:inline-block;font-family:var(--tx-mono);font-size:11px;padding:2px 9px;margin:0 4px 4px 0;border-radius:999px;border:1px solid var(--tx-line);color:var(--tx-acc)}
+.tx-ech:focus-visible{outline:2px solid var(--tx-a1)}
 .tx-legend i.acc{background:linear-gradient(135deg,var(--tx-a1),var(--tx-a2))}
 
 .tx [hidden],.tx[hidden]{display:none!important}
@@ -152,10 +172,21 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     </div>
   </header>
 
+  <nav class="tx-tabs" id="abas" aria-label="Abas por eixo">
+    <button class="tx-tab" type="button" data-aba="">Visão geral</button>
+    <button class="tx-tab" type="button" data-aba="1" title="Eixo 1 – Gestão Fiscal, Orçamento e Finanças Públicas"><b>E1</b>Gestão fiscal<span class="c" data-draw="ecount" data-eixo="1" data-source="c_eixo_tot" data-field="pastas">—</span></button>
+    <button class="tx-tab" type="button" data-aba="2" title="Eixo 2 – Gestão Administrativa e Organização do Estado"><b>E2</b>Gestão administrativa<span class="c" data-draw="ecount" data-eixo="2" data-source="c_eixo_tot" data-field="pastas">—</span></button>
+    <button class="tx-tab" type="button" data-aba="3" title="Eixo 3 – Políticas Públicas e Serviços Essenciais"><b>E3</b>Políticas públicas<span class="c" data-draw="ecount" data-eixo="3" data-source="c_eixo_tot" data-field="pastas">—</span></button>
+    <button class="tx-tab" type="button" data-aba="4" title="Eixo 4 – Infraestrutura, Investimentos e Desenvolvimento"><b>E4</b>Infraestrutura<span class="c" data-draw="ecount" data-eixo="4" data-source="c_eixo_tot" data-field="pastas">—</span></button>
+    <button class="tx-tab" type="button" data-aba="5" title="Eixo 5 – Assuntos Jurídicos e Compromissos Institucionais"><b>E5</b>Assuntos jurídicos<span class="c" data-draw="ecount" data-eixo="5" data-source="c_eixo_tot" data-field="pastas">—</span></button>
+    <button class="tx-tab" type="button" data-aba="6" title="Eixo 6 – Planejamento Governamental e Gestão de Resultados"><b>E6</b>Planejamento<span class="c" data-draw="ecount" data-eixo="6" data-source="c_eixo_tot" data-field="pastas">—</span></button>
+  </nav>
+
   <p class="tx-lede" id="resumo" data-draw="lede">—</p>
 
   <!-- VISÃO GERAL -->
   <div id="geral" class="tx-sec">
+    <div class="tx-filter" id="filtro-eixo"><span class="tx-eyebrow">Filtrar por eixo</span><button class="tx-fchip" type="button" data-feixo="">Todos</button><button class="tx-fchip" type="button" data-feixo="1" title="Eixo 1 – Gestão Fiscal, Orçamento e Finanças Públicas"><b>E1</b>Gestão fiscal</button><button class="tx-fchip" type="button" data-feixo="2" title="Eixo 2 – Gestão Administrativa e Organização do Estado"><b>E2</b>Gestão administrativa</button><button class="tx-fchip" type="button" data-feixo="3" title="Eixo 3 – Políticas Públicas e Serviços Essenciais"><b>E3</b>Políticas públicas</button><button class="tx-fchip" type="button" data-feixo="4" title="Eixo 4 – Infraestrutura, Investimentos e Desenvolvimento"><b>E4</b>Infraestrutura</button><button class="tx-fchip" type="button" data-feixo="5" title="Eixo 5 – Assuntos Jurídicos e Compromissos Institucionais"><b>E5</b>Assuntos jurídicos</button><button class="tx-fchip" type="button" data-feixo="6" title="Eixo 6 – Planejamento Governamental e Gestão de Resultados"><b>E6</b>Planejamento</button></div>
     <div class="tx-kpis" id="kpis-geral">
       <div class="tx-card tx-kpi"><span class="tx-muted">Valor contratado declarado</span><span class="v" data-draw="g" data-source="c_geral" data-field="contratos_valor" data-row="0" data-fmt="brl">—</span><span class="s"><span data-draw="g" data-source="c_geral" data-field="contratos" data-row="0" data-fmt="n">—</span> contratos</span></div>
       <div class="tx-card tx-kpi"><span class="tx-muted">Obras informadas</span><span class="v" data-draw="g" data-source="c_geral" data-field="obras" data-row="0" data-fmt="n">—</span><span class="s"><span data-draw="g" data-source="c_geral" data-field="obras_paralisadas" data-row="0" data-fmt="n">—</span> paralisadas ou inacabadas</span></div>
@@ -179,7 +210,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
       <section class="tx-card" id="mapa-geral">
         <span class="tx-eyebrow">Geo · municípios do RN</span><h2>Onde estão as obras</h2>
         <p class="tx-muted">Obras de todas as pastas por município informado. O tamanho do círculo é o valor total.</p>
-        <div class="tx-chart tx-map" data-draw="mapall" data-source="c_geo_obras malha" style="min-height:380px"></div>
+        <div class="tx-chart tx-map" data-draw="mapall" data-source="c_geo_obras c_geo_obras_eixo malha" style="min-height:380px"></div>
         <div class="tx-legend"><span><i style="background:var(--color-warn)"></i>Obras</span><span><i style="background:var(--color-bad)"></i>Com obra paralisada ou inacabada</span><span><i style="border-radius:3px;background:color-mix(in srgb,var(--tx-a1) 30%,var(--color-panel))"></i>Município com obra</span></div>
       </section>
     </div>
@@ -196,11 +227,53 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     </section>
   </div>
 
+
+  <!-- EIXO -->
+  <div id="eixo" class="tx-sec" hidden>
+    <div class="tx-eixohead" data-eixohead="1" hidden><span class="num">01</span><span class="tx-eyebrow">Eixo 1</span><h2>Gestão Fiscal, Orçamento e Finanças Públicas</h2></div>
+    <div class="tx-eixohead" data-eixohead="2" hidden><span class="num">02</span><span class="tx-eyebrow">Eixo 2</span><h2>Gestão Administrativa e Organização do Estado</h2></div>
+    <div class="tx-eixohead" data-eixohead="3" hidden><span class="num">03</span><span class="tx-eyebrow">Eixo 3</span><h2>Políticas Públicas e Serviços Essenciais</h2></div>
+    <div class="tx-eixohead" data-eixohead="4" hidden><span class="num">04</span><span class="tx-eyebrow">Eixo 4</span><h2>Infraestrutura, Investimentos e Desenvolvimento</h2></div>
+    <div class="tx-eixohead" data-eixohead="5" hidden><span class="num">05</span><span class="tx-eyebrow">Eixo 5</span><h2>Assuntos Jurídicos e Compromissos Institucionais</h2></div>
+    <div class="tx-eixohead" data-eixohead="6" hidden><span class="num">06</span><span class="tx-eyebrow">Eixo 6</span><h2>Planejamento Governamental e Gestão de Resultados</h2></div>
+    <div class="tx-kpis" id="kpis-eixo"><div class="tx-card tx-kpi"><span class="tx-muted">Valor contratado</span><span class="v" data-draw="ek" data-source="c_eixo_tot" data-field="contratos_valor" data-fmt="brl">—</span><span class="s"><span data-draw="ek" data-source="c_eixo_tot" data-field="contratos" data-fmt="n">—</span> contratos</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Saldo a pagar (contratos)</span><span class="v" data-draw="ek" data-source="c_eixo_tot" data-field="contratos_saldo" data-fmt="brl">—</span><span class="s">informado pelas pastas</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Obras</span><span class="v" data-draw="ek" data-source="c_eixo_tot" data-field="obras" data-fmt="n">—</span><span class="s"><span data-draw="ek" data-source="c_eixo_tot" data-field="obras_paralisadas" data-fmt="n">—</span> paralisadas ou inacabadas</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Patrimônio e estoque</span><span class="v" data-draw="ek" data-source="c_eixo_tot" data-field="patrimonio_valor" data-fmt="brl">—</span><span class="s"><span data-draw="ek" data-source="c_eixo_tot" data-field="patrimonio" data-fmt="n">—</span> itens</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Pessoal informado</span><span class="v" data-draw="ek" data-source="c_eixo_tot" data-field="pessoal" data-fmt="n">—</span><span class="s">servidores e colaboradores</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Precatórios</span><span class="v" data-draw="ek" data-source="c_eixo_tot" data-field="precatorios_valor" data-fmt="brl">—</span><span class="s"><span data-draw="ek" data-source="c_eixo_tot" data-field="precatorios" data-fmt="n">—</span> registros</span></div></div>
+
+    <section class="tx-card tx-sec" id="eixo-pastas">
+      <span class="tx-eyebrow">Comparativo</span><h2>Pastas do eixo</h2>
+      <p class="tx-muted">Clique na sigla para abrir a pasta. A coluna de incisos conta os 26 incisos do art. 4º com aplicabilidade informada.</p>
+      <div class="tx-scroll">
+        <table data-source="pastas" data-row-key="pasta">
+          <thead><tr><th data-field="sigla">Pasta</th><th data-field="contratos_valor" class="n">Contratado</th><th data-field="contratos_saldo" class="n">Saldo a pagar</th><th data-field="obras" class="n">Obras</th><th data-field="obras_paralisadas" class="n">Paralisadas</th><th data-field="patrimonio_valor" class="n">Patrimônio</th><th data-field="pessoal" class="n">Pessoal</th><th data-field="incisos_informados" class="n">Incisos</th><th data-field="abas_preenchidas" class="n">Abas</th></tr></thead>
+          <tbody data-draw="etable"></tbody>
+        </table>
+      </div>
+      <div class="tx-sec" style="gap:6px"><span class="tx-muted">Unidades deste eixo sem formulário no painel:</span><div class="tx-ugs" data-draw="esem" data-source="eixos"></div></div>
+    </section>
+
+    <div class="tx-grid2">
+      <section class="tx-card" id="eixo-ranking">
+        <span class="tx-eyebrow">Ranking</span><h2>Valor contratado por pasta</h2>
+        <div class="tx-chart" data-draw="erank" data-source="pastas" style="min-height:160px"></div>
+      </section>
+      <section class="tx-card" id="eixo-mapa">
+        <span class="tx-eyebrow">Geo · municípios do RN</span><h2>Obras do eixo</h2>
+        <div class="tx-chart tx-map" data-draw="emap" data-source="c_geo_obras_eixo malha" style="min-height:300px"></div>
+        <div class="tx-legend"><span><i style="background:var(--color-warn)"></i>Obras</span><span><i style="background:var(--color-bad)"></i>Com obra paralisada ou inacabada</span></div>
+      </section>
+    </div>
+
+    <section class="tx-sec" id="eixo-cards">
+      <span class="tx-eyebrow">Pastas</span><h2>Cartões das pastas do eixo</h2>
+      <div class="tx-cards" data-draw="ecards" data-source="pastas"></div>
+    </section>
+  </div>
+
   <!-- PASTA -->
   <div id="pasta" class="tx-sec" hidden>
     <section class="tx-card tx-sec" id="identificacao">
-      <div class="tx-row"><h2 data-draw="pnome" data-source="pastas" data-field="nome">—</h2><button class="tx-btn" type="button" id="voltar">Voltar à visão geral</button></div>
+      <div class="tx-row"><h2 data-draw="pnome" data-source="pastas" data-field="nome">—</h2><button class="tx-btn" type="button" id="voltar">Voltar</button></div>
       <dl class="tx-ident">
+        <div><dt>Eixo</dt><dd data-draw="peixo" data-source="eixos">—</dd></div>
         <div><dt>Órgão informante</dt><dd data-draw="pf" data-source="pastas" data-field="orgao_informado">—</dd></div>
         <div><dt>Data-base</dt><dd data-draw="pf" data-source="pastas" data-field="data_base">—</dd></div>
         <div><dt>Responsável pelo preenchimento</dt><dd data-draw="pf" data-source="pastas" data-field="responsavel">—</dd></div>
@@ -355,6 +428,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
       <li>Situações escritas livremente foram agrupadas (por exemplo "ATENDIDO", "Disponibilizado" e "Concluída" contam como Atendido). O texto original continua na fonte.</li>
       <li>Obras e bens são localizados pela sede do município informado. Textos que não citam um município do RN ficam fora do mapa.</li>
       <li>Valores em branco contam como não informados, não como zero. "Saldo a pagar" usa o saldo informado ou, sem ele, contratado menos pago.</li>
+      <li>Os eixos vêm da planilha "UGs por eixo" do acompanhamento dos processos SEI. Unidades listadas em dois eixos (CONTROL, JUCERN e SEPLAN) aparecem nas duas abas, e nos totais de cada eixo; o total geral conta cada pasta uma vez.</li>
       <li>Os dados são uma cópia de 10/11/2026. Alterações feitas depois nas planilhas só aparecem quando os arquivos forem lidos de novo.</li>
     </ul>
   </details>
@@ -375,6 +449,9 @@ window.TX = (function () {
   const n = (v) => v == null || isNaN(v) ? '—' : Number(v).toLocaleString(L, { maximumFractionDigits: 1 });
   const fmt = (v, f) => f === 'brl' ? brl(v) : f === 'n' ? n(v) : (v == null || v === '' ? '—' : String(v));
   const pasta = () => dash.params().pasta || '';
+  const aba = () => String(dash.params().aba || '');
+  const feixo = () => String(dash.params().feixo || '');
+  const eixoSet = (n) => { const r = (dash.data('eixos').status === 'ok' ? dash.data('eixos').data : []) || []; return new Set(r.filter((e) => String(e.eixo_num) === String(n) && e.pasta).map((e) => e.pasta)); };
   const enc = (s) => encodeURIComponent(String(s));
   const rowsOf = (id) => { const d = dash.data(id); return d.status === 'ok' && Array.isArray(d.data) ? d.data : null; };
   const statusOf = (id) => dash.data(id).status;
@@ -488,7 +565,7 @@ window.TX = (function () {
       return tr;
     }));
   }
-  return { brl, brlFull, n, fmt, pasta, enc, rowsOf, statusOf, sitClass, tip, hbar, map, geoTip, tbody, placeholder };
+  return { brl, brlFull, n, fmt, pasta, aba, feixo, eixoSet, enc, rowsOf, statusOf, sitClass, tip, hbar, map, geoTip, tbody, placeholder };
 })();
 </script>
 <script>
@@ -499,6 +576,40 @@ dash.calc('c_geral', {
   fn: (pastas) => {
     const s = (f) => pastas.reduce((a, r) => a + (Number(r[f]) || 0), 0);
     return [{ pastas: pastas.length, contratos: s('contratos'), contratos_valor: s('contratos_valor'), obras: s('obras'), obras_paralisadas: s('obras_paralisadas'), patrimonio: s('patrimonio'), patrimonio_valor: s('patrimonio_valor'), pessoal: s('pessoal'), precatorios: s('precatorios'), precatorios_valor: s('precatorios_valor') }];
+  }
+});
+dash.calc('c_eixo_tot', {
+  title: 'Totais por eixo', description: 'Somas da tabela de pastas para as pastas de cada eixo. Uma pasta em dois eixos conta nos dois.',
+  inputs: ['pastas', 'eixos'],
+  fn: (pastas, eixos) => {
+    const campos = ['contratos', 'contratos_valor', 'contratos_saldo', 'obras', 'obras_paralisadas', 'patrimonio', 'patrimonio_valor', 'pessoal', 'precatorios', 'precatorios_valor'];
+    const out = [];
+    for (let n = 1; n <= 6; n++) {
+      const membros = eixos.filter((e) => Number(e.eixo_num) === n);
+      const set = new Set(membros.filter((e) => e.pasta).map((e) => e.pasta));
+      const rs = pastas.filter((p) => set.has(p.pasta));
+      const r = { eixo_num: n, eixo: membros[0] ? membros[0].eixo : 'Eixo ' + n, unidades: membros.length, pastas: rs.length, sem_formulario: membros.length - rs.length };
+      for (const c of campos) r[c] = rs.reduce((a, x) => a + (Number(x[c]) || 0), 0);
+      out.push(r);
+    }
+    return out;
+  }
+});
+dash.calc('c_geo_obras_eixo', {
+  title: 'Obras por eixo e município', description: 'Obras das pastas de cada eixo agrupadas pelo município da sede.',
+  inputs: ['obras', 'eixos'],
+  fn: (obras, eixos) => {
+    const m = new Map();
+    for (const e of eixos) {
+      if (!e.pasta) continue;
+      for (const o of obras) {
+        if (o.pasta !== e.pasta || o.lat == null) continue;
+        const k = e.eixo_num + '|' + o.municipio;
+        const r = m.get(k) || { eixo_num: Number(e.eixo_num), municipio: o.municipio, lat: o.lat, lon: o.lon, obras: 0, obras_valor: 0, paralisadas: 0, pastas: new Set() };
+        r.obras++; r.obras_valor += Number(o.valor_total) || 0; if (o.situacao === 'Paralisada' || o.situacao === 'Inacabada') r.paralisadas++; r.pastas.add(o.pasta); m.set(k, r);
+      }
+    }
+    return [...m.values()].map((r) => ({ ...r, pastas: [...r.pastas].join(', ') }));
   }
 });
 dash.calc('c_contr_sit', {
@@ -594,14 +705,20 @@ dash.calc('c_geo_obras', {
 <script>
 (function () {
   const h = decodeURIComponent((location.hash || '').slice(1));
-  if (h && h !== 'geral') dash.setParams({ pasta: h });
+  const m = h.match(/^eixo-([1-6])$/);
+  if (m) dash.setParams({ aba: m[1], pasta: '' });
+  else if (h && h !== 'geral') dash.setParams({ pasta: h });
 })();
 
 // Mostra a visão geral ou a pasta, e esconde as seções sem dados.
 dash.onData(() => {
-  const p = TX.pasta();
-  document.querySelectorAll('#geral').forEach((e) => { e.hidden = !!p; });
+  const p = TX.pasta(), a = TX.aba(), f = TX.feixo();
+  document.querySelectorAll('#geral').forEach((e) => { e.hidden = !!p || !!a; });
+  document.querySelectorAll('#eixo').forEach((e) => { e.hidden = !!p || !a; });
   document.querySelectorAll('#pasta').forEach((e) => { e.hidden = !p; });
+  document.querySelectorAll('[data-eixohead]').forEach((e) => { e.hidden = e.dataset.eixohead !== a; });
+  document.querySelectorAll('.tx-tab').forEach((e) => { const on = !p && e.dataset.aba === a; e.classList.toggle('on', on); e.setAttribute('aria-current', on ? 'page' : 'false'); });
+  document.querySelectorAll('.tx-fchip').forEach((e) => { const on = e.dataset.feixo === f; e.classList.toggle('on', on); e.setAttribute('aria-pressed', on ? 'true' : 'false'); });
   const rows = TX.rowsOf('pastas');
   const r = rows && rows.find((x) => x.pasta === p);
   const counts = r ? { controle: 26, contratos: r.contratos, obras: r.obras, financas: r.financas, pessoal: r.pessoal || 0, patrimonio: r.patrimonio, convenios: r.convenios, programas: r.programas, pendencias: r.pendencias, precatorios: r.precatorios, sistemas: r.sistemas, tac: r.tac, atos: r.atos, previdencia: r.previdencia, incentivos: r.incentivos } : null;
@@ -609,11 +726,14 @@ dash.onData(() => {
   if (r && r.pessoal === 0) document.querySelectorAll('#pessoal').forEach((e) => { e.hidden = true; });
 });
 
-document.querySelectorAll('#voltar').forEach((b) => b.addEventListener('click', () => { dash.setParams({ pasta: '' }); dash.setLink('geral'); window.scrollTo({ top: 0 }); }));
+document.querySelectorAll('#voltar').forEach((b) => b.addEventListener('click', () => { const a = TX.aba(); dash.setParams({ pasta: '' }); dash.setLink(a ? 'eixo-' + a : 'geral'); window.scrollTo({ top: 0 }); }));
+document.querySelectorAll('.tx-tab').forEach((b) => b.addEventListener('click', () => TX.goAba(b.dataset.aba)));
+document.querySelectorAll('.tx-fchip').forEach((b) => b.addEventListener('click', () => dash.setParams({ feixo: b.dataset.feixo })));
 window.__txAll = false;
 const txToggle = (all) => { window.__txAll = all; document.querySelectorAll('#mais-contratos').forEach((e) => { e.hidden = all; }); document.querySelectorAll('#menos-contratos').forEach((e) => { e.hidden = !all; }); dash.draw('tcontr'); dash.draw('ncontr'); };
 document.querySelectorAll('#mais-contratos').forEach((b) => b.addEventListener('click', () => txToggle(true)));
 document.querySelectorAll('#menos-contratos').forEach((b) => b.addEventListener('click', () => txToggle(false)));
+window.TX.goAba = (a) => { dash.setParams({ aba: a, pasta: '' }); dash.setLink(a ? 'eixo-' + a : 'geral'); };
 window.TX.go = (p) => { dash.setParams({ pasta: p }); dash.setLink(p); document.querySelectorAll('#topo').forEach((e) => e.scrollIntoView({ block: 'start' })); };
 
 dash.draw('pick', (sel) => {
@@ -626,6 +746,19 @@ dash.draw('pick', (sel) => {
 dash.draw('lede', (el) => {
   const p = TX.pasta();
   const mk = (src, field, fmt, where) => { const b = document.createElement('b'); b.dataset.source = src; b.dataset.field = field; if (where) b.dataset.where = where; else b.dataset.row = '0'; b.textContent = TX.fmt(where ? (TX.rowsOf(src) || []).find((r) => r.pasta === p)?.[field] : (dash.data(src).data || [])[0]?.[field], fmt); return b; };
+  const eixoLede = (n) => {
+    const rs = TX.rowsOf('c_eixo_tot'); const r = rs && rs.find((x) => String(x.eixo_num) === n);
+    if (!r) { el.textContent = '—'; return true; }
+    const w = 'eixo_num=' + n; const m2 = (f, fmt) => { const b = document.createElement('b'); b.dataset.source = 'c_eixo_tot'; b.dataset.field = f; b.dataset.where = w; b.textContent = TX.fmt(r[f], fmt); return b; };
+    const parts = ['O Eixo ' + n + ' reúne ', m2('unidades', 'n'), r.unidades === 1 ? ' unidade' : ' unidades'];
+    if (!r.pastas) parts.push(', e nenhuma enviou o formulário ainda.');
+    else if (r.pastas === r.unidades) parts.push(', e todas enviaram o formulário.');
+    else parts.push(', das quais ', m2('pastas', 'n'), r.pastas === 1 ? ' enviou o formulário.' : ' enviaram o formulário.');
+    if (r.pastas) parts.push(' Juntas, declaram ', m2('contratos', 'n'), ' contratos que somam ', m2('contratos_valor', 'brl'), ' e ', m2('obras', 'n'), ' obras.');
+    el.replaceChildren(...parts); return true;
+  };
+  if (!p && TX.aba()) { eixoLede(TX.aba()); return; }
+  if (!p && TX.feixo()) { eixoLede(TX.feixo()); return; }
   if (!p) {
     const g = dash.data('c_geral');
     if (g.status !== 'ok' || !g.data || !g.data.length) { el.textContent = '—'; return; }
@@ -645,12 +778,33 @@ dash.draw('lede', (el) => {
 
 // Visão geral
 dash.draw('g', (el) => {
+  const f = TX.feixo();
+  if (f) {
+    el.dataset.source = 'c_eixo_tot'; el.dataset.where = 'eixo_num=' + f; delete el.dataset.row;
+    const r = (TX.rowsOf('c_eixo_tot') || []).find((x) => String(x.eixo_num) === f);
+    el.textContent = r ? TX.fmt(r[el.dataset.field], el.dataset.fmt) : '—';
+    return;
+  }
+  el.dataset.source = 'c_geral'; el.dataset.row = '0'; delete el.dataset.where;
   const d = dash.data('c_geral');
   el.textContent = d.status === 'ok' && d.data && d.data[0] ? TX.fmt(d.data[0][el.dataset.field], el.dataset.fmt) : '—';
 });
-dash.draw('cards', (el) => {
-  const rows = TX.rowsOf('pastas');
-  if (!rows) { TX.placeholder(el, '—'); return; }
+dash.draw('ecount', (el) => {
+  const n = el.dataset.eixo; el.dataset.where = 'eixo_num=' + n;
+  const r = (TX.rowsOf('c_eixo_tot') || []).find((x) => String(x.eixo_num) === n);
+  el.textContent = r ? TX.n(r.pastas) : '—';
+});
+dash.draw('ek', (el) => {
+  const n = TX.aba(); el.dataset.where = 'eixo_num=' + n;
+  const r = (TX.rowsOf('c_eixo_tot') || []).find((x) => String(x.eixo_num) === n);
+  el.textContent = r ? TX.fmt(r[el.dataset.field], el.dataset.fmt) : '—';
+});
+const txFiltro = (rows, n) => { if (!n) return rows; const s = TX.eixoSet(n); return rows.filter((r) => s.has(r.pasta)); };
+const txCards = (el, n) => {
+  const rows0 = TX.rowsOf('pastas');
+  if (!rows0 || dash.data('eixos').status !== 'ok') { TX.placeholder(el, '—'); return; }
+  const rows = txFiltro(rows0, n);
+  if (!rows.length) { TX.placeholder(el, 'Nenhuma pasta deste eixo tem formulário no painel.'); return; }
   const sorted = [...rows].sort((a, b) => a.sigla.localeCompare(b.sigla, 'pt-BR'));
   el.replaceChildren(...sorted.map((r) => {
     const w = 'pasta=' + TX.enc(r.pasta);
@@ -666,23 +820,57 @@ dash.draw('cards', (el) => {
     b.addEventListener('click', () => TX.go(r.pasta));
     return b;
   }));
-});
-dash.draw('rank', (el) => {
-  const rows = TX.rowsOf('pastas') || [];
+};
+dash.draw('cards', (el) => txCards(el, TX.feixo()));
+dash.draw('ecards', (el) => txCards(el, TX.aba()));
+const txRank = (el, n) => {
+  const rows = txFiltro(TX.rowsOf('pastas') || [], n);
   TX.hbar(el, [...rows].filter((r) => r.contratos_valor > 0).sort((a, b) => b.contratos_valor - a.contratos_valor), {
     source: 'pastas', label: 'sigla', value: 'contratos_valor', fmt: TX.brl, aria: 'Valor contratado por pasta, em barras horizontais',
     tip: (d) => [[d.sigla, ''], ['Contratado:', TX.brlFull(d.contratos_valor)], ['Contratos:', TX.n(d.contratos)], ['Saldo a pagar:', TX.brl(d.contratos_saldo)]],
     click: (d) => TX.go(d.pasta)
   });
-});
+};
+dash.draw('rank', (el) => txRank(el, TX.feixo()));
+dash.draw('erank', (el) => txRank(el, TX.aba()));
 dash.draw('mapall', (el) => {
-  const g = dash.data('malha'), c = dash.data('c_geo_obras');
+  const f = TX.feixo();
+  const g = dash.data('malha'), c = dash.data(f ? 'c_geo_obras_eixo' : 'c_geo_obras');
   if (g.status !== 'ok' || c.status !== 'ok' || !g.data || !g.data.features) { TX.placeholder(el, g.status === 'error' ? 'Não carregou' : '—'); return; }
-  TX.map(el, g.data, c.data || [], { aria: 'Mapa do Rio Grande do Norte com as obras informadas por município', tip: TX.geoTip });
+  const pts = f ? (c.data || []).filter((r) => String(r.eixo_num) === f) : (c.data || []);
+  TX.map(el, g.data, pts, { aria: 'Mapa do Rio Grande do Norte com as obras informadas por município', tip: TX.geoTip });
+});
+dash.draw('emap', (el) => {
+  const n = TX.aba();
+  const g = dash.data('malha'), c = dash.data('c_geo_obras_eixo');
+  if (g.status !== 'ok' || c.status !== 'ok' || !g.data || !g.data.features) { TX.placeholder(el, g.status === 'error' ? 'Não carregou' : '—'); return; }
+  const pts = (c.data || []).filter((r) => String(r.eixo_num) === n);
+  TX.map(el, g.data, pts, { aria: 'Mapa do Rio Grande do Norte com as obras das pastas do eixo', tip: TX.geoTip });
+  if (!pts.length) { const p = document.createElement('p'); p.className = 'tx-muted'; p.textContent = 'Nenhuma obra informada pelas pastas deste eixo.'; el.appendChild(p); }
+});
+dash.draw('etable', (el) => {
+  const n = TX.aba();
+  if (!TX.rowsOf('pastas') || dash.data('eixos').status !== 'ok') { el.replaceChildren(); return; }
+  const rows = txFiltro(TX.rowsOf('pastas'), n).sort((a, b) => (b.contratos_valor || 0) - (a.contratos_valor || 0));
+  const cols = [['contratos_valor', 'brl'], ['contratos_saldo', 'brl'], ['obras', 'n'], ['obras_paralisadas', 'n'], ['patrimonio_valor', 'brl'], ['pessoal', 'n'], ['incisos_informados', 'n'], ['abas_preenchidas', 'n']];
+  el.replaceChildren(...rows.map((r) => {
+    const tr = document.createElement('tr'); tr.dataset.key = r.pasta;
+    const td0 = document.createElement('td'); const b = document.createElement('button'); b.type = 'button'; b.className = 'tx-ech'; b.textContent = r.sigla; b.addEventListener('click', () => TX.go(r.pasta)); td0.appendChild(b); tr.appendChild(td0);
+    cols.forEach(([f, k]) => { const td = document.createElement('td'); td.className = 'n'; td.textContent = k === 'brl' ? TX.brl(r[f]) : TX.n(r[f]); tr.appendChild(td); });
+    return tr;
+  }));
+});
+dash.draw('esem', (el) => {
+  const d = dash.data('eixos'); const n = TX.aba();
+  if (d.status !== 'ok') { el.replaceChildren(); return; }
+  const rs = (d.data || []).filter((e) => String(e.eixo_num) === n && !e.pasta);
+  if (!rs.length) { const s = document.createElement('span'); s.textContent = 'todas enviaram'; el.replaceChildren(s); return; }
+  el.replaceChildren(...rs.map((e) => { const s = document.createElement('span'); s.dataset.source = 'eixos'; s.dataset.field = 'sigla'; s.dataset.where = 'id=' + TX.enc(e.id); s.title = e.ug; s.textContent = e.sigla; return s; }));
 });
 dash.draw('heat', (el) => {
-  const rows = TX.rowsOf('pastas');
-  if (!rows) { el.replaceChildren(); return; }
+  const rows0 = TX.rowsOf('pastas');
+  if (!rows0 || dash.data('eixos').status !== 'ok') { el.replaceChildren(); return; }
+  const rows = txFiltro(rows0, TX.feixo());
   const fields = ['incisos_informados', 'programas', 'financas', 'contratos', 'convenios', 'obras', 'pessoal', 'patrimonio', 'tac', 'precatorios', 'previdencia', 'sistemas', 'incentivos', 'pendencias', 'atos'];
   const mx = {}; fields.forEach((f) => { mx[f] = d3.max(rows, (r) => r[f] || 0) || 1; });
   el.replaceChildren(...[...rows].sort((a, b) => a.sigla.localeCompare(b.sigla, 'pt-BR')).map((r) => {
@@ -703,6 +891,13 @@ const curRow = () => (TX.rowsOf('pastas') || []).find((r) => r.pasta === TX.past
 dash.draw('pnome', (el) => { const r = curRow(); el.dataset.where = 'pasta=' + TX.enc(TX.pasta()); el.textContent = r ? r.sigla + ' — ' + r.nome : '—'; });
 dash.draw('pf', (el) => { const r = curRow(); el.dataset.where = 'pasta=' + TX.enc(TX.pasta()); el.textContent = r ? (r[el.dataset.field] || 'Não informado') : '—'; });
 dash.draw('k', (el) => { const r = curRow(); el.dataset.where = 'pasta=' + TX.enc(TX.pasta()); el.textContent = r ? TX.fmt(r[el.dataset.field], el.dataset.fmt) : '—'; });
+dash.draw('peixo', (el) => {
+  const d = dash.data('eixos'); const p = TX.pasta();
+  if (d.status !== 'ok') { el.textContent = '—'; return; }
+  const rs = (d.data || []).filter((e) => e.pasta === p);
+  if (!rs.length) { el.textContent = 'Não classificado'; return; }
+  el.replaceChildren(...rs.map((e) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tx-ech'; b.dataset.source = 'eixos'; b.dataset.field = 'eixo'; b.dataset.where = 'id=' + TX.enc(e.id); b.textContent = e.eixo; b.addEventListener('click', () => TX.goAba(String(e.eixo_num))); return b; }));
+});
 dash.draw('plinks', (el) => {
   const r = curRow(); if (!r) { el.replaceChildren(); return; }
   const a1 = document.createElement('a'); a1.href = r.pasta_url; a1.target = '_blank'; a1.rel = 'noopener'; a1.textContent = 'Abrir a pasta no Google Drive';
