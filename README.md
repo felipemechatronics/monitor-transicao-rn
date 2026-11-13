@@ -2,7 +2,7 @@
 
 Painel dos formulários do **Relatório Consolidado Setorial** (art. 4º da IN) preenchidos pelos órgãos do Governo do RN na pasta "DADOS - IN - ART. 4º" do Google Drive.
 
-Na abertura aparece a visão geral das 23 pastas com formulário preenchido, com filtro por eixo. Há também uma aba para cada um dos 6 eixos (links `index.html#eixo-1` a `#eixo-6`), com totais, comparativo das pastas, mapa e as unidades do eixo que ainda não enviaram o formulário. O filtro por município (seletor ou clique no mapa) mostra as obras e os bens localizados no município e combina com o eixo. Escolha uma pasta no seletor (ou clique num cartão) para ver identificação, indicadores, controle dos incisos I a XXVI, contratos, obras com mapa por município, finanças, pessoal, patrimônio e as demais abas. Cada pasta tem link próprio, por exemplo `index.html#SESED`.
+Na abertura aparece a visão geral das 23 pastas com formulário preenchido, com filtro por eixo. Há também uma aba para cada um dos 6 eixos (links `index.html#eixo-1` a `#eixo-6`), com totais, comparativo das pastas, mapa e as unidades do eixo que ainda não enviaram o formulário. A visão geral lista também as unidades que ainda não subiram formulário, com link para a pasta de cada uma no Drive. O filtro por município (seletor ou clique no mapa) mostra as obras e os bens localizados no município e combina com o eixo. Escolha uma pasta no seletor (ou clique num cartão) para ver identificação, indicadores, controle dos incisos I a XXVI, contratos, obras com mapa por município, finanças, pessoal, patrimônio e as demais abas. Cada pasta tem link próprio, por exemplo `index.html#SESED`.
 
 ## Como abrir
 

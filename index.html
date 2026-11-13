@@ -156,6 +156,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 .tx-munbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .tx-munbar select{min-width:240px;max-width:100%;min-height:36px}
 .tx-munpanel{border-color:var(--tx-line)}
+#pendentes a{color:var(--tx-acc)}
 .tx-legend i.acc{background:linear-gradient(135deg,var(--tx-a1),var(--tx-a2))}
 
 .tx [hidden],.tx[hidden]{display:none!important}
@@ -216,6 +217,17 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
       <span class="tx-eyebrow">Visão geral</span><h2>Pastas com formulário preenchido</h2>
       <p class="tx-muted">Clique numa pasta para abrir seus dados. A barra mostra quantos dos 26 incisos do art. 4º tiveram aplicabilidade informada.</p>
       <div class="tx-cards" data-draw="cards" data-source="pastas"></div>
+    </section>
+
+    <section class="tx-card tx-sec" id="pendentes">
+      <span class="tx-eyebrow">Pendências de envio</span><h2>Unidades que ainda não subiram formulário</h2>
+      <p class="tx-muted">Situação na leitura de 11/11/2026. O link abre a pasta da unidade no Google Drive. <span data-draw="npend" data-source="eixos">—</span></p>
+      <div class="tx-scroll tx-tbl">
+        <table data-source="eixos" data-row-key="id">
+          <thead><tr><th data-field="sigla">Unidade</th><th data-field="ug">Nome</th><th data-field="eixo">Eixo</th><th data-field="pasta_drive">Pasta no Drive</th></tr></thead>
+          <tbody data-draw="tpend2"></tbody>
+        </table>
+      </div>
     </section>
 
     <div class="tx-grid2">
@@ -757,7 +769,7 @@ dash.onData(() => {
   document.querySelectorAll('#municipio').forEach((e) => { e.hidden = !!p || !mu; });
   document.querySelectorAll('#filtro-municipio').forEach((e) => { e.hidden = !!p; });
   document.querySelectorAll('#limpar-mun').forEach((e) => { e.hidden = !mu; });
-  document.querySelectorAll('#kpis-geral, #kpis-eixo').forEach((e) => { e.hidden = !!mu; });
+  document.querySelectorAll('#kpis-geral, #kpis-eixo, #pendentes').forEach((e) => { e.hidden = !!mu; });
   document.querySelectorAll('.tx-tab').forEach((e) => { const on = !p && e.dataset.aba === a; e.classList.toggle('on', on); e.setAttribute('aria-current', on ? 'page' : 'false'); });
   document.querySelectorAll('.tx-fchip').forEach((e) => { const on = e.dataset.feixo === f; e.classList.toggle('on', on); e.setAttribute('aria-pressed', on ? 'true' : 'false'); });
   const rows = TX.rowsOf('pastas');
@@ -860,6 +872,27 @@ dash.draw('mobras', (el) => TX.tbody(el, 'obras', [['pasta'], ['objeto', 'w'], [
 dash.draw('mobrasn', (el) => { const n = txMunRows('obras').length; el.textContent = n ? n + (n === 1 ? ' obra.' : ' obras.') : 'Nenhuma obra informada neste município.'; });
 dash.draw('mbens', (el) => TX.tbody(el, 'patrimonio', [['pasta'], ['descricao', 'w'], ['localizacao'], ['valor', 'brl']], () => txMunRows('patrimonio').sort((a, b) => (b.valor || 0) - (a.valor || 0)).slice(0, 40)));
 dash.draw('mbensn', (el) => { const n = txMunRows('patrimonio').length; el.textContent = n ? (n > 40 ? 'Mostrando os 40 maiores de ' + n + ' bens.' : n + (n === 1 ? ' bem.' : ' bens.')) : 'Nenhum bem localizado neste município.'; });
+const txPend = () => {
+  const d = dash.data('eixos'); if (d.status !== 'ok') return null;
+  const f = TX.feixo(); const m = new Map();
+  for (const r of d.data) { if (r.pasta) continue; if (f && String(r.eixo_num) !== f) continue; if (!m.has(r.sigla)) m.set(r.sigla, { ...r, eixos: [] }); if (r.eixo_num) m.get(r.sigla).eixos.push(r.eixo); else m.get(r.sigla).eixos.push(r.eixo); }
+  return [...m.values()].sort((a, b) => a.sigla.localeCompare(b.sigla, 'pt-BR'));
+};
+dash.draw('npend', (el) => { const r = txPend(); el.textContent = r ? (r.length === 1 ? '1 unidade neste filtro.' : r.length + ' unidades neste filtro.') : '—'; });
+dash.draw('tpend2', (el) => {
+  const rows = txPend(); if (!rows) { el.replaceChildren(); return; }
+  el.replaceChildren(...rows.map((r) => {
+    const tr = document.createElement('tr'); tr.dataset.key = r.id;
+    const td = (t, c) => { const x = document.createElement('td'); if (c) x.className = c; x.textContent = t; return x; };
+    const sig = td(r.sigla); sig.style.fontFamily = 'var(--tx-mono)';
+    const ln = document.createElement('td');
+    const urls = (r.pasta_drive || '').split(' | ').filter(Boolean);
+    if (!urls.length) { const sp = document.createElement('span'); sp.className = 'tx-pill bad'; sp.textContent = 'Sem pasta no Drive'; ln.appendChild(sp); }
+    urls.forEach((u, i) => { const a = document.createElement('a'); a.href = u; a.target = '_blank'; a.rel = 'noopener'; a.textContent = urls.length > 1 ? 'Abrir pasta ' + (i + 1) : 'Abrir pasta'; a.style.marginRight = '10px'; ln.appendChild(a); });
+    tr.append(sig, td(r.ug, 'w'), td(r.eixos.join(' / ')), ln);
+    return tr;
+  }));
+});
 dash.draw('ecount', (el) => {
   const n = el.dataset.eixo; el.dataset.where = 'eixo_num=' + n;
   const r = (TX.rowsOf('c_eixo_tot') || []).find((x) => String(x.eixo_num) === n);
