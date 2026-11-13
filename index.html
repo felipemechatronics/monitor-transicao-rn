@@ -168,7 +168,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
       <span class="tx-eyebrow"><i class="tx-dot"></i>Governo do RN · Transição 2026 · Art. 4º da IN</span>
       <h1>Monitor da Transição RN</h1>
       <p class="tx-muted">Formulários do Relatório Consolidado Setorial lidos das pastas do Google Drive.</p>
-      <div class="tx-chips"><span class="tx-chip">leitura · 11/11/2026</span><span class="tx-chip">23 pastas · 15 abas</span><span class="tx-chip">incisos I–XXVI</span></div>
+      <div class="tx-chips"><span class="tx-chip">leitura · 13/11/2026</span><span class="tx-chip">38 pastas · 15 abas</span><span class="tx-chip">incisos I–XXVI</span></div>
     </div>
     <div class="tx-pick">
       <label for="pick">Escolha a pasta</label>
@@ -221,7 +221,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 
     <section class="tx-card tx-sec" id="pendentes">
       <span class="tx-eyebrow">Pendências de envio</span><h2>Unidades que ainda não subiram formulário</h2>
-      <p class="tx-muted">Situação na leitura de 11/11/2026. O link abre a pasta da unidade no Google Drive. <span data-draw="npend" data-source="eixos">—</span></p>
+      <p class="tx-muted">Situação na leitura de 13/11/2026. O link abre a pasta da unidade no Google Drive. <span data-draw="npend" data-source="eixos">—</span></p>
       <div class="tx-scroll tx-tbl">
         <table data-source="eixos" data-row-key="id">
           <thead><tr><th data-field="sigla">Unidade</th><th data-field="ug">Nome</th><th data-field="eixo">Eixo</th><th data-field="pasta_drive">Pasta no Drive</th></tr></thead>
@@ -452,13 +452,13 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
   <details id="notas">
     <summary>Como os dados foram lidos e tratados</summary>
     <ul>
-      <li>Foram lidas as planilhas de 23 das 24 pastas indicadas. A SIN (Secretaria de Estado da Infraestrutura) não tem pasta em "DADOS - IN - ART. 4º" e por isso não aparece.</li>
+      <li>Foram verificadas as 49 pastas de "DADOS - IN - ART. 4º" (a pasta "1. ESPECÍFICOS" só tem PDFs da SEPLAN). 38 têm formulário com conteúdo; DATANORTE, FJA, FUNDASE, GVG, IFESP, IPERN, PGE, SAPE, SEDEC, SEGP e SETHAS ainda estão só com o modelo em branco. CAERN e IPEM preencheram apenas a identificação. SIN e UERN não têm pasta.</li>
       <li>Quando uma pasta tinha mais de uma planilha (cópias, versões convertidas para Google Planilhas), cada aba vem da versão com mais linhas preenchidas.</li>
       <li>Situações escritas livremente foram agrupadas (por exemplo "ATENDIDO", "Disponibilizado" e "Concluída" contam como Atendido). O texto original continua na fonte.</li>
       <li>Obras e bens são localizados pela sede do município informado. Textos que não citam um município do RN ficam fora do mapa.</li>
       <li>Valores em branco contam como não informados, não como zero. "Saldo a pagar" usa o saldo informado ou, sem ele, contratado menos pago.</li>
       <li>Os eixos vêm da planilha "UGs por eixo" do acompanhamento dos processos SEI. Unidades listadas em dois eixos (CONTROL, JUCERN e SEPLAN) aparecem nas duas abas, e nos totais de cada eixo; o total geral conta cada pasta uma vez.</li>
-      <li>Os dados são uma cópia de 11/11/2026 (a primeira leitura foi em 10/11/2026; DER, DETRAN, EMPROTUR, FAPERN, IDEMA, JUCERN, PM/RN, POTIGÁS, SEDRAF, SEFAZ, SEPLAN, SESAP e SETUR atualizaram os formulários desde então). Alterações feitas depois nas planilhas só aparecem quando os arquivos forem lidos de novo.</li>
+      <li>Os dados são uma cópia de 13/11/2026. Entraram nesta leitura ARSEP, CAERN, CBM/RN, CONTROL, DEI, DESENVOLVE RN, EMGERN, EMPARN, GAC, IDIARN, IPEM, PCI, PC/RN, SEEC e SEMARH; DER, DETRAN, EMATER, IDEMA, IGARN, JUCERN, PM/RN, POTIGÁS, SEAD, SEAP, SEDRAF, SEFAZ, SEMJIDH e SESAP atualizaram os formulários desde 11/11/2026. Alterações feitas depois nas planilhas só aparecem quando os arquivos forem lidos de novo.</li>
     </ul>
   </details>
 </div>
@@ -603,6 +603,7 @@ window.TX = (function () {
   return { brl, brlFull, n, fmt, pasta, aba, feixo, eixoSet, mun, munSet, enc, rowsOf, statusOf, sitClass, tip, hbar, map, geoTip, tbody, placeholder };
 })();
 </script>
+
 <script>
 // Valores calculados a partir das fontes. Cada um tem a coluna "pasta" para o filtro da página.
 dash.calc('c_geral', {
@@ -670,14 +671,14 @@ dash.calc('c_contr_sit', {
   }
 });
 dash.calc('c_contr_venc', {
-  title: 'Fim de vigência dos contratos', description: 'Contratos não encerrados por faixa da data de fim de vigência, tomando 11/11/2026 (data da leitura) como referência.',
+  title: 'Fim de vigência dos contratos', description: 'Contratos não encerrados por faixa da data de fim de vigência, tomando 13/11/2026 (data da leitura) como referência.',
   inputs: ['contratos'],
   fn: (contratos) => {
     const faixas = ['Já vencido', 'Até 31/12/2026', '1º semestre de 2027', 'Depois de jun/2027', 'Sem data de fim'];
     const m = new Map();
     for (const c of contratos) {
       if (c.situacao === 'Encerrado') continue;
-      const f = !c.fim_iso ? faixas[4] : c.fim_iso < '2026-11-11' ? faixas[0] : c.fim_iso <= '2026-12-31' ? faixas[1] : c.fim_iso <= '2027-06-30' ? faixas[2] : faixas[3];
+      const f = !c.fim_iso ? faixas[4] : c.fim_iso < '2026-11-13' ? faixas[0] : c.fim_iso <= '2026-12-31' ? faixas[1] : c.fim_iso <= '2027-06-30' ? faixas[2] : faixas[3];
       const k = c.pasta + '|' + f; const r = m.get(k) || { pasta: c.pasta, faixa: f, ordem: faixas.indexOf(f), contratos: 0, valor: 0 }; r.contratos++; r.valor += Number(c.valor_contratado) || 0; m.set(k, r);
     }
     return [...m.values()];
@@ -750,6 +751,7 @@ dash.calc('c_geo_obras', {
   }
 });
 </script>
+
 <script>
 (function () {
   const h = decodeURIComponent((location.hash || '').slice(1));
