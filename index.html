@@ -18,7 +18,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 (function(){
   const SRC=['pastas','controle','contratos','obras','convenios','financas','pessoal','patrimonio','precatorios','programas','sistemas','pendencias','tac_tag','atos','previdencia','incentivos','malha','eixos'];
   const DS={}, ST={}, calcs={}, draws={}, ons=[];
-  const P={pasta:'',aba:'',feixo:'',mun:''};
+  const P={pasta:'',aba:'',feixo:'',mun:'',osit:'',opasta:''};
   const run=()=>{ons.forEach(f=>{try{f()}catch(e){console.error(e)}});Object.keys(draws).forEach(n=>document.querySelectorAll('[data-draw="'+n+'"]').forEach(el=>{if(el.closest('[hidden]'))return;try{draws[n](el)}catch(e){console.error(n,e)}}));};
   window.dash={
     colors:['var(--c1)','var(--c2)','var(--c3)','var(--c4)'],
@@ -72,6 +72,37 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 .tx-tip{position:absolute;pointer-events:none;background:var(--cds-surface-popover);border:1px solid var(--cds-border);box-shadow:var(--cds-shadow-popover);border-radius:var(--cds-radius);padding:6px 9px;font-size:var(--cds-font-size-caption);color:var(--color-fg);max-width:260px;z-index:5;line-height:1.4}
 .tx-tip b{font-weight:var(--cds-font-weight-medium)}
 .tx-map{min-height:260px}
+.tx-omap{min-height:380px}
+.tx-brand{display:flex;align-items:center;gap:18px;flex-wrap:wrap;min-width:0;flex:1 1 560px}
+.tx-brand>div{flex:1 1 300px;min-width:0}
+.tx-logo{height:92px;width:auto;max-width:100%;background:#fff;border-radius:12px;padding:6px 10px;box-shadow:0 1px 0 var(--color-border-line),0 0 0 1px var(--color-border-line);object-fit:contain}
+@media (max-width:560px){.tx-logo{height:72px}}
+@media (max-width:820px){.tx-omap{min-height:200px}}
+.tx-omap-body{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:var(--cds-gap-lg);align-items:start}
+@media (max-width:820px){.tx-omap-body{grid-template-columns:minmax(0,1fr)}}
+.tx-omap-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:var(--cds-gap-md)}
+.tx-omap-ctl{display:flex;flex-direction:column;gap:8px;margin:var(--cds-gap-md) 0 var(--cds-gap-sm)}
+.tx-omap-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.tx-omap-row .dash-select{max-width:100%}
+.tx-ochip{all:unset;cursor:pointer;font-size:var(--cds-font-size-caption);padding:5px 11px;border-radius:999px;border:1px solid var(--color-border-line);background:var(--color-panel);display:inline-flex;align-items:center;gap:6px}
+.tx-ochip i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.tx-ochip b{font-family:var(--tx-mono);font-weight:500;color:var(--color-fg-muted)}
+.tx-ochip:hover{border-color:var(--tx-line)}
+.tx-ochip:focus-visible{outline:2px solid var(--tx-a1)}
+.tx-ochip.on{background:linear-gradient(135deg,var(--tx-a1),var(--tx-a2));border-color:transparent;color:#fff}
+.tx-ochip.on b{color:#fff}
+.tx-osum{font-size:var(--cds-font-size-body);margin:0}
+.tx-osum b{font-family:var(--tx-mono);color:var(--tx-acc)}
+.tx-omun{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.tx-omun button{all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:6px 8px;border-radius:var(--cds-radius);border:1px solid transparent;font-size:var(--cds-font-size-caption)}
+.tx-omun button:hover,.tx-omun button:focus-visible{border-color:var(--tx-line);background:var(--tx-tint)}
+.tx-omun button.on{border-color:var(--tx-a2);background:var(--tx-tint)}
+.tx-omun .m{font-weight:600}
+.tx-omun .v{font-family:var(--tx-mono);text-align:right}
+.tx-omun .s{grid-column:1/-1;color:var(--color-fg-muted)}
+.tx-omun .bar{grid-column:1/-1;height:4px;border-radius:2px;background:color-mix(in srgb,var(--tx-a1) 12%,var(--color-panel));overflow:hidden}
+.tx-omun .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--tx-a1),var(--tx-a2))}
+.tx-map svg .lbl{font-size:10px;fill:var(--color-fg-muted);paint-order:stroke;stroke:var(--color-panel);stroke-width:3px;pointer-events:none}
 .tx-legend{display:flex;flex-wrap:wrap;gap:var(--cds-gap-md);font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin-top:var(--cds-gap-sm)}
 .tx-legend span{display:inline-flex;align-items:center;gap:6px}
 .tx-legend i{width:12px;height:12px;border-radius:50%;display:inline-block}
@@ -164,11 +195,14 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 
 <div class="tx" id="monitor">
   <header class="tx-head" id="topo">
-    <div>
+    <div class="tx-brand">
+      <img class="tx-logo" src="assets/logo-control.png" alt="Governo do Estado do Rio Grande do Norte · Controladoria Geral do Estado – CONTROL" width="520" height="245">
+      <div>
       <span class="tx-eyebrow"><i class="tx-dot"></i>Governo do RN · Transição 2026 · Art. 4º da IN</span>
       <h1>Monitor da Transição RN</h1>
       <p class="tx-muted">Formulários do Relatório Consolidado Setorial lidos das pastas do Google Drive.</p>
       <div class="tx-chips"><span class="tx-chip">leitura · 13/11/2026</span><span class="tx-chip">39 pastas · 15 abas</span><span class="tx-chip">incisos I–XXVI</span></div>
+      </div>
     </div>
     <div class="tx-pick">
       <label for="pick">Escolha a pasta</label>
@@ -230,19 +264,25 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
       </div>
     </section>
 
-    <div class="tx-grid2">
-      <section class="tx-card" id="ranking-contratos">
+    <section class="tx-card" id="ranking-contratos">
         <span class="tx-eyebrow">Ranking</span><h2>Valor contratado por pasta</h2>
         <p class="tx-muted">Soma do valor contratado na aba Contratos.</p>
         <div class="tx-chart" data-draw="rank" data-source="pastas" style="min-height:520px"></div>
       </section>
-      <section class="tx-card" id="mapa-geral">
-        <span class="tx-eyebrow">Geo · municípios do RN</span><h2>Onde estão as obras</h2>
-        <p class="tx-muted">Obras de todas as pastas por município informado. O tamanho do círculo é o valor total.</p>
-        <div class="tx-chart tx-map" data-draw="mapall" data-source="c_geo_obras c_geo_obras_eixo malha" style="min-height:380px"></div>
-        <div class="tx-legend"><span><i style="background:var(--color-warn)"></i>Obras</span><span><i style="background:var(--color-bad)"></i>Com obra paralisada ou inacabada</span><span><i style="border-radius:3px;background:color-mix(in srgb,var(--tx-a1) 30%,var(--color-panel))"></i>Município com obra</span></div>
+    <section class="tx-card" id="mapa-obras">
+        <div class="tx-omap-top"><div><span class="tx-eyebrow">Geo · Rio Grande do Norte</span><h2>Mapa das obras</h2></div><button class="tx-btn tx-olimpar" type="button" hidden>Limpar filtros do mapa</button></div>
+        <p class="tx-muted">O mapa mostra sempre o estado inteiro. Cada círculo é um município; o tamanho é o valor total das obras. Clique num município para filtrar o painel por ele.</p>
+        <div class="tx-omap-ctl">
+          <div class="tx-omap-row"><span class="tx-eyebrow">Situação</span><button class="tx-ochip" type="button" data-osit="">Todas <b data-draw="ocnt" data-k="" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="andamento"><i style="background:var(--color-warn)"></i>Em andamento <b data-draw="ocnt" data-k="andamento" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="parada"><i style="background:var(--color-bad)"></i>Paralisada ou inacabada <b data-draw="ocnt" data-k="parada" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="naoini"><i style="background:var(--tx-a2)"></i>Não iniciada <b data-draw="ocnt" data-k="naoini" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="concl"><i style="background:var(--color-ok)"></i>Concluída <b data-draw="ocnt" data-k="concl" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="outro"><i style="background:var(--cds-chart-reference)"></i>Sem situação clara <b data-draw="ocnt" data-k="outro" data-source="obras eixos">—</b></button></div>
+          <div class="tx-omap-row"><span class="tx-eyebrow">Pasta</span><select class="dash-select" data-draw="opsel" data-source="obras eixos" aria-label="Filtrar o mapa por pasta"></select></div>
+        </div>
+        <p class="tx-osum" data-draw="osum" data-source="obras eixos" aria-live="polite">—</p>
+        <div class="tx-omap-body">
+          <div class="tx-chart tx-map tx-omap" data-draw="omap" data-source="obras eixos malha"></div>
+          <div class="tx-sec" style="gap:6px"><span class="tx-eyebrow">Municípios com mais obras</span><ol class="tx-omun" data-draw="omun" data-source="obras eixos"></ol></div>
+        </div>
+        <div class="tx-legend"><span><i style="background:var(--color-warn)"></i>Obras</span><span><i style="background:var(--color-bad)"></i>Com obra paralisada ou inacabada</span><span><i style="border-radius:3px;background:color-mix(in srgb,var(--tx-a1) 30%,var(--color-panel))"></i>Município com obra no filtro</span><span><i style="border-radius:3px;background:none;border:2px solid var(--tx-a2)"></i>Município selecionado</span></div>
       </section>
-    </div>
 
     <section class="tx-card" id="preenchimento">
       <span class="tx-eyebrow">Cobertura do formulário</span><h2>Preenchimento por aba</h2>
@@ -279,17 +319,24 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
       <div class="tx-sec" style="gap:6px"><span class="tx-muted">Unidades deste eixo sem formulário no painel:</span><div class="tx-ugs" data-draw="esem" data-source="eixos"></div></div>
     </section>
 
-    <div class="tx-grid2">
-      <section class="tx-card" id="eixo-ranking">
+    <section class="tx-card" id="eixo-ranking">
         <span class="tx-eyebrow">Ranking</span><h2>Valor contratado por pasta</h2>
         <div class="tx-chart" data-draw="erank" data-source="pastas" style="min-height:160px"></div>
       </section>
-      <section class="tx-card" id="eixo-mapa">
-        <span class="tx-eyebrow">Geo · municípios do RN</span><h2>Obras do eixo</h2>
-        <div class="tx-chart tx-map" data-draw="emap" data-source="c_geo_obras_eixo malha" style="min-height:300px"></div>
-        <div class="tx-legend"><span><i style="background:var(--color-warn)"></i>Obras</span><span><i style="background:var(--color-bad)"></i>Com obra paralisada ou inacabada</span></div>
+    <section class="tx-card" id="emapa-obras">
+        <div class="tx-omap-top"><div><span class="tx-eyebrow">Geo · Rio Grande do Norte</span><h2>Mapa das obras do eixo</h2></div><button class="tx-btn tx-olimpar" type="button" hidden>Limpar filtros do mapa</button></div>
+        <p class="tx-muted">O mapa mostra sempre o estado inteiro. Cada círculo é um município; o tamanho é o valor total das obras. Clique num município para filtrar o painel por ele.</p>
+        <div class="tx-omap-ctl">
+          <div class="tx-omap-row"><span class="tx-eyebrow">Situação</span><button class="tx-ochip" type="button" data-osit="">Todas <b data-draw="eocnt" data-k="" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="andamento"><i style="background:var(--color-warn)"></i>Em andamento <b data-draw="eocnt" data-k="andamento" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="parada"><i style="background:var(--color-bad)"></i>Paralisada ou inacabada <b data-draw="eocnt" data-k="parada" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="naoini"><i style="background:var(--tx-a2)"></i>Não iniciada <b data-draw="eocnt" data-k="naoini" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="concl"><i style="background:var(--color-ok)"></i>Concluída <b data-draw="eocnt" data-k="concl" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="outro"><i style="background:var(--cds-chart-reference)"></i>Sem situação clara <b data-draw="eocnt" data-k="outro" data-source="obras eixos">—</b></button></div>
+          <div class="tx-omap-row"><span class="tx-eyebrow">Pasta</span><select class="dash-select" data-draw="eopsel" data-source="obras eixos" aria-label="Filtrar o mapa por pasta"></select></div>
+        </div>
+        <p class="tx-osum" data-draw="eosum" data-source="obras eixos" aria-live="polite">—</p>
+        <div class="tx-omap-body">
+          <div class="tx-chart tx-map tx-omap" data-draw="eomap" data-source="obras eixos malha"></div>
+          <div class="tx-sec" style="gap:6px"><span class="tx-eyebrow">Municípios com mais obras</span><ol class="tx-omun" data-draw="eomun" data-source="obras eixos"></ol></div>
+        </div>
+        <div class="tx-legend"><span><i style="background:var(--color-warn)"></i>Obras</span><span><i style="background:var(--color-bad)"></i>Com obra paralisada ou inacabada</span><span><i style="border-radius:3px;background:color-mix(in srgb,var(--tx-a1) 30%,var(--color-panel))"></i>Município com obra no filtro</span><span><i style="border-radius:3px;background:none;border:2px solid var(--tx-a2)"></i>Município selecionado</span></div>
       </section>
-    </div>
 
     <section class="tx-sec" id="eixo-cards">
       <span class="tx-eyebrow">Pastas</span><h2>Cartões das pastas do eixo</h2>
@@ -543,26 +590,33 @@ window.TX = (function () {
   function map(el, geo, pts, o) {
     el.querySelectorAll('svg').forEach((s) => s.remove());
     el.querySelectorAll(':scope > p').forEach((s) => s.remove());
-    const W = el.clientWidth || 360, H = Math.max(240, Math.min(W * 0.62, 420));
-    const proj = d3.geoMercator().fitSize([W, H], geo), path = d3.geoPath(proj);
+    const W = el.clientWidth || 360, H = Math.round(Math.max(240, Math.min(W * 0.6, 560)));
+    // o estado inteiro sempre cabe no quadro (sem zoom)
+    const proj = d3.geoMercator().fitExtent([[8, 8], [W - 8, H - 8]], geo), path = d3.geoPath(proj);
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', o.aria);
-    const has = new Set(pts.filter((p) => p.obras > 0).map((p) => p.municipio));
+    const has = new Set(pts.filter((p) => p.obras > 0 || p.bens > 0).map((p) => p.municipio));
     const t = tip(el);
+    // contorno do estado: traço grosso por baixo, coberto pelo preenchimento dos municípios
     svg.append('g').selectAll('path').data(geo.features).join('path').attr('d', path)
-      .style('fill', (f) => has.has(f.properties.nome) ? 'color-mix(in srgb, var(--tx-a1) 22%, var(--color-panel))' : 'color-mix(in srgb, var(--tx-a2) 3%, var(--color-panel))')
-      .style('stroke', 'color-mix(in srgb, var(--tx-a1) 25%, var(--cds-chart-grid))').style('stroke-width', 0.6)
-      .style('cursor', 'pointer')
+      .style('fill', 'none').style('stroke', 'color-mix(in srgb, var(--tx-a2) 55%, var(--tx-a1))').style('stroke-width', 3.5).style('stroke-linejoin', 'round').style('pointer-events', 'none');
+    svg.append('g').selectAll('path').data(geo.features).join('path').attr('d', path)
+      .style('fill', (f) => has.has(f.properties.nome) ? 'color-mix(in srgb, var(--tx-a1) 22%, var(--color-panel))' : 'var(--color-panel)')
+      .style('stroke', 'color-mix(in srgb, var(--tx-a1) 22%, var(--cds-chart-grid))').style('stroke-width', 0.5)
+      .style('cursor', (f) => has.has(f.properties.nome) ? 'pointer' : 'default')
       .on('mousemove', (ev, f) => { const p = pts.find((q) => q.municipio === f.properties.nome); t.show(ev, o.tip(f.properties.nome, p)); })
       .on('mouseleave', () => t.hide())
-      .on('click', (ev, f) => { const nm = f.properties.nome; if (!nm || !window.TX.setMun) return; if (dash.params().mun === nm) { window.TX.setMun(''); return; } if (pts.some((q) => q.municipio === nm)) window.TX.setMun(nm); });
+      .on('click', (ev, f) => { const nm = f.properties.nome; if (!nm || !window.TX.setMun) return; if (dash.params().mun === nm) { window.TX.setMun(''); return; } if (has.has(nm)) window.TX.setMun(nm); });
     const selm = dash.params().mun;
-    if (selm) svg.append('g').selectAll('path').data(geo.features.filter((f) => f.properties.nome === selm)).join('path').attr('d', path).style('fill', 'none').style('stroke', 'var(--tx-a2)').style('stroke-width', 2.5).style('pointer-events', 'none');
-    const r = d3.scaleSqrt().domain([0, d3.max(pts, (p) => p.obras_valor || 0) || 1]).range([3, Math.max(10, W / 28)]);
+    if (selm) svg.append('g').selectAll('path').data(geo.features.filter((f) => f.properties.nome === selm)).join('path').attr('d', path).style('fill', 'color-mix(in srgb, var(--tx-a2) 18%, transparent)').style('stroke', 'var(--tx-a2)').style('stroke-width', 2.5).style('pointer-events', 'none');
+    const r = d3.scaleSqrt().domain([0, d3.max(pts, (p) => p.obras_valor || 0) || 1]).range([3, Math.max(10, W / 26)]);
     const ob = pts.filter((p) => p.obras > 0).sort((a, b) => (b.obras_valor || 0) - (a.obras_valor || 0));
+    const col = o.color || ((p) => p.paralisadas > 0 ? 'var(--color-bad)' : 'var(--color-warn)');
     svg.append('g').selectAll('circle.o').data(ob).join('circle').attr('class', 'o')
       .attr('cx', (p) => proj([p.lon, p.lat])[0]).attr('cy', (p) => proj([p.lon, p.lat])[1]).attr('r', (p) => r(p.obras_valor || 0))
-      .style('fill', (p) => p.paralisadas > 0 ? 'var(--color-bad)' : 'var(--color-warn)').style('fill-opacity', 0.7).style('stroke', 'var(--color-bg)').style('stroke-width', 1)
-      .on('mousemove', (ev, p) => t.show(ev, o.tip(p.municipio, p))).on('mouseleave', () => t.hide());
+      .style('fill', col).style('fill-opacity', 0.72).style('stroke', (p) => p.municipio === selm ? 'var(--tx-a2)' : 'var(--color-bg)').style('stroke-width', (p) => p.municipio === selm ? 2.5 : 1)
+      .style('cursor', 'pointer')
+      .on('mousemove', (ev, p) => t.show(ev, o.tip(p.municipio, p))).on('mouseleave', () => t.hide())
+      .on('click', (ev, p) => { if (!window.TX.setMun) return; window.TX.setMun(dash.params().mun === p.municipio ? '' : p.municipio); });
     if (o.bens) {
       const bp = pts.filter((p) => p.bens > 0);
       const rb = d3.scaleSqrt().domain([0, d3.max(bp, (p) => p.bens) || 1]).range([3, 9]);
@@ -570,6 +624,15 @@ window.TX = (function () {
         .attr('cx', (p) => proj([p.lon, p.lat])[0]).attr('cy', (p) => proj([p.lon, p.lat])[1]).attr('r', (p) => rb(p.bens))
         .style('fill', 'none').style('stroke', 'var(--cds-chart-reference)').style('stroke-width', 1.5)
         .on('mousemove', (ev, p) => t.show(ev, o.tip(p.municipio, p))).on('mouseleave', () => t.hide());
+    }
+    // nomes de referência para se localizar no estado
+    if (W >= 300) {
+      const ref = ['Natal', 'Mossoró', 'Caicó', 'Pau dos Ferros', 'Currais Novos', 'Açu', 'João Câmara', 'Macau', 'Santa Cruz', 'Apodi'];
+      const lab = geo.features.filter((f) => ref.includes(f.properties.nome) || f.properties.nome === selm);
+      svg.append('g').selectAll('text').data(lab).join('text').attr('class', 'lbl')
+        .attr('x', (f) => path.centroid(f)[0]).attr('y', (f) => path.centroid(f)[1] - 7).attr('text-anchor', 'middle')
+        .style('font-weight', (f) => f.properties.nome === selm ? 700 : 400).style('fill', (f) => f.properties.nome === selm ? 'var(--color-fg)' : null)
+        .text((f) => f.properties.nome);
     }
   }
   function geoTip(nome, p) {
@@ -773,6 +836,9 @@ dash.onData(() => {
   document.querySelectorAll('#limpar-mun').forEach((e) => { e.hidden = !mu; });
   document.querySelectorAll('#kpis-geral, #kpis-eixo, #pendentes').forEach((e) => { e.hidden = !!mu; });
   document.querySelectorAll('.tx-tab').forEach((e) => { const on = !p && e.dataset.aba === a; e.classList.toggle('on', on); e.setAttribute('aria-current', on ? 'page' : 'false'); });
+  const os = String(dash.params().osit || ''), op = String(dash.params().opasta || '');
+  document.querySelectorAll('.tx-ochip').forEach((e) => { const on = e.dataset.osit === os; e.classList.toggle('on', on); e.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+  document.querySelectorAll('.tx-olimpar').forEach((e) => { e.hidden = !os && !op && !mu; });
   document.querySelectorAll('.tx-fchip').forEach((e) => { const on = e.dataset.feixo === f; e.classList.toggle('on', on); e.setAttribute('aria-pressed', on ? 'true' : 'false'); });
   const rows = TX.rowsOf('pastas');
   const r = rows && rows.find((x) => x.pasta === p);
@@ -785,6 +851,8 @@ document.querySelectorAll('#voltar').forEach((b) => b.addEventListener('click', 
 document.querySelectorAll('.tx-tab').forEach((b) => b.addEventListener('click', () => TX.goAba(b.dataset.aba)));
 document.querySelectorAll('.tx-fchip').forEach((b) => b.addEventListener('click', () => dash.setParams({ feixo: b.dataset.feixo })));
 document.querySelectorAll('#limpar-mun').forEach((b) => b.addEventListener('click', () => dash.setParams({ mun: '' })));
+document.querySelectorAll('.tx-ochip').forEach((b) => b.addEventListener('click', () => dash.setParams({ osit: b.dataset.osit })));
+document.querySelectorAll('.tx-olimpar').forEach((b) => b.addEventListener('click', () => dash.setParams({ osit: '', opasta: '', mun: '' })));
 window.TX.setMun = (m) => { dash.setParams({ mun: m || '' }); };
 window.__txAll = false;
 const txToggle = (all) => { window.__txAll = all; document.querySelectorAll('#mais-contratos').forEach((e) => { e.hidden = all; }); document.querySelectorAll('#menos-contratos').forEach((e) => { e.hidden = !all; }); dash.draw('tcontr'); dash.draw('ncontr'); };
@@ -939,21 +1007,101 @@ const txRank = (el, n) => {
 };
 dash.draw('rank', (el) => txRank(el, TX.feixo()));
 dash.draw('erank', (el) => txRank(el, TX.aba()));
-dash.draw('mapall', (el) => {
-  const f = TX.feixo();
-  const g = dash.data('malha'), c = dash.data(f ? 'c_geo_obras_eixo' : 'c_geo_obras');
-  if (g.status !== 'ok' || c.status !== 'ok' || !g.data || !g.data.features) { TX.placeholder(el, g.status === 'error' ? 'Não carregou' : '—'); return; }
-  const pts = f ? (c.data || []).filter((r) => String(r.eixo_num) === f) : (c.data || []);
-  TX.map(el, g.data, pts, { aria: 'Mapa do Rio Grande do Norte com as obras informadas por município', tip: TX.geoTip });
-});
-dash.draw('emap', (el) => {
-  const n = TX.aba();
-  const g = dash.data('malha'), c = dash.data('c_geo_obras_eixo');
-  if (g.status !== 'ok' || c.status !== 'ok' || !g.data || !g.data.features) { TX.placeholder(el, g.status === 'error' ? 'Não carregou' : '—'); return; }
-  const pts = (c.data || []).filter((r) => String(r.eixo_num) === n);
-  TX.map(el, g.data, pts, { aria: 'Mapa do Rio Grande do Norte com as obras das pastas do eixo', tip: TX.geoTip });
-  if (!pts.length) { const p = document.createElement('p'); p.className = 'tx-muted'; p.textContent = 'Nenhuma obra informada pelas pastas deste eixo.'; el.appendChild(p); }
-});
+// Mapa das obras: filtros de situação e pasta, sempre com o estado inteiro.
+const TXO = (() => {
+  const grupo = (sit) => sit === 'Em andamento' ? 'andamento' : (sit === 'Paralisada' || sit === 'Inacabada') ? 'parada' : sit === 'Não iniciada' ? 'naoini' : sit === 'Concluída' ? 'concl' : 'outro';
+  const cor = { andamento: 'var(--color-warn)', parada: 'var(--color-bad)', naoini: 'var(--tx-a2)', concl: 'var(--color-ok)', outro: 'var(--cds-chart-reference)' };
+  const eixo = (pref) => pref === 'e' ? TX.aba() : TX.feixo();
+  const osit = () => String(dash.params().osit || '');
+  const pastasDoEixo = (pref) => { const e = eixo(pref); return e ? TX.eixoSet(e) : null; };
+  const opasta = (pref) => { const p = String(dash.params().opasta || ''); const s = pastasDoEixo(pref); return p && (!s || s.has(p)) ? p : ''; };
+  // obras do eixo + pasta (sem o filtro de situação)
+  const base = (pref) => { const s = pastasDoEixo(pref), p = opasta(pref); return (TX.rowsOf('obras') || []).filter((o) => (!s || s.has(o.pasta)) && (!p || o.pasta === p)); };
+  const filtradas = (pref) => { const g = osit(); return base(pref).filter((o) => !g || grupo(o.situacao) === g); };
+  const porMun = (rows) => {
+    const m = new Map();
+    for (const o of rows) {
+      if (o.lat == null) continue;
+      const r = m.get(o.municipio) || { municipio: o.municipio, lat: o.lat, lon: o.lon, obras: 0, obras_valor: 0, paralisadas: 0, pastas: new Set(), g: {} };
+      r.obras++; r.obras_valor += Number(o.valor_total) || 0; if (grupo(o.situacao) === 'parada') r.paralisadas++; r.pastas.add(o.pasta);
+      const k = grupo(o.situacao); r.g[k] = (r.g[k] || 0) + 1; m.set(o.municipio, r);
+    }
+    return [...m.values()].map((r) => ({ ...r, pastas: [...r.pastas].join(', ') }));
+  };
+  const ready = () => dash.data('obras').status === 'ok' && dash.data('eixos').status === 'ok';
+  return { grupo, cor, eixo, osit, opasta, base, filtradas, porMun, ready };
+})();
+window.TXO = TXO;
+const txOMap = (el, pref) => {
+  const g = dash.data('malha');
+  if (g.status !== 'ok' || !g.data || !g.data.features || !TXO.ready()) { TX.placeholder(el, g.status === 'error' ? 'Não carregou' : '—'); return; }
+  const k = TXO.osit();
+  const pts = TXO.porMun(TXO.filtradas(pref));
+  TX.map(el, g.data, pts, {
+    aria: 'Mapa do Rio Grande do Norte com as obras por município, conforme os filtros escolhidos', tip: TX.geoTip,
+    color: k ? (() => TXO.cor[k]) : null
+  });
+  if (!pts.length) { const p = document.createElement('p'); p.className = 'tx-muted'; p.textContent = 'Nenhuma obra com município reconhecido para este filtro.'; el.appendChild(p); }
+};
+const txOSum = (el, pref) => {
+  if (!TXO.ready()) { el.textContent = '—'; return; }
+  const rows = TXO.filtradas(pref), loc = rows.filter((o) => o.lat != null);
+  const muns = new Set(loc.map((o) => o.municipio)).size;
+  const val = loc.reduce((a, o) => a + (Number(o.valor_total) || 0), 0);
+  const par = loc.filter((o) => TXO.grupo(o.situacao) === 'parada').length;
+  const fora = rows.length - loc.length;
+  const b = (t) => { const x = document.createElement('b'); x.textContent = t; return x; };
+  const parts = ['No mapa: ', b(TX.n(loc.length)), loc.length === 1 ? ' obra em ' : ' obras em ', b(TX.n(muns)), muns === 1 ? ' município, somando ' : ' municípios, somando ', b(TX.brl(val))];
+  if (par) parts.push(', com ', b(TX.n(par)), par === 1 ? ' paralisada ou inacabada' : ' paralisadas ou inacabadas');
+  parts.push('.');
+  if (fora) parts.push(' ' + TX.n(fora) + (fora === 1 ? ' obra não cita' : ' obras não citam') + ' um município do RN e fica' + (fora === 1 ? '' : 'm') + ' fora do mapa.');
+  el.replaceChildren(...parts);
+};
+const txOCnt = (el, pref) => {
+  if (!TXO.ready()) { el.textContent = '—'; return; }
+  const k = el.dataset.k || '';
+  const rows = TXO.base(pref).filter((o) => o.lat != null);
+  el.textContent = TX.n(k ? rows.filter((o) => TXO.grupo(o.situacao) === k).length : rows.length);
+};
+const txOPSel = (sel, pref) => {
+  if (!TXO.ready()) { sel.replaceChildren(new Option('Todas as pastas', '')); return; }
+  const s = TXO.eixo(pref) ? TX.eixoSet(TXO.eixo(pref)) : null;
+  const cont = new Map();
+  for (const o of TX.rowsOf('obras') || []) if (o.lat != null && (!s || s.has(o.pasta))) cont.set(o.pasta, (cont.get(o.pasta) || 0) + 1);
+  const sig = new Map((TX.rowsOf('pastas') || []).map((p) => [p.pasta, p.sigla]));
+  const ops = [...cont].sort((a, b) => (sig.get(a[0]) || a[0]).localeCompare(sig.get(b[0]) || b[0], 'pt-BR'));
+  sel.replaceChildren(new Option('Todas as pastas', ''), ...ops.map(([p, c]) => new Option((sig.get(p) || p) + ' · ' + c + (c === 1 ? ' obra' : ' obras'), p)));
+  sel.value = TXO.opasta(pref);
+  sel.onchange = () => dash.setParams({ opasta: sel.value });
+};
+const txOMun = (el, pref) => {
+  if (!TXO.ready()) { el.replaceChildren(); return; }
+  const pts = TXO.porMun(TXO.filtradas(pref)).sort((a, b) => b.obras - a.obras || b.obras_valor - a.obras_valor);
+  const sel = TX.mun();
+  const top = pts.slice(0, 10);
+  if (sel && !top.some((p) => p.municipio === sel)) { const x = pts.find((p) => p.municipio === sel); if (x) top.push(x); }
+  const mx = d3.max(top, (p) => p.obras) || 1;
+  if (!top.length) { const li = document.createElement('li'); li.className = 'tx-muted'; li.textContent = 'Nenhum município neste filtro.'; el.replaceChildren(li); return; }
+  el.replaceChildren(...top.map((p) => {
+    const li = document.createElement('li'), bt = document.createElement('button');
+    bt.type = 'button'; if (p.municipio === sel) bt.className = 'on';
+    bt.setAttribute('aria-pressed', p.municipio === sel ? 'true' : 'false');
+    const m = document.createElement('span'); m.className = 'm'; m.textContent = p.municipio;
+    const v = document.createElement('span'); v.className = 'v'; v.textContent = TX.n(p.obras) + (p.obras === 1 ? ' obra' : ' obras');
+    const bar = document.createElement('span'); bar.className = 'bar'; const i = document.createElement('i'); i.style.width = (100 * p.obras / mx) + '%'; bar.appendChild(i);
+    const sub = document.createElement('span'); sub.className = 's'; sub.textContent = TX.brl(p.obras_valor) + (p.paralisadas ? ' · ' + TX.n(p.paralisadas) + ' paralisada(s)/inacabada(s)' : '');
+    bt.append(m, v, bar, sub);
+    bt.addEventListener('click', () => TX.setMun(p.municipio === TX.mun() ? '' : p.municipio));
+    li.appendChild(bt); return li;
+  }));
+};
+for (const pref of ['', 'e']) {
+  dash.draw(pref + 'omap', (el) => txOMap(el, pref));
+  dash.draw(pref + 'osum', (el) => txOSum(el, pref));
+  dash.draw(pref + 'ocnt', (el) => txOCnt(el, pref));
+  dash.draw(pref + 'opsel', (el) => txOPSel(el, pref));
+  dash.draw(pref + 'omun', (el) => txOMun(el, pref));
+}
 dash.draw('etable', (el) => {
   const n = TX.aba();
   if (!TX.rowsOf('pastas') || dash.data('eixos').status !== 'ok') { el.replaceChildren(); return; }
