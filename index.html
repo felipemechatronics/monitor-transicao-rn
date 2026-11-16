@@ -16,7 +16,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 (function(){
-  const SRC=['pastas','controle','contratos','obras','convenios','financas','pessoal','patrimonio','precatorios','programas','sistemas','pendencias','tac_tag','atos','previdencia','incentivos','malha','eixos'];
+  const SRC=['pastas','controle','contratos','obras','convenios','financas','pessoal','patrimonio','precatorios','programas','sistemas','pendencias','tac_tag','atos','previdencia','incentivos','malha','eixos','recebimento'];
   const DS={}, ST={}, calcs={}, draws={}, ons=[];
   const P={pasta:'',aba:'',feixo:'',mun:'',osit:'',opasta:''};
   const run=()=>{ons.forEach(f=>{try{f()}catch(e){console.error(e)}});Object.keys(draws).forEach(n=>document.querySelectorAll('[data-draw="'+n+'"]').forEach(el=>{if(el.closest('[hidden]'))return;try{draws[n](el)}catch(e){console.error(n,e)}}));};
@@ -28,7 +28,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     calc(id,o){calcs[id]=o}, loader(){}, refresh(){}, onData(fn){ons.push(fn)},
     draw(name,fn){ if(typeof fn==='function'||(fn&&fn.update)){draws[name]=typeof fn==='function'?fn:fn.update} else document.querySelectorAll('[data-draw="'+name+'"]').forEach(el=>{try{draws[name](el)}catch(e){console.error(e)}}); }
   };
-  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261115a').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
+  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261115b').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
   let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,150)});
   window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));const m=h.match(/^eixo-([1-6])$/);if(m){if(P.aba!==m[1]||P.pasta){P.aba=m[1];P.pasta='';run()}return}const v=h==='geral'?'':h;if(h==='geral'&&(P.aba||P.pasta)){P.aba='';P.pasta='';run();return}if(v!==P.pasta){P.pasta=v;run()}});
 })();
@@ -73,6 +73,31 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 .tx-tip b{font-weight:var(--cds-font-weight-medium)}
 .tx-map{min-height:260px}
 .tx-omap{min-height:380px}
+.tx-rk{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--cds-gap-md);margin:var(--cds-gap-md) 0}
+.tx-rk .t{border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:var(--color-panel);min-width:0}
+.tx-rk .t .l{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.tx-rk .t .v{font-family:var(--tx-mono);font-size:clamp(22px,3vw,30px);line-height:1.1}
+.tx-rk .t .s{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.tx-rk .g{display:flex;align-items:center;gap:14px}
+.tx-rk .g svg{flex:none}
+.tx-rbar{height:8px;border-radius:4px;background:color-mix(in srgb,var(--tx-a1) 12%,var(--color-panel));overflow:hidden;display:flex}
+.tx-rbar i{display:block;height:100%}
+.tx-rleg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.tx-rleg span{display:inline-flex;align-items:center;gap:5px}
+.tx-rleg i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.tx-rlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
+.tx-rrow{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:10px 12px;border:1px solid var(--color-border-line);border-radius:var(--cds-radius);background:var(--color-panel)}
+.tx-rrow:hover,.tx-rrow:focus-visible{border-color:var(--tx-a2);background:var(--tx-tint)}
+.tx-rrow .sg{font-weight:700;color:var(--tx-acc)}
+.tx-rrow .nm{grid-column:1/-1;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-rrow .pc{font-family:var(--tx-mono);font-weight:600;text-align:right}
+.tx-rrow .tx-rbar{grid-column:1/-1}
+.tx-rrow .cp{grid-column:1/-1;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);font-family:var(--tx-mono)}
+.tx-rdet{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--cds-gap-md);margin-top:var(--cds-gap-sm)}
+.tx-rdet .t{border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.tx-rdet .t b{font-family:var(--tx-mono)}
+.tx-rmiss{margin:var(--cds-gap-sm) 0 0;padding-left:18px;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.tx-rmiss li{margin:2px 0}
 .tx-brand{display:flex;align-items:center;gap:18px;flex-wrap:wrap;min-width:0;flex:1 1 560px}
 .tx-brand>div{flex:1 1 300px;min-width:0}
 .tx-logo{height:92px;width:auto;max-width:100%;background:#fff;border-radius:12px;padding:6px 10px;box-shadow:0 1px 0 var(--color-border-line),0 0 0 1px var(--color-border-line);object-fit:contain}
@@ -247,6 +272,14 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
       <div class="tx-card tx-kpi"><span class="tx-muted">Precatórios</span><span class="v" data-draw="g" data-source="c_geral" data-field="precatorios_valor" data-row="0" data-fmt="brl">—</span><span class="s"><span data-draw="g" data-source="c_geral" data-field="precatorios" data-row="0" data-fmt="n">—</span> registros</span></div>
     </div>
 
+    <section class="tx-card" id="recebimento">
+      <span class="tx-eyebrow">Recebimento dos dados · art. 4º da IN</span><h2>Percentual de recebimento</h2>
+      <p class="tx-muted">O percentual de cada unidade soma três partes: identificação (20%, campos obrigatórios preenchidos), incisos (40%, quantos dos 26 tiveram a aplicabilidade informada) e detalhamento (40%, quantos incisos marcados como aplicáveis têm dados na aba correspondente; se nenhum foi marcado, conta o envio de alguma aba com dados). Quem não enviou formulário fica com 0%. O geral é a média das unidades.</p>
+      <div class="tx-rk" data-draw="rkpis" data-source="recebimento"></div>
+      <div class="tx-rleg"><span><i style="background:var(--color-ok)"></i>Completo (100%)</span><span><i style="background:var(--tx-a1)"></i>Avançado (75% ou mais)</span><span><i style="background:var(--color-warn)"></i>Parcial (40% a 75%)</span><span><i style="background:var(--color-bad)"></i>Inicial (abaixo de 40%)</span><span><i style="background:var(--cds-chart-reference)"></i>Não enviou</span></div>
+      <div class="tx-rlist" data-draw="rlist" data-source="recebimento" style="margin-top:var(--cds-gap-md)"></div>
+    </section>
+
     <section class="tx-sec" id="pastas-lista">
       <span class="tx-eyebrow">Visão geral</span><h2>Pastas com formulário preenchido</h2>
       <p class="tx-muted">Clique numa pasta para abrir seus dados. A barra mostra quantos dos 26 incisos do art. 4º tiveram aplicabilidade informada.</p>
@@ -359,6 +392,10 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
         <div><dt>Arquivo lido</dt><dd data-draw="pf" data-source="pastas" data-field="arquivos">—</dd></div>
       </dl>
       <div class="tx-links" data-draw="plinks"></div>
+    </section>
+    <section class="tx-card" id="precebimento">
+      <span class="tx-eyebrow">Recebimento dos dados</span><h2>Percentual de recebimento desta pasta</h2>
+      <div data-draw="prec" data-source="recebimento">—</div>
     </section>
 
     <div class="tx-kpis" id="kpis-pasta">
@@ -1007,6 +1044,96 @@ const txRank = (el, n) => {
 };
 dash.draw('rank', (el) => txRank(el, TX.feixo()));
 dash.draw('erank', (el) => txRank(el, TX.aba()));
+
+// Percentual de recebimento dos dados
+const TXR = (() => {
+  const faixa = (r) => !r.enviou ? 'nao' : r.pct >= 99.95 ? 'comp' : r.pct >= 75 ? 'av' : r.pct >= 40 ? 'par' : 'ini';
+  const cor = { comp: 'var(--color-ok)', av: 'var(--tx-a1)', par: 'var(--color-warn)', ini: 'var(--color-bad)', nao: 'var(--cds-chart-reference)' };
+  const nome = { comp: 'Completo', av: 'Avançado', par: 'Parcial', ini: 'Inicial', nao: 'Não enviou' };
+  const pct = (v) => (Math.round(v * 10) / 10).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%';
+  const rows = () => { const d = dash.data('recebimento'); if (d.status !== 'ok' || !Array.isArray(d.data)) return null; const e = TX.feixo(); return e ? d.data.filter((r) => (r.eixos || []).map(String).includes(String(e))) : d.data; };
+  const bar = (v, c) => { const b = document.createElement('span'); b.className = 'tx-rbar'; const i = document.createElement('i'); i.style.width = Math.max(0, Math.min(100, v)) + '%'; i.style.background = c; b.appendChild(i); return b; };
+  const ring = (v, c) => {
+    const ns = 'http://www.w3.org/2000/svg', R = 30, C = 2 * Math.PI * R;
+    const s = document.createElementNS(ns, 'svg'); s.setAttribute('width', 76); s.setAttribute('height', 76); s.setAttribute('viewBox', '0 0 76 76'); s.setAttribute('aria-hidden', 'true');
+    const a = document.createElementNS(ns, 'circle'); a.setAttribute('cx', 38); a.setAttribute('cy', 38); a.setAttribute('r', R); a.setAttribute('fill', 'none'); a.style.stroke = 'color-mix(in srgb, var(--tx-a1) 14%, var(--color-panel))'; a.setAttribute('stroke-width', 9);
+    const b = document.createElementNS(ns, 'circle'); b.setAttribute('cx', 38); b.setAttribute('cy', 38); b.setAttribute('r', R); b.setAttribute('fill', 'none'); b.style.stroke = c; b.setAttribute('stroke-width', 9); b.setAttribute('stroke-linecap', 'round');
+    b.setAttribute('stroke-dasharray', (C * Math.max(0, Math.min(100, v)) / 100) + ' ' + C); b.setAttribute('transform', 'rotate(-90 38 38)');
+    s.append(a, b); return s;
+  };
+  return { faixa, cor, nome, pct, rows, bar, ring };
+})();
+const txTile = (label, value, sub, extra) => {
+  const t = document.createElement('div'); t.className = 't';
+  const l = document.createElement('span'); l.className = 'l'; l.textContent = label;
+  const v = document.createElement('span'); v.className = 'v'; v.textContent = value;
+  const s = document.createElement('span'); s.className = 's'; s.textContent = sub;
+  t.append(l, v); if (extra) t.append(extra); t.append(s); return t;
+};
+dash.draw('rkpis', (el) => {
+  const R = TXR.rows(); if (!R) { el.textContent = '—'; return; }
+  if (!R.length) { el.textContent = 'Nenhuma unidade neste eixo.'; return; }
+  const n = R.length, env = R.filter((r) => r.enviou).length;
+  const media = R.reduce((a, r) => a + r.pct, 0) / n;
+  const iok = R.reduce((a, r) => a + r.incisos_ok, 0), itot = R.reduce((a, r) => a + r.incisos_total, 0);
+  const g = document.createElement('div'); g.className = 't';
+  const l = document.createElement('span'); l.className = 'l'; l.textContent = TX.feixo() ? 'Recebimento geral do eixo' : 'Recebimento geral';
+  const w = document.createElement('div'); w.className = 'g';
+  const v = document.createElement('span'); v.className = 'v'; v.textContent = TXR.pct(media);
+  w.append(TXR.ring(media, 'var(--tx-a1)'), v);
+  const s = document.createElement('span'); s.className = 's'; s.textContent = 'média das ' + n + ' unidades (quem não enviou conta 0%)';
+  g.append(l, w, s);
+  const cont = {}; for (const r of R) { const f = TXR.faixa(r); cont[f] = (cont[f] || 0) + 1; }
+  const st = document.createElement('span'); st.className = 'tx-rbar';
+  for (const f of ['comp', 'av', 'par', 'ini', 'nao']) if (cont[f]) { const i = document.createElement('i'); i.style.width = (100 * cont[f] / n) + '%'; i.style.background = TXR.cor[f]; i.title = TXR.nome[f] + ': ' + cont[f]; st.appendChild(i); }
+  const dist = txTile('Unidades por faixa', (cont.comp || 0) + ' completas', ['comp', 'av', 'par', 'ini', 'nao'].filter((f) => cont[f]).map((f) => TXR.nome[f] + ' ' + cont[f]).join(' · '), st);
+  el.replaceChildren(g,
+    txTile('Unidades que enviaram formulário', env + ' de ' + n, TXR.pct(100 * env / n) + ' das unidades', TXR.bar(100 * env / n, 'var(--tx-a2)')),
+    txTile('Incisos com aplicabilidade informada', TX.n(iok) + ' de ' + TX.n(itot), TXR.pct(100 * iok / itot) + ' dos incisos esperados', TXR.bar(100 * iok / itot, 'var(--tx-a1)')),
+    dist);
+});
+dash.draw('rlist', (el) => {
+  const R = TXR.rows(); if (!R) { el.textContent = '—'; return; }
+  el.replaceChildren(...R.map((r) => {
+    const f = TXR.faixa(r);
+    const b = document.createElement(r.enviou ? 'button' : 'a'); b.className = 'tx-rrow';
+    if (r.enviou) { b.type = 'button'; b.addEventListener('click', () => TX.go(r.pasta)); }
+    else { b.href = r.pasta_url; b.target = '_blank'; b.rel = 'noopener'; }
+    const sg = document.createElement('span'); sg.className = 'sg'; sg.textContent = r.sigla;
+    const pc = document.createElement('span'); pc.className = 'pc'; pc.textContent = TXR.pct(r.pct); pc.style.color = TXR.cor[f];
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = r.nome;
+    const cp = document.createElement('span'); cp.className = 'cp';
+    cp.textContent = r.enviou ? 'Ident. ' + TXR.pct(r.pct_ident) + ' · Incisos ' + r.incisos_ok + '/' + r.incisos_total + ' · Detalhe ' + TXR.pct(r.pct_detalhe) : 'Não enviou formulário · abrir pasta no Drive';
+    b.setAttribute('aria-label', r.sigla + ': ' + TXR.pct(r.pct) + ' de recebimento, ' + TXR.nome[f]);
+    b.append(sg, pc, nm, TXR.bar(r.pct, TXR.cor[f]), cp);
+    return b;
+  }));
+});
+dash.draw('prec', (el) => {
+  const d = dash.data('recebimento'); if (d.status !== 'ok' || !Array.isArray(d.data)) { el.textContent = '—'; return; }
+  const r = d.data.find((x) => x.pasta === TX.pasta()); if (!r) { el.textContent = 'Sem dados de recebimento para esta pasta.'; return; }
+  const f = TXR.faixa(r);
+  const top = document.createElement('div'); top.className = 'tx-rk'; top.style.margin = '0';
+  const g = document.createElement('div'); g.className = 't';
+  const w = document.createElement('div'); w.className = 'g';
+  const v = document.createElement('span'); v.className = 'v'; v.textContent = TXR.pct(r.pct);
+  w.append(TXR.ring(r.pct, TXR.cor[f]), v);
+  const l = document.createElement('span'); l.className = 'l'; l.textContent = 'Recebimento';
+  const s = document.createElement('span'); s.className = 's'; s.textContent = TXR.nome[f];
+  g.append(l, w, s);
+  top.append(g,
+    txTile('Identificação (peso 20%)', TXR.pct(r.pct_ident), r.ident_ok + ' de ' + r.ident_total + ' campos obrigatórios', TXR.bar(r.pct_ident, 'var(--tx-a2)')),
+    txTile('Incisos (peso 40%)', TXR.pct(r.pct_incisos), r.incisos_ok + ' de ' + r.incisos_total + ' com aplicabilidade informada', TXR.bar(r.pct_incisos, 'var(--tx-a1)')),
+    txTile('Detalhamento (peso 40%)', TXR.pct(r.pct_detalhe), r.aplicaveis ? r.aplicaveis_com_dados + ' de ' + r.aplicaveis + ' incisos aplicáveis com dados na aba' : (r.abas_com_dados ? 'nenhum inciso marcado como aplicável; ' + r.abas_com_dados + ' abas com dados' : 'nenhuma aba com dados'), TXR.bar(r.pct_detalhe, 'var(--tx-a1)')));
+  const ul = document.createElement('ul'); ul.className = 'tx-rmiss';
+  const li = (t) => { const x = document.createElement('li'); x.textContent = t; ul.appendChild(x); };
+  if (r.faltam_ident) li('Campos obrigatórios em branco: ' + r.faltam_ident + '.');
+  if (r.faltam_incisos) li('Incisos sem aplicabilidade informada: ' + r.faltam_incisos + '.');
+  if (r.faltam_detalhe) li('Incisos marcados como aplicáveis sem dados na aba: ' + r.faltam_detalhe + '.');
+  if (!ul.children.length) li('Nada pendente no formulário.');
+  el.replaceChildren(top, ul);
+});
+
 // Mapa das obras: filtros de situação e pasta, sempre com o estado inteiro.
 const TXO = (() => {
   const grupo = (sit) => sit === 'Em andamento' ? 'andamento' : (sit === 'Paralisada' || sit === 'Inacabada') ? 'parada' : sit === 'Não iniciada' ? 'naoini' : sit === 'Concluída' ? 'concl' : 'outro';
