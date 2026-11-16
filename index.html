@@ -16,9 +16,9 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 (function(){
-  const SRC=['pastas','controle','contratos','obras','convenios','financas','pessoal','patrimonio','precatorios','programas','sistemas','pendencias','tac_tag','atos','previdencia','incentivos','malha','eixos','recebimento'];
+  const SRC=['pastas','controle','contratos','obras','convenios','financas','pessoal','patrimonio','precatorios','programas','sistemas','pendencias','tac_tag','atos','previdencia','incentivos','malha','eixos','recebimento','organograma'];
   const DS={}, ST={}, calcs={}, draws={}, ons=[];
-  const P={pasta:'',aba:'',feixo:'',mun:'',osit:'',opasta:''};
+  const P={pasta:'',aba:'',feixo:'',mun:'',osit:'',opasta:'',vista:'',onode:'',ofrente:''};
   const run=()=>{ons.forEach(f=>{try{f()}catch(e){console.error(e)}});Object.keys(draws).forEach(n=>document.querySelectorAll('[data-draw="'+n+'"]').forEach(el=>{if(el.closest('[hidden]'))return;try{draws[n](el)}catch(e){console.error(n,e)}}));};
   window.dash={
     colors:['var(--c1)','var(--c2)','var(--c3)','var(--c4)'],
@@ -28,9 +28,9 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     calc(id,o){calcs[id]=o}, loader(){}, refresh(){}, onData(fn){ons.push(fn)},
     draw(name,fn){ if(typeof fn==='function'||(fn&&fn.update)){draws[name]=typeof fn==='function'?fn:fn.update} else document.querySelectorAll('[data-draw="'+name+'"]').forEach(el=>{try{draws[name](el)}catch(e){console.error(e)}}); }
   };
-  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261115b').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
+  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261116a').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
   let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,150)});
-  window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));const m=h.match(/^eixo-([1-6])$/);if(m){if(P.aba!==m[1]||P.pasta){P.aba=m[1];P.pasta='';run()}return}const v=h==='geral'?'':h;if(h==='geral'&&(P.aba||P.pasta)){P.aba='';P.pasta='';run();return}if(v!==P.pasta){P.pasta=v;run()}});
+  window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));if(h==='organograma'){P.vista='org';P.pasta='';P.aba='';run();return}const m=h.match(/^eixo-([1-6])$/);if(m){if(P.aba!==m[1]||P.pasta||P.vista){P.aba=m[1];P.pasta='';P.vista='';run()}return}const v=h==='geral'?'':h;if(h==='geral'&&(P.aba||P.pasta||P.vista)){P.aba='';P.pasta='';P.vista='';run();return}if(v)P.vista='';if(v!==P.pasta){P.pasta=v;run()}});
 })();
 </script>
 </head>
@@ -73,6 +73,81 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 .tx-tip b{font-weight:var(--cds-font-weight-medium)}
 .tx-map{min-height:260px}
 .tx-omap{min-height:380px}
+/* organograma */
+.tx-orgwrap{overflow-x:auto;padding:8px 0 4px}
+.tx-orgtop{display:flex;justify-content:center;align-items:stretch;gap:0;flex-wrap:wrap}
+.tx-orgtree,.tx-orgtree ul{margin:0;padding:0;list-style:none}
+.tx-orgtree ul{display:flex;justify-content:center;padding-top:22px;position:relative}
+.tx-orgtree li{list-style:none;position:relative;padding:22px 8px 0;display:flex;flex-direction:column;align-items:center}
+.tx-orgtree li::before,.tx-orgtree li::after{content:'';position:absolute;top:0;right:50%;width:50%;height:22px;border-top:2px solid var(--tx-line)}
+.tx-orgtree li::after{right:auto;left:50%;border-left:2px solid var(--tx-line)}
+.tx-orgtree li:only-child::before,.tx-orgtree li:only-child::after{display:none}
+.tx-orgtree li:only-child{padding-top:0}
+.tx-orgtree li:first-child::before,.tx-orgtree li:last-child::after{border:0}
+.tx-orgtree li:last-child::before{border-right:2px solid var(--tx-line);border-radius:0 8px 0 0}
+.tx-orgtree li:first-child::after{border-radius:8px 0 0 0}
+.tx-orgtree ul ul::before{content:'';position:absolute;top:0;left:50%;height:22px;border-left:2px solid var(--tx-line)}
+.tx-orgtree>li{padding-top:0}
+.tx-onode{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:4px;width:200px;padding:10px 12px;border-radius:12px;border:1px solid var(--color-border-line);border-top:4px solid var(--oc,var(--tx-a1));background:var(--color-panel);text-align:left;box-shadow:0 1px 0 var(--color-border-line)}
+.tx-onode:hover,.tx-onode:focus-visible{border-color:var(--oc,var(--tx-a1));background:var(--tx-tint)}
+.tx-onode.on{outline:2px solid var(--oc,var(--tx-a1));outline-offset:2px;background:var(--tx-tint)}
+.tx-onode .k{font-family:var(--tx-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-fg-muted)}
+.tx-onode .t{font-weight:700;font-size:var(--cds-font-size-body);line-height:1.25}
+.tx-onode .m{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);line-height:1.35}
+.tx-onode .tx-rbar{margin-top:2px}
+.tx-ogrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:min(900px,calc(100vw - 80px));padding-top:22px;position:relative}
+.tx-ogrid::before{content:'';position:absolute;top:0;left:50%;height:22px;border-left:2px solid var(--tx-line)}
+.tx-ogrid .tx-onode{width:auto}
+.tx-osubs{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.tx-osub{all:unset;cursor:pointer;font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid var(--color-border-line);background:var(--color-panel)}
+.tx-osub:hover,.tx-osub:focus-visible,.tx-osub.on{border-color:var(--tx-a2);background:var(--tx-tint)}
+.tx-otoprow{position:relative;display:flex;justify-content:center}
+.tx-oside{position:absolute;right:100%;top:0;display:flex;align-items:center;padding-right:0}
+.tx-olink{display:flex;align-items:center;padding:0 10px;color:var(--color-fg-muted);font-size:11px;font-family:var(--tx-mono);gap:6px}
+.tx-olink::before{content:'';width:46px;border-top:2px dashed var(--tx-line)}
+@media (max-width:980px){
+  .tx-orgtree ul,.tx-ogrid{display:block;padding:0 0 0 18px;width:auto;border-left:2px solid var(--tx-line);margin-left:12px}
+  .tx-orgtree li{display:block;padding:8px 0 0 0}
+  .tx-orgtree li::before{display:block;content:'';position:absolute;top:28px;left:-18px;width:16px;height:0;border-top:2px solid var(--tx-line);border-right:0;border-radius:0}
+  .tx-orgtree li::after,.tx-orgtree ul ul::before,.tx-ogrid::before{display:none}
+  .tx-orgtree>li::before{display:none}
+  .tx-onode,.tx-ogrid .tx-onode{width:100%;max-width:420px;margin-top:8px}
+  .tx-orgtop{justify-content:flex-start;flex-direction:column}
+  .tx-otoprow{display:block}
+  .tx-oside{position:static;display:block}
+  .tx-olink{padding:6px 0 6px 12px}
+  .tx-olink::before{width:0;height:18px;border-top:0;border-left:2px dashed var(--tx-line)}
+}
+.tx-odet-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--cds-gap-sm);align-items:flex-start}
+.tx-ofacts{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.tx-ofacts span{font-size:var(--cds-font-size-caption);padding:3px 9px;border-radius:999px;border:1px solid var(--color-border-line);background:var(--color-panel)}
+.tx-ofacts b{font-family:var(--tx-mono)}
+.tx-osem{border-collapse:separate;border-spacing:3px;width:100%;min-width:640px;font-size:var(--cds-font-size-caption)}
+.tx-osem th{font-weight:500;color:var(--color-fg-muted);font-family:var(--tx-mono);font-size:11px;text-align:center;padding:4px}
+.tx-osem th.now{color:var(--tx-acc)}
+.tx-osem td{height:26px;border-radius:6px;background:color-mix(in srgb,var(--tx-a1) 6%,var(--color-panel))}
+.tx-osem td.l{background:none;padding-right:10px;white-space:nowrap;text-align:left}
+.tx-osem td.on{background:linear-gradient(135deg,var(--tx-a1),var(--tx-a2))}
+.tx-osem td.now{background:color-mix(in srgb,var(--tx-acc) 16%,var(--color-panel))}
+.tx-osem td.on.now{background:linear-gradient(135deg,var(--tx-a1),var(--tx-a2));box-shadow:inset 0 0 0 2px var(--tx-acc),0 0 0 2px color-mix(in srgb,var(--tx-acc) 35%,transparent)}
+.tx-omarcos{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:var(--cds-gap-md)}
+.tx-omarcos .m{border:1px solid var(--color-border-line);border-left:4px solid var(--tx-a2);border-radius:8px;padding:8px 10px;font-size:var(--cds-font-size-caption);display:flex;flex-direction:column;gap:2px}
+.tx-omarcos .m.past{opacity:.6;border-left-color:var(--color-ok)}
+.tx-omarcos .m b{font-family:var(--tx-mono)}
+.tx-oag{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.tx-oag li{display:grid;grid-template-columns:160px minmax(0,1fr);gap:4px 12px;padding:8px 10px;border:1px solid var(--color-border-line);border-radius:8px;font-size:var(--cds-font-size-caption)}
+.tx-oag li.past{opacity:.55}
+.tx-oag li.next{border-color:var(--tx-a2);background:var(--tx-tint)}
+.tx-oag .d{font-family:var(--tx-mono)}
+.tx-oag .p{font-weight:600;font-size:var(--cds-font-size-body)}
+@media (max-width:560px){.tx-oag li{grid-template-columns:1fr}}
+.tx-oap{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--cds-gap-md)}
+.tx-oap h3{margin:0 0 6px;font-size:var(--cds-font-size-body)}
+.tx-oap .r{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:70px minmax(0,1fr) 54px;gap:2px 10px;align-items:center;width:100%;padding:6px 8px;border-radius:8px;border:1px solid transparent;font-size:var(--cds-font-size-caption)}
+.tx-oap .r:hover,.tx-oap .r:focus-visible{border-color:var(--tx-line);background:var(--tx-tint)}
+.tx-oap .r .sg{font-weight:700;color:var(--tx-acc)}
+.tx-oap .r .pc{font-family:var(--tx-mono);text-align:right}
+.tx-oap .r .tx-rbar{grid-column:2/-1;height:5px}
 .tx-rk{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--cds-gap-md);margin:var(--cds-gap-md) 0}
 .tx-rk .t{border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:var(--color-panel);min-width:0}
 .tx-rk .t .l{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
@@ -243,6 +318,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     <button class="tx-tab" type="button" data-aba="4">Eixo 4 – Infraestrutura, Investimentos e Desenvolvimento.<span class="c" data-draw="ecount" data-eixo="4" data-source="c_eixo_tot" data-field="pastas">—</span></button>
     <button class="tx-tab" type="button" data-aba="5">Eixo 5 – Assuntos Jurídicos e Compromissos Institucionais.<span class="c" data-draw="ecount" data-eixo="5" data-source="c_eixo_tot" data-field="pastas">—</span></button>
     <button class="tx-tab" type="button" data-aba="6">Eixo 6 – Planejamento Governamental e Gestão de Resultados.<span class="c" data-draw="ecount" data-eixo="6" data-source="c_eixo_tot" data-field="pastas">—</span></button>
+    <button class="tx-tab tx-tab-org" type="button" data-vista="org">Organograma</button>
   </nav>
   <div class="tx-munbar" id="filtro-municipio"><span class="tx-eyebrow">Município</span><select id="mun" class="dash-select" data-draw="munsel" data-source="c_mun" aria-label="Filtrar por município"></select><button class="tx-btn" type="button" id="limpar-mun" hidden>Limpar município</button><span class="tx-muted">Obras e bens com município informado. Também dá para clicar num município no mapa.</span></div>
 
@@ -262,6 +338,47 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
   </section>
 
   <!-- VISÃO GERAL -->
+
+  <!-- ORGANOGRAMA -->
+  <div id="org" class="tx-sec" hidden>
+    <section class="tx-card">
+      <span class="tx-eyebrow">Organograma · Cronograma executivo</span>
+      <h2 data-draw="orgtit" data-source="organograma">Organograma da transição</h2>
+      <p class="tx-muted" data-draw="orgsub" data-source="organograma">—</p>
+      <p class="tx-muted">Estrutura montada a partir das quatro abas do cronograma executivo (visão semanal, atividades, agenda institucional e apresentações das pastas). Clique numa caixa para ver o papel, a rotina, as atividades, a agenda e os marcos daquela instância.</p>
+      <div class="tx-orgwrap" data-draw="orgtree" data-source="organograma recebimento"></div>
+    </section>
+    <section class="tx-card" id="org-detalhe" aria-live="polite">
+      <div data-draw="orgdet" data-source="organograma recebimento">—</div>
+    </section>
+    <section class="tx-card">
+      <span class="tx-eyebrow">Visão semanal</span><h2>Trilhas de execução por semana</h2>
+      <p class="tx-muted">A coluna destacada é a semana de hoje.</p>
+      <div class="tx-scroll" data-draw="orgsem" data-source="organograma"></div>
+      <div class="tx-omarcos" data-draw="orgmarcos" data-source="organograma"></div>
+    </section>
+    <section class="tx-card">
+      <span class="tx-eyebrow">Agenda institucional</span><h2>Reuniões e pontos de decisão</h2>
+      <p class="tx-muted" data-draw="orgagn" data-source="organograma">—</p>
+      <ol class="tx-oag" data-draw="orgagenda" data-source="organograma"></ol>
+    </section>
+    <section class="tx-card">
+      <span class="tx-eyebrow">Apresentações das pastas</span><h2>21 secretarias e órgãos centrais</h2>
+      <p class="tx-muted">Data da exposição, área principal e o percentual de recebimento dos dados de cada unidade no painel. Clique para abrir a pasta.</p>
+      <div class="tx-oap" data-draw="orgapres" data-source="organograma recebimento"></div>
+    </section>
+    <section class="tx-card">
+      <span class="tx-eyebrow">Matriz de execução</span><h2>Atividades por frente</h2>
+      <p class="tx-muted" data-draw="orgmnota" data-source="organograma">—</p>
+      <div class="tx-omap-row" data-draw="orgfrentes" data-source="organograma" style="margin:var(--cds-gap-sm) 0"></div>
+      <div class="tx-scroll tx-tbl" data-draw="orgativ" data-source="organograma"></div>
+    </section>
+    <details class="tx-card">
+      <summary>Notas do cronograma e base normativa</summary>
+      <div data-draw="orgnotas" data-source="organograma"></div>
+    </details>
+  </div>
+
   <div id="geral" class="tx-sec">
     <div class="tx-filter" id="filtro-eixo"><span class="tx-eyebrow">Filtrar por eixo</span><button class="tx-fchip" type="button" data-feixo="">Todos</button><button class="tx-fchip" type="button" data-feixo="1">Eixo 1 – Gestão Fiscal, Orçamento e Finanças Públicas.</button><button class="tx-fchip" type="button" data-feixo="2">Eixo 2 – Gestão Administrativa e Organização do Estado.</button><button class="tx-fchip" type="button" data-feixo="3">Eixo 3 – Políticas Públicas e Serviços Essenciais.</button><button class="tx-fchip" type="button" data-feixo="4">Eixo 4 – Infraestrutura, Investimentos e Desenvolvimento.</button><button class="tx-fchip" type="button" data-feixo="5">Eixo 5 – Assuntos Jurídicos e Compromissos Institucionais.</button><button class="tx-fchip" type="button" data-feixo="6">Eixo 6 – Planejamento Governamental e Gestão de Resultados.</button></div>
     <div class="tx-kpis" id="kpis-geral">
@@ -857,22 +974,26 @@ dash.calc('c_geo_obras', {
   const h = decodeURIComponent((location.hash || '').slice(1));
   const m = h.match(/^eixo-([1-6])$/);
   if (m) dash.setParams({ aba: m[1], pasta: '' });
+  else if (h === 'organograma') dash.setParams({ vista: 'org', pasta: '', aba: '' });
   else if (h && h !== 'geral') dash.setParams({ pasta: h });
 })();
 
 // Mostra a visão geral ou a pasta, e esconde as seções sem dados.
 dash.onData(() => {
-  const p = TX.pasta(), a = TX.aba(), f = TX.feixo();
-  document.querySelectorAll('#geral').forEach((e) => { e.hidden = !!p || !!a; });
-  document.querySelectorAll('#eixo').forEach((e) => { e.hidden = !!p || !a; });
+  const p = TX.pasta(), a = TX.aba(), f = TX.feixo(), v = !p && String(dash.params().vista || '') === 'org';
+  document.querySelectorAll('#geral').forEach((e) => { e.hidden = !!p || !!a || v; });
+  document.querySelectorAll('#eixo').forEach((e) => { e.hidden = !!p || !a || v; });
+  document.querySelectorAll('#org').forEach((e) => { e.hidden = !v; });
+  document.querySelectorAll('#resumo').forEach((e) => { e.hidden = v; });
+  document.querySelectorAll('.tx-tab-org').forEach((e) => { e.classList.toggle('on', v); e.setAttribute('aria-current', v ? 'page' : 'false'); });
   document.querySelectorAll('#pasta').forEach((e) => { e.hidden = !p; });
   document.querySelectorAll('[data-eixohead]').forEach((e) => { e.hidden = e.dataset.eixohead !== a; });
   const mu = TX.mun();
-  document.querySelectorAll('#municipio').forEach((e) => { e.hidden = !!p || !mu; });
-  document.querySelectorAll('#filtro-municipio').forEach((e) => { e.hidden = !!p; });
+  document.querySelectorAll('#municipio').forEach((e) => { e.hidden = !!p || !mu || v; });
+  document.querySelectorAll('#filtro-municipio').forEach((e) => { e.hidden = !!p || v; });
   document.querySelectorAll('#limpar-mun').forEach((e) => { e.hidden = !mu; });
   document.querySelectorAll('#kpis-geral, #kpis-eixo, #pendentes').forEach((e) => { e.hidden = !!mu; });
-  document.querySelectorAll('.tx-tab').forEach((e) => { const on = !p && e.dataset.aba === a; e.classList.toggle('on', on); e.setAttribute('aria-current', on ? 'page' : 'false'); });
+  document.querySelectorAll('.tx-tab[data-aba]').forEach((e) => { const on = !p && !v && e.dataset.aba === a; e.classList.toggle('on', on); e.setAttribute('aria-current', on ? 'page' : 'false'); });
   const os = String(dash.params().osit || ''), op = String(dash.params().opasta || '');
   document.querySelectorAll('.tx-ochip').forEach((e) => { const on = e.dataset.osit === os; e.classList.toggle('on', on); e.setAttribute('aria-pressed', on ? 'true' : 'false'); });
   document.querySelectorAll('.tx-olimpar').forEach((e) => { e.hidden = !os && !op && !mu; });
@@ -885,7 +1006,8 @@ dash.onData(() => {
 });
 
 document.querySelectorAll('#voltar').forEach((b) => b.addEventListener('click', () => { const a = TX.aba(); dash.setParams({ pasta: '' }); dash.setLink(a ? 'eixo-' + a : 'geral'); window.scrollTo({ top: 0 }); }));
-document.querySelectorAll('.tx-tab').forEach((b) => b.addEventListener('click', () => TX.goAba(b.dataset.aba)));
+document.querySelectorAll('.tx-tab[data-aba]').forEach((b) => b.addEventListener('click', () => TX.goAba(b.dataset.aba)));
+document.querySelectorAll('.tx-tab-org').forEach((b) => b.addEventListener('click', () => { dash.setParams({ vista: 'org', pasta: '', aba: '' }); dash.setLink('organograma'); }));
 document.querySelectorAll('.tx-fchip').forEach((b) => b.addEventListener('click', () => dash.setParams({ feixo: b.dataset.feixo })));
 document.querySelectorAll('#limpar-mun').forEach((b) => b.addEventListener('click', () => dash.setParams({ mun: '' })));
 document.querySelectorAll('.tx-ochip').forEach((b) => b.addEventListener('click', () => dash.setParams({ osit: b.dataset.osit })));
@@ -895,8 +1017,8 @@ window.__txAll = false;
 const txToggle = (all) => { window.__txAll = all; document.querySelectorAll('#mais-contratos').forEach((e) => { e.hidden = all; }); document.querySelectorAll('#menos-contratos').forEach((e) => { e.hidden = !all; }); dash.draw('tcontr'); dash.draw('ncontr'); };
 document.querySelectorAll('#mais-contratos').forEach((b) => b.addEventListener('click', () => txToggle(true)));
 document.querySelectorAll('#menos-contratos').forEach((b) => b.addEventListener('click', () => txToggle(false)));
-window.TX.goAba = (a) => { dash.setParams({ aba: a, pasta: '' }); dash.setLink(a ? 'eixo-' + a : 'geral'); };
-window.TX.go = (p) => { dash.setParams({ pasta: p }); dash.setLink(p); document.querySelectorAll('#topo').forEach((e) => e.scrollIntoView({ block: 'start' })); };
+window.TX.goAba = (a) => { dash.setParams({ aba: a, pasta: '', vista: '' }); dash.setLink(a ? 'eixo-' + a : 'geral'); };
+window.TX.go = (p) => { dash.setParams({ pasta: p, vista: '' }); dash.setLink(p); document.querySelectorAll('#topo').forEach((e) => e.scrollIntoView({ block: 'start' })); };
 
 dash.draw('pick', (sel) => {
   const rows = TX.rowsOf('pastas') || [];
@@ -1132,6 +1254,216 @@ dash.draw('prec', (el) => {
   if (r.faltam_detalhe) li('Incisos marcados como aplicáveis sem dados na aba: ' + r.faltam_detalhe + '.');
   if (!ul.children.length) li('Nada pendente no formulário.');
   el.replaceChildren(top, ul);
+});
+
+
+// Organograma (cronograma executivo da transição)
+const TXG = (() => {
+  const O = () => { const d = dash.data('organograma'); return d.status === 'ok' && Array.isArray(d.data) && d.data[0] ? d.data[0] : null; };
+  const pad = (x) => String(x).padStart(2, '0');
+  const hoje = () => { const t = new Date(); return t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate()); };
+  const br = (iso) => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : '—';
+  const cal = (a) => { const h = hoje(); return a.prazo_iso && a.prazo_iso < h ? 'Prazo encerrado' : a.inicio_iso && a.inicio_iso > h ? 'A iniciar' : 'Em curso'; };
+  const calCls = { 'Prazo encerrado': '', 'A iniciar': '', 'Em curso': 'warn' };
+  const cor = { colegiado: 'var(--tx-a2)', coordenacao: 'var(--tx-a1)', apoio: 'var(--color-warn)', grupo: 'var(--tx-acc)', eixo: 'var(--tx-a1)', subcomite: 'var(--tx-a2)', orgaos: 'var(--color-ok)' };
+  const node = () => String(dash.params().onode || 'comissao');
+  const ativDe = (o, id) => o.atividades.filter((a) => a.nos.includes(id) || (id.startsWith('sub-') && a.nos.includes('sub')));
+  const agDe = (o, id) => o.agenda.filter((a) => a.nos.includes(id) || (id.startsWith('eixo') && id !== 'eixos' && a.nos.includes('eixos')));
+  const rec = () => { const d = dash.data('recebimento'); return d.status === 'ok' && Array.isArray(d.data) ? d.data : []; };
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  return { O, hoje, br, cal, calCls, cor, node, ativDe, agDe, rec, el };
+})();
+dash.draw('orgtit', (e) => { const o = TXG.O(); e.textContent = o ? o.titulo : 'Organograma da transição'; });
+dash.draw('orgsub', (e) => { const o = TXG.O(); e.textContent = o ? o.subtitulo : '—'; });
+const txONode = (o, n, extra) => {
+  const { el } = TXG;
+  const b = el('button', 'tx-onode' + (TXG.node() === n.id ? ' on' : '')); b.type = 'button';
+  b.style.setProperty('--oc', TXG.cor[n.tipo] || 'var(--tx-a1)');
+  b.setAttribute('aria-pressed', TXG.node() === n.id ? 'true' : 'false');
+  const k = { colegiado: 'Colegiado', coordenacao: 'Coordenação', apoio: 'Apoio executivo', grupo: 'Grupos técnicos', eixo: 'Eixo temático', orgaos: 'Fontes de informação' }[n.tipo] || '';
+  b.append(el('span', 'k', k), el('span', 't', n.tipo === 'eixo' ? n.nome.replace(/\.$/, '') : n.nome));
+  const at = TXG.ativDe(o, n.id).length, ag = TXG.agDe(o, n.id).length;
+  const meta = [];
+  if (n.rotina) meta.push(n.rotina.frequencia + ' · ' + n.rotina.modalidade);
+  meta.push(at + (at === 1 ? ' atividade' : ' atividades') + (ag ? ' · ' + ag + (ag === 1 ? ' compromisso na agenda' : ' compromissos na agenda') : ''));
+  b.append(el('span', 'm', meta.join(' · ')));
+  if (extra) b.append(...extra);
+  b.addEventListener('click', () => { dash.setParams({ onode: n.id }); document.querySelectorAll('#org-detalhe').forEach((x) => x.scrollIntoView({ block: 'nearest', behavior: 'smooth' })); });
+  return b;
+};
+dash.draw('orgtree', (root) => {
+  const o = TXG.O(); if (!o) { root.textContent = '—'; return; }
+  const { el } = TXG;
+  const N = Object.fromEntries(o.nodes.map((n) => [n.id, n]));
+  const R = TXG.rec();
+  const eixoExtra = (n) => {
+    const us = R.filter((r) => (r.eixos || []).includes(n.eixo_num));
+    const recb = () => { if (!us.length) return [el('span', 'm', 'Sem pastas vinculadas na planilha de eixos')]; const m = us.reduce((a, r) => a + r.pct, 0) / us.length; return [el('span', 'm', us.length + (us.length === 1 ? ' unidade' : ' unidades') + ' · recebimento ' + TXR.pct(m)), TXR.bar(m, 'var(--tx-a1)')]; };
+    if (n.id === 'eixo3') {
+      const w = el('span', 'tx-osubs');
+      o.nodes.filter((x) => x.pai === 'eixo3').forEach((x) => { const c = el('span', 'tx-osub' + (TXG.node() === x.id ? ' on' : ''), x.curto); c.setAttribute('role', 'button'); c.tabIndex = 0; const go = (ev) => { ev.stopPropagation(); dash.setParams({ onode: x.id }); }; c.addEventListener('click', go); c.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(ev); } }); w.appendChild(c); });
+      return [...recb(), w];
+    }
+    return recb();
+  };
+  const orgExtra = () => {
+    if (!R.length) return [];
+    const env = R.filter((r) => r.enviou).length, m = R.reduce((a, r) => a + r.pct, 0) / R.length;
+    return [el('span', 'm', o.apresentacoes.length + ' apresentações · ' + env + ' de ' + R.length + ' pastas com formulário · recebimento ' + TXR.pct(m)), TXR.bar(m, 'var(--color-ok)')];
+  };
+  const top = el('div', 'tx-orgtop');
+  const ul = el('ul', 'tx-orgtree');
+  const li1 = el('li');
+  const row = el('div', 'tx-otoprow'); const side = el('div', 'tx-oside');
+  side.append(txONode(o, N.orgaos, orgExtra()), el('span', 'tx-olink', 'informações'));
+  row.append(side, txONode(o, N.comissao)); li1.appendChild(row);
+  const ul2 = el('ul'); const li2 = el('li'); li2.appendChild(txONode(o, N.coord));
+  const ul3 = el('ul');
+  const li3a = el('li'); li3a.appendChild(txONode(o, N.secex));
+  const li3b = el('li'); li3b.appendChild(txONode(o, N.eixos));
+  const grid = el('div', 'tx-ogrid');
+  o.nodes.filter((n) => n.tipo === 'eixo').forEach((n) => grid.appendChild(txONode(o, n, eixoExtra(n))));
+  li3b.appendChild(grid);
+  ul3.append(li3a, li3b); li2.appendChild(ul3); ul2.appendChild(li2); li1.appendChild(ul2); ul.appendChild(li1);
+  top.append(ul);
+  root.replaceChildren(top);
+});
+const txOTable = (rows, cols) => {
+  const { el } = TXG;
+  const t = el('table'); const th = el('thead'); const tr = el('tr');
+  cols.forEach(([h]) => tr.appendChild(el('th', '', h))); th.appendChild(tr);
+  const tb = el('tbody');
+  rows.forEach((r) => { const x = el('tr'); cols.forEach(([, f]) => { const td = el('td'); const v = f(r); if (v instanceof Node) td.appendChild(v); else td.textContent = v == null || v === '' ? '—' : v; x.appendChild(td); }); tb.appendChild(x); });
+  t.append(th, tb); return t;
+};
+const txOAtivCols = () => [
+  ['Código', (a) => a.codigo], ['Atividade', (a) => a.atividade], ['Responsável', (a) => a.responsavel],
+  ['Início', (a) => TXG.br(a.inicio_iso)], ['Prazo', (a) => TXG.br(a.prazo_iso)],
+  ['Pelo calendário', (a) => { const c = TXG.cal(a); return TXG.el('span', 'tx-pill ' + TXG.calCls[c], c); }],
+  ['Situação na planilha', (a) => a.situacao], ['Criticidade', (a) => TXG.el('span', 'tx-pill ' + (a.criticidade === 'Alta' ? 'bad' : a.criticidade === 'Média' ? 'warn' : ''), a.criticidade || '—')],
+  ['Produto ou evidência', (a) => a.produto], ['Depende de', (a) => a.dependencia], ['Observações', (a) => a.obs]];
+dash.draw('orgdet', (root) => {
+  const o = TXG.O(); if (!o) { root.textContent = '—'; return; }
+  const { el } = TXG;
+  const n = o.nodes.find((x) => x.id === TXG.node()) || o.nodes[0];
+  const out = [];
+  const h = el('div', 'tx-odet-h'); const hd = el('div');
+  hd.append(el('span', 'tx-eyebrow', 'Instância selecionada'), el('h2', '', n.nome));
+  h.appendChild(hd);
+  if (n.id !== 'comissao') { const bk = el('button', 'tx-btn', 'Voltar à Comissão Mista'); bk.type = 'button'; bk.addEventListener('click', () => dash.setParams({ onode: 'comissao' })); h.appendChild(bk); }
+  out.push(h);
+  if (n.descricao) out.push(el('p', '', n.descricao));
+  const at = TXG.ativDe(o, n.id).slice().sort((a, b) => (a.prazo_iso || '').localeCompare(b.prazo_iso || ''));
+  const facts = el('div', 'tx-ofacts');
+  const f = (lbl, val) => { const s = el('span'); s.append(lbl + ' '); s.appendChild(el('b', '', val)); facts.appendChild(s); };
+  if (n.rotina) { f('Frequência:', n.rotina.frequencia); f('Modalidade:', n.rotina.modalidade); f('Registro:', n.rotina.registro); }
+  const cc = (k) => at.filter((a) => TXG.cal(a) === k).length;
+  f('Atividades:', String(at.length)); f('Em curso hoje:', String(cc('Em curso'))); f('A iniciar:', String(cc('A iniciar'))); f('Prazo encerrado:', String(cc('Prazo encerrado')));
+  const prox = at.filter((a) => a.prazo_iso >= TXG.hoje())[0]; if (prox) f('Próximo prazo:', TXG.br(prox.prazo_iso) + ' (' + prox.codigo + ')');
+  out.push(facts);
+  const mk = o.marcos.filter((m) => m.nos.includes(n.id) || (n.tipo === 'eixo' && m.nos.includes('eixos')));
+  if (mk.length) { out.push(el('h3', '', 'Marcos')); const ul = el('ul', 'tx-rmiss'); mk.forEach((m) => ul.appendChild(el('li', '', m.marco + ' · ' + m.data + ' · ' + m.objeto + ' (' + m.responsavel + ')'))); out.push(ul); }
+  if (n.tipo === 'eixo' || n.id === 'orgaos') {
+    const R = TXG.rec(); const us = n.id === 'orgaos' ? R : R.filter((r) => (r.eixos || []).includes(n.eixo_num));
+    if (us.length) {
+      out.push(el('h3', '', n.id === 'orgaos' ? 'Recebimento dos dados por unidade' : 'Unidades do eixo e recebimento dos dados'));
+      const l = el('div', 'tx-rlist');
+      us.slice().sort((a, b) => b.pct - a.pct).forEach((r) => { const b = el(r.enviou ? 'button' : 'a', 'tx-rrow'); const fx = TXR.faixa(r); if (r.enviou) { b.type = 'button'; b.addEventListener('click', () => TX.go(r.pasta)); } else { b.href = r.pasta_url; b.target = '_blank'; b.rel = 'noopener'; } const pc = el('span', 'pc', TXR.pct(r.pct)); pc.style.color = TXR.cor[fx]; b.append(el('span', 'sg', r.sigla), pc, el('span', 'nm', r.nome), TXR.bar(r.pct, TXR.cor[fx])); l.appendChild(b); });
+      out.push(l);
+    }
+  }
+  if (n.id === 'eixos') { const ul = el('ul', 'tx-rmiss'); o.nodes.filter((x) => x.tipo === 'eixo').forEach((x) => ul.appendChild(el('li', '', x.nome.replace(/\.$/, '') + ': ' + TXG.ativDe(o, x.id).length + ' atividades'))); out.push(el('h3', '', 'Eixos'), ul); }
+  const ag = TXG.agDe(o, n.id);
+  if (ag.length) {
+    out.push(el('h3', '', 'Agenda'));
+    const ol = el('ol', 'tx-oag'); const hj = TXG.hoje(); let nx = false;
+    ag.forEach((a) => { const li = el('li', a.fim_iso < hj ? 'past' : (!nx && (nx = true) ? 'next' : '')); li.append(el('span', 'd', TXG.br(a.inicio_iso) + (a.fim_iso !== a.inicio_iso ? '–' + TXG.br(a.fim_iso) : '')), el('span', 'p', a.publico)); li.append(el('span', ''), el('span', '', a.pauta + ' · Registro: ' + a.registro)); ol.appendChild(li); });
+    out.push(ol);
+  }
+  out.push(el('h3', '', at.length ? 'Atividades sob responsabilidade (' + at.length + ')' : 'Atividades'));
+  if (at.length) { const w = el('div', 'tx-scroll tx-tbl'); w.appendChild(txOTable(at, txOAtivCols())); out.push(w); }
+  else out.push(el('p', 'tx-muted', 'Nenhuma atividade da matriz cita esta instância como responsável.'));
+  root.replaceChildren(...out);
+});
+dash.draw('orgsem', (root) => {
+  const o = TXG.O(); if (!o) { root.textContent = '—'; return; }
+  const { el } = TXG; const hj = TXG.hoje();
+  // semana atual: compara o dia de hoje com o rótulo "dd–dd/mm" ou "dd/mm–dd/mm"
+  const range = (lab) => { const m = lab.match(/(\d\d)(?:\/(\d\d))?[–-](\d\d)\/(\d\d)/); if (!m) return null; const m1 = m[2] || m[4]; return ['2026-' + m1 + '-' + m[1], '2026-' + m[4] + '-' + m[3]]; };
+  const now = o.semanas.map((l) => { const r = range(l); return r && hj >= r[0] && hj <= r[1] + 'z'; });
+  const t = el('table', 'tx-osem'); const tr = el('tr'); tr.appendChild(el('th', '', 'Trilha'));
+  o.semanas.forEach((l, i) => tr.appendChild(el('th', now[i] ? 'now' : '', l + (now[i] ? ' · hoje' : ''))));
+  const th = el('thead'); th.appendChild(tr); const tb = el('tbody');
+  o.trilhas.forEach((r) => { const x = el('tr'); x.appendChild(el('td', 'l', r.nome)); r.semanas.forEach((on, i) => { const td = el('td', (on ? 'on' : '') + (now[i] ? ' now' : '')); td.title = r.nome + ' · ' + o.semanas[i] + (on ? ': prevista' : ''); x.appendChild(td); }); tb.appendChild(x); });
+  t.append(th, tb); root.replaceChildren(t);
+});
+dash.draw('orgmarcos', (root) => {
+  const o = TXG.O(); if (!o) { root.replaceChildren(); return; }
+  const { el } = TXG; const hj = TXG.hoje();
+  root.replaceChildren(...o.marcos.map((m) => { const d = el('div', 'm' + (m.data_iso < hj ? ' past' : '')); d.append(el('b', '', m.marco + ' · ' + m.data), el('span', '', m.objeto), el('span', 'tx-muted', m.responsavel + (m.data_iso < hj ? ' · data passada' : ''))); return d; }));
+});
+dash.draw('orgagn', (e) => {
+  const o = TXG.O(); if (!o) { e.textContent = '—'; return; }
+  const hj = TXG.hoje(); const cm = o.agenda.filter((a) => a.natureza === 'Comissão Mista');
+  const feitas = cm.filter((a) => a.fim_iso < hj).length; const prox = o.agenda.find((a) => a.fim_iso >= hj);
+  e.textContent = cm.length + ' compromissos da Comissão Mista na agenda (' + feitas + ' com data passada). ' + (prox ? 'Próximo compromisso: ' + TXG.br(prox.inicio_iso) + ' · ' + prox.publico + '.' : 'Agenda encerrada.');
+});
+dash.draw('orgagenda', (root) => {
+  const o = TXG.O(); if (!o) { root.replaceChildren(); return; }
+  const { el } = TXG; const hj = TXG.hoje(); let nx = false;
+  root.replaceChildren(...o.agenda.map((a) => {
+    const past = a.fim_iso < hj; const li = el('li', past ? 'past' : (!nx && (nx = true) ? 'next' : ''));
+    const d = el('span', 'd', TXG.br(a.inicio_iso) + (a.fim_iso !== a.inicio_iso ? '–' + TXG.br(a.fim_iso) : ''));
+    const pill = el('span', 'tx-pill ' + (a.natureza === 'Comissão Mista' ? 'ok' : a.natureza === 'Reuniões técnicas' ? 'warn' : ''), a.natureza);
+    const c1 = el('span'); c1.append(d, el('br'), pill);
+    const c2 = el('span'); c2.append(el('span', 'p', a.publico), el('br'), a.pauta, el('br'), el('span', 'tx-muted', 'Registro: ' + a.registro + ' · ' + a.situacao));
+    li.append(c1, c2); return li;
+  }));
+});
+dash.draw('orgapres', (root) => {
+  const o = TXG.O(); if (!o) { root.replaceChildren(); return; }
+  const { el } = TXG; const R = new Map(TXG.rec().map((r) => [r.pasta, r]));
+  const dias = [...new Set(o.apresentacoes.map((a) => a.data_iso))];
+  const cols = dias.map((d) => {
+    const c = el('div'); const ap = o.apresentacoes.filter((a) => a.data_iso === d);
+    c.appendChild(el('h3', '', TXG.br(d) + ' · ' + ap.length + ' apresentações'));
+    ap.forEach((a) => { const r = R.get(a.pasta); const b = el(r && r.enviou ? 'button' : (r ? 'a' : 'div'), 'r'); if (r && r.enviou) { b.type = 'button'; b.addEventListener('click', () => TX.go(r.pasta)); } else if (r) { b.href = r.pasta_url; b.target = '_blank'; b.rel = 'noopener'; }
+      const pc = el('span', 'pc', r ? TXR.pct(r.pct) : '—'); if (r) pc.style.color = TXR.cor[TXR.faixa(r)];
+      const nm = el('span'); nm.append(el('b', '', a.orgao), ' · ' + a.area);
+      b.append(el('span', 'sg', a.sigla), nm, pc); if (r) b.appendChild(TXR.bar(r.pct, TXR.cor[TXR.faixa(r)]));
+      b.title = 'Requisição ' + a.requisicao + ' · resposta até ' + a.resposta + ' · ' + a.situacao + ' · Entidades vinculadas: ' + a.vinculadas;
+      c.appendChild(b); });
+    return c;
+  });
+  const rt = el('div'); rt.appendChild(el('h3', '', 'Roteiro mínimo de cada apresentação')); const ol = el('ul', 'tx-rmiss'); o.roteiro.forEach((x) => ol.appendChild(el('li', '', x))); rt.appendChild(ol);
+  root.replaceChildren(...cols, rt);
+});
+dash.draw('orgmnota', (e) => {
+  const o = TXG.O(); if (!o) { e.textContent = '—'; return; }
+  const A = o.atividades; const c = (k) => A.filter((a) => TXG.cal(a) === k).length;
+  e.textContent = o.matriz_nota + ' ' + A.length + ' ações: ' + c('Em curso') + ' em curso pelo calendário, ' + c('A iniciar') + ' a iniciar e ' + c('Prazo encerrado') + ' com prazo encerrado. Na planilha, todas constam como "' + [...new Set(A.map((a) => a.situacao))].join('", "') + '".';
+});
+dash.draw('orgfrentes', (root) => {
+  const o = TXG.O(); if (!o) { root.replaceChildren(); return; }
+  const cur = String(dash.params().ofrente || '');
+  const fr = [...new Set(o.atividades.map((a) => a.frente))];
+  const mk = (k, t) => { const b = TXG.el('button', 'tx-ochip' + (cur === k ? ' on' : ''), t); b.type = 'button'; b.setAttribute('aria-pressed', cur === k ? 'true' : 'false'); b.appendChild(TXG.el('b', '', String(k ? o.atividades.filter((a) => a.frente === k).length : o.atividades.length))); b.addEventListener('click', () => dash.setParams({ ofrente: k })); return b; };
+  root.replaceChildren(TXG.el('span', 'tx-eyebrow', 'Frente'), mk('', 'Todas '), ...fr.map((f) => mk(f, f + ' ')));
+});
+dash.draw('orgativ', (root) => {
+  const o = TXG.O(); if (!o) { root.replaceChildren(); return; }
+  const cur = String(dash.params().ofrente || '');
+  const rows = o.atividades.filter((a) => !cur || a.frente === cur);
+  const cols = txOAtivCols(); cols.splice(1, 0, ['Frente', (a) => a.frente]);
+  root.replaceChildren(txOTable(rows, cols));
+});
+dash.draw('orgnotas', (root) => {
+  const o = TXG.O(); if (!o) { root.replaceChildren(); return; }
+  const { el } = TXG;
+  const ul = el('ul', 'tx-rmiss'); o.notas.forEach((x) => ul.appendChild(el('li', '', x)));
+  const ub = el('ul', 'tx-rmiss');
+  o.base.forEach((x) => { const li = el('li'); const m = x.match(/^(.*?)(https?:\/\/\S+)$/); if (m) { li.append(m[1]); const a = el('a', '', m[2]); a.href = m[2]; a.target = '_blank'; a.rel = 'noopener'; li.appendChild(a); } else li.textContent = x; ub.appendChild(li); });
+  root.replaceChildren(el('h3', '', 'Notas'), ul, el('h3', '', 'Base normativa e documental'), ub);
 });
 
 // Mapa das obras: filtros de situação e pasta, sempre com o estado inteiro.
