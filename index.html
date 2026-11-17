@@ -28,7 +28,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     calc(id,o){calcs[id]=o}, loader(){}, refresh(){}, onData(fn){ons.push(fn)},
     draw(name,fn){ if(typeof fn==='function'||(fn&&fn.update)){draws[name]=typeof fn==='function'?fn:fn.update} else document.querySelectorAll('[data-draw="'+name+'"]').forEach(el=>{try{draws[name](el)}catch(e){console.error(e)}}); }
   };
-  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261116b').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
+  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261116c').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
   let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,150)});
   window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));if(h==='organograma'){P.vista='org';P.pasta='';P.aba='';run();return}const m=h.match(/^eixo-([1-6])$/);if(m){if(P.aba!==m[1]||P.pasta||P.vista){P.aba=m[1];P.pasta='';P.vista='';run()}return}const v=h==='geral'?'':h;if(h==='geral'&&(P.aba||P.pasta||P.vista)){P.aba='';P.pasta='';P.vista='';run();return}if(v)P.vista='';if(v!==P.pasta){P.pasta=v;run()}});
 })();
@@ -95,11 +95,6 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 .tx-flist{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
 .tx-fstack{display:flex;height:34px;border-radius:8px;overflow:hidden;margin:8px 0}
 .tx-fstack i{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-family:var(--tx-mono);overflow:hidden;white-space:nowrap}
-.tx-fbanner{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:center;width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--tx-line);background:linear-gradient(135deg,color-mix(in srgb,var(--tx-a1) 10%,var(--color-panel)),color-mix(in srgb,var(--tx-a2) 8%,var(--color-panel)))}
-.tx-fbanner:hover,.tx-fbanner:focus-visible{border-color:var(--tx-a2)}
-.tx-fbanner .h{font-weight:700;font-size:var(--cds-font-size-body)}
-.tx-fbanner .kk{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
-.tx-fbanner .kk b{font-family:var(--tx-mono);color:var(--color-fg)}
 /* organograma */
 .tx-orgwrap{overflow-x:auto;padding:8px 0 4px}
 .tx-orgtop{display:flex;justify-content:center;align-items:stretch;gap:0;flex-wrap:wrap}
@@ -370,7 +365,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
   <!-- PASTA INDICADORES FISCAIS (Eixo 1) -->
   <div id="fiscal" class="tx-sec" hidden>
     <section class="tx-card">
-      <div class="tx-row"><div><span class="tx-eyebrow">Pasta · Eixo 1 – Gestão Fiscal, Orçamento e Finanças Públicas.</span><h2>Indicadores Fiscais</h2></div><button class="tx-btn" type="button" id="fvoltar">Voltar ao Eixo 1</button></div>
+      <div class="tx-row"><div><span class="tx-eyebrow">Eixo 1 – Gestão Fiscal, Orçamento e Finanças Públicas.</span><h2>Indicadores Fiscais</h2></div><button class="tx-btn" type="button" id="fvoltar">Voltar</button></div>
       <p class="tx-muted">Dados das apresentações "Indicadores fiscais de 2026" (execução de janeiro a agosto, RREO e RGF no SICONFI) e "PLOA 2027 · Guia para novos gestores" (orçamento proposto comparado à LOA 2026). Valores nominais.</p>
       <div class="tx-fnav">
         <button class="tx-ochip" type="button" data-fgo="f-exec">Execução 2026</button><button class="tx-ochip" type="button" data-fgo="f-pessoal">RCL, pessoal e dívida</button><button class="tx-ochip" type="button" data-fgo="f-tabs">Receitas e despesas</button><button class="tx-ochip" type="button" data-fgo="f-ploa">PLOA 2027</button><button class="tx-ochip" type="button" data-fgo="f-cmp">PLOA 2027 × LOA 2026</button>
@@ -485,7 +480,6 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
       <div class="tx-card tx-kpi"><span class="tx-muted">Precatórios</span><span class="v" data-draw="g" data-source="c_geral" data-field="precatorios_valor" data-row="0" data-fmt="brl">—</span><span class="s"><span data-draw="g" data-source="c_geral" data-field="precatorios" data-row="0" data-fmt="n">—</span> registros</span></div>
     </div>
 
-    <div class="tx-fban-wrap" data-fban="geral" hidden><button class="tx-fbanner" type="button" data-draw="fban" data-source="fiscal">Indicadores Fiscais</button></div>
     <section class="tx-card" id="recebimento">
       <span class="tx-eyebrow">Recebimento dos dados · art. 4º da IN</span><h2>Percentual de recebimento</h2>
       <p class="tx-muted">O percentual de cada unidade soma três partes: identificação (20%, campos obrigatórios preenchidos), incisos (40%, quantos dos 26 tiveram a aplicabilidade informada) e detalhamento (40%, quantos incisos marcados como aplicáveis têm dados na aba correspondente; se nenhum foi marcado, conta o envio de alguma aba com dados). Quem não enviou formulário fica com 0%. O geral é a média das unidades.</p>
@@ -497,7 +491,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     <section class="tx-sec" id="pastas-lista">
       <span class="tx-eyebrow">Visão geral</span><h2>Pastas com formulário preenchido</h2>
       <p class="tx-muted">Clique numa pasta para abrir seus dados. A barra mostra quantos dos 26 incisos do art. 4º tiveram aplicabilidade informada.</p>
-      <div class="tx-cards" data-draw="cards" data-source="pastas"></div>
+      <div class="tx-cards" data-draw="cards" data-source="pastas fiscal"></div>
     </section>
 
     <section class="tx-card tx-sec" id="pendentes">
@@ -547,7 +541,6 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
   <!-- EIXO -->
   <div id="eixo" class="tx-sec" hidden>
     <div class="tx-eixohead" data-eixohead="1" hidden><span class="num">01</span><h2>Eixo 1 – Gestão Fiscal, Orçamento e Finanças Públicas.</h2></div>
-    <div class="tx-fban-wrap" data-fban="eixo" hidden><button class="tx-fbanner" type="button" data-draw="fban" data-source="fiscal">Indicadores Fiscais</button></div>
     <div class="tx-eixohead" data-eixohead="2" hidden><span class="num">02</span><h2>Eixo 2 – Gestão Administrativa e Organização do Estado.</h2></div>
     <div class="tx-eixohead" data-eixohead="3" hidden><span class="num">03</span><h2>Eixo 3 – Políticas Públicas e Serviços Essenciais.</h2></div>
     <div class="tx-eixohead" data-eixohead="4" hidden><span class="num">04</span><h2>Eixo 4 – Infraestrutura, Investimentos e Desenvolvimento.</h2></div>
@@ -588,7 +581,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 
     <section class="tx-sec" id="eixo-cards">
       <span class="tx-eyebrow">Pastas</span><h2>Cartões das pastas do eixo</h2>
-      <div class="tx-cards" data-draw="ecards" data-source="pastas"></div>
+      <div class="tx-cards" data-draw="ecards" data-source="pastas fiscal"></div>
     </section>
   </div>
 
@@ -1086,8 +1079,6 @@ dash.onData(() => {
   document.querySelectorAll('.tx-tab-org').forEach((e) => { e.classList.toggle('on', v); e.setAttribute('aria-current', v ? 'page' : 'false'); });
   document.querySelectorAll('#pasta').forEach((e) => { e.hidden = !p || fz; });
   document.querySelectorAll('#fiscal').forEach((e) => { e.hidden = !fz; });
-  document.querySelectorAll('[data-fban="eixo"]').forEach((e) => { e.hidden = a !== '1'; });
-  document.querySelectorAll('[data-fban="geral"]').forEach((e) => { e.hidden = !!f && f !== '1'; });
   document.querySelectorAll('[data-eixohead]').forEach((e) => { e.hidden = e.dataset.eixohead !== a; });
   const mu = TX.mun();
   document.querySelectorAll('#municipio').forEach((e) => { e.hidden = !!p || !mu || v; });
@@ -1106,9 +1097,8 @@ dash.onData(() => {
   if (r && r.pessoal === 0) document.querySelectorAll('#pessoal').forEach((e) => { e.hidden = true; });
 });
 
-document.querySelectorAll('#fvoltar').forEach((b) => b.addEventListener('click', () => { dash.setParams({ pasta: '', aba: '1', vista: '' }); dash.setLink('eixo-1'); window.scrollTo({ top: 0 }); }));
+document.querySelectorAll('#fvoltar').forEach((b) => b.addEventListener('click', () => { const a = TX.aba(); dash.setParams({ pasta: '' }); dash.setLink(a ? 'eixo-' + a : 'geral'); window.scrollTo({ top: 0 }); }));
 document.querySelectorAll('[data-fgo]').forEach((b) => b.addEventListener('click', () => document.querySelectorAll('#' + b.dataset.fgo).forEach((x) => x.scrollIntoView({ block: 'start', behavior: 'smooth' }))));
-document.querySelectorAll('.tx-fbanner').forEach((b) => b.addEventListener('click', () => TX.go('INDICADORES-FISCAIS')));
 document.querySelectorAll('#voltar').forEach((b) => b.addEventListener('click', () => { const a = TX.aba(); dash.setParams({ pasta: '' }); dash.setLink(a ? 'eixo-' + a : 'geral'); window.scrollTo({ top: 0 }); }));
 document.querySelectorAll('.tx-tab[data-aba]').forEach((b) => b.addEventListener('click', () => TX.goAba(b.dataset.aba)));
 document.querySelectorAll('.tx-tab-org').forEach((b) => b.addEventListener('click', () => { dash.setParams({ vista: 'org', pasta: '', aba: '' }); dash.setLink('organograma'); }));
@@ -1126,7 +1116,7 @@ window.TX.go = (p) => { dash.setParams({ pasta: p, vista: '' }); dash.setLink(p)
 
 dash.draw('pick', (sel) => {
   const rows = TX.rowsOf('pastas') || [];
-  sel.replaceChildren(new Option('Visão geral — todas as pastas', ''), new Option('Indicadores Fiscais — Eixo 1 (RREO/RGF 2026 e PLOA 2027)', 'INDICADORES-FISCAIS'), ...rows.map((r) => new Option(r.sigla + ' — ' + r.nome, r.pasta)));
+  sel.replaceChildren(new Option('Visão geral — todas as pastas', ''), ...[...rows.map((r) => [r.sigla + ' — ' + r.nome, r.pasta]), ['Indicadores Fiscais — RREO/RGF de 2026 e PLOA 2027', 'INDICADORES-FISCAIS']].sort((x, y) => x[0].localeCompare(y[0], 'pt-BR')).map(([t, v]) => new Option(t, v)));
   sel.value = TX.pasta();
   sel.onchange = () => TX.go(sel.value);
 });
@@ -1242,8 +1232,20 @@ const txCards = (el, n) => {
   if (!rows0 || dash.data('eixos').status !== 'ok') { TX.placeholder(el, '—'); return; }
   const rows = txFiltro(rows0, n);
   if (!rows.length) { TX.placeholder(el, TX.mun() ? 'Nenhuma pasta deste filtro tem obra ou bem no município.' : 'Nenhuma pasta deste eixo tem formulário no painel.'); return; }
-  const sorted = [...rows].sort((a, b) => a.sigla.localeCompare(b.sigla, 'pt-BR'));
+  const fisc = (!n || String(n) === '1') && !TX.mun() && dash.data('fiscal').status === 'ok' ? [{ __fiscal: true, sigla: 'Indicadores Fiscais', pasta: 'INDICADORES-FISCAIS' }] : [];
+  const sorted = [...rows, ...fisc].sort((a, b) => a.sigla.localeCompare(b.sigla, 'pt-BR'));
   el.replaceChildren(...sorted.map((r) => {
+    if (r.__fiscal) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'tx-pc'; b.setAttribute('aria-label', 'Abrir Indicadores Fiscais');
+      const s = document.createElement('span'); s.className = 'sig'; s.textContent = 'Indicadores Fiscais';
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = 'Execução fiscal de 2026 (RREO e RGF) e PLOA 2027';
+      const dl = document.createElement('dl');
+      [['RCL (12 meses)', 'R$ 20,97 bi'], ['Pessoal / RCL', '55,17%'], ['PLOA 2027', 'R$ 28,55 bi']].forEach(([l, v]) => { const dt = document.createElement('dt'); dt.textContent = l; const dd = document.createElement('dd'); dd.textContent = v; dl.append(dt, dd); });
+      const cap = document.createElement('span'); cap.className = 'nm'; cap.style.minHeight = '0'; cap.textContent = 'Fonte: SICONFI/STN e PLOA 2027';
+      b.append(s, nm, dl, cap);
+      b.addEventListener('click', () => TX.go('INDICADORES-FISCAIS'));
+      return b;
+    }
     const w = 'pasta=' + TX.enc(r.pasta);
     const b = document.createElement('button'); b.type = 'button'; b.className = 'tx-pc'; b.setAttribute('aria-label', 'Abrir ' + r.sigla);
     const s = document.createElement('span'); s.className = 'sig'; s.textContent = r.sigla;
@@ -1373,14 +1375,6 @@ const TXF = (() => {
   return { D, get, nf, mi, el, tone };
 })();
 dash.draw('fx', (e) => { const o = TXF.D(); if (!o) { e.textContent = '—'; return; } const k = e.dataset.k; const v = k.startsWith('ploa.') ? TXF.get(o.ploa, k.slice(5)) : TXF.get(o.execucao, k); e.textContent = v || ''; });
-dash.draw('fban', (b) => {
-  const o = TXF.D(); const { el } = TXF;
-  const h = el('span'); h.append(el('span', 'tx-eyebrow', 'Pasta do Eixo 1'), el('br'), el('span', 'h', 'Indicadores Fiscais'));
-  const go = el('span', 'tx-pill ok', 'Abrir pasta');
-  const kk = el('span', 'kk');
-  if (o) [['RCL', 'R$ 20,97 bi'], ['Pessoal/RCL (Executivo)', '55,17%'], ['DCL/RCL', '39,2%'], ['Primário jan–ago', '+R$ 387 mi'], ['PLOA 2027', 'R$ 28,55 bi'], ['Pessoal orçado/RCL', '≈ 70%']].forEach(([a, v]) => { const s = el('span'); s.append(a + ' '); s.appendChild(el('b', '', v)); kk.appendChild(s); });
-  b.replaceChildren(h, go, kk);
-});
 dash.draw('fkpis', (root) => {
   const o = TXF.D(); if (!o) { root.textContent = '—'; return; } const { el } = TXF;
   const ks = root.dataset.k === 'ploa' ? o.ploa.kpis : o.execucao.kpis;
