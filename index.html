@@ -16,7 +16,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 (function(){
-  const SRC=['pastas','controle','contratos','obras','convenios','financas','pessoal','patrimonio','precatorios','programas','sistemas','pendencias','tac_tag','atos','previdencia','incentivos','malha','eixos','recebimento','organograma'];
+  const SRC=['pastas','controle','contratos','obras','convenios','financas','pessoal','patrimonio','precatorios','programas','sistemas','pendencias','tac_tag','atos','previdencia','incentivos','malha','eixos','recebimento','organograma','fiscal'];
   const DS={}, ST={}, calcs={}, draws={}, ons=[];
   const P={pasta:'',aba:'',feixo:'',mun:'',osit:'',opasta:'',vista:'',onode:'',ofrente:''};
   const run=()=>{ons.forEach(f=>{try{f()}catch(e){console.error(e)}});Object.keys(draws).forEach(n=>document.querySelectorAll('[data-draw="'+n+'"]').forEach(el=>{if(el.closest('[hidden]'))return;try{draws[n](el)}catch(e){console.error(n,e)}}));};
@@ -28,7 +28,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     calc(id,o){calcs[id]=o}, loader(){}, refresh(){}, onData(fn){ons.push(fn)},
     draw(name,fn){ if(typeof fn==='function'||(fn&&fn.update)){draws[name]=typeof fn==='function'?fn:fn.update} else document.querySelectorAll('[data-draw="'+name+'"]').forEach(el=>{try{draws[name](el)}catch(e){console.error(e)}}); }
   };
-  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261116a').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
+  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261116b').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
   let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,150)});
   window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));if(h==='organograma'){P.vista='org';P.pasta='';P.aba='';run();return}const m=h.match(/^eixo-([1-6])$/);if(m){if(P.aba!==m[1]||P.pasta||P.vista){P.aba=m[1];P.pasta='';P.vista='';run()}return}const v=h==='geral'?'':h;if(h==='geral'&&(P.aba||P.pasta||P.vista)){P.aba='';P.pasta='';P.vista='';run();return}if(v)P.vista='';if(v!==P.pasta){P.pasta=v;run()}});
 })();
@@ -73,6 +73,33 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 .tx-tip b{font-weight:var(--cds-font-weight-medium)}
 .tx-map{min-height:260px}
 .tx-omap{min-height:380px}
+/* Indicadores Fiscais */
+.tx-fnav{display:flex;flex-wrap:wrap;gap:6px;margin-top:var(--cds-gap-sm)}
+.tx-fk{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:var(--cds-gap-md);margin:var(--cds-gap-md) 0}
+.tx-fk .t{border:1px solid var(--color-border-line);border-left:4px solid var(--fc,var(--tx-a1));border-radius:var(--cds-radius);padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:var(--color-panel)}
+.tx-fk .l{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.tx-fk .v{font-family:var(--tx-mono);font-size:clamp(20px,2.6vw,28px);line-height:1.1}
+.tx-fk .s{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.tx-f2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:var(--cds-gap-lg)}
+.tx-fmin{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--cds-gap-md)}
+.tx-fmin .t{border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.tx-fmin .v{font-family:var(--tx-mono);font-size:24px}
+.tx-fmeter{position:relative;height:12px;border-radius:6px;background:color-mix(in srgb,var(--tx-a1) 12%,var(--color-panel))}
+.tx-fmeter i{position:absolute;left:0;top:0;bottom:0;border-radius:6px}
+.tx-fmeter b{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--color-fg)}
+.tx-ftab td.n,.tx-ftab th.n{text-align:right;font-family:var(--tx-mono);white-space:nowrap}
+.tx-ftab td.sub{padding-left:22px;color:var(--color-fg-muted)}
+.tx-ftab tr.b td{font-weight:600}
+.tx-ftab td.neg{color:var(--color-bad)}
+.tx-fnote{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin:6px 0 0}
+.tx-flist{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.tx-fstack{display:flex;height:34px;border-radius:8px;overflow:hidden;margin:8px 0}
+.tx-fstack i{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-family:var(--tx-mono);overflow:hidden;white-space:nowrap}
+.tx-fbanner{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:center;width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--tx-line);background:linear-gradient(135deg,color-mix(in srgb,var(--tx-a1) 10%,var(--color-panel)),color-mix(in srgb,var(--tx-a2) 8%,var(--color-panel)))}
+.tx-fbanner:hover,.tx-fbanner:focus-visible{border-color:var(--tx-a2)}
+.tx-fbanner .h{font-weight:700;font-size:var(--cds-font-size-body)}
+.tx-fbanner .kk{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.tx-fbanner .kk b{font-family:var(--tx-mono);color:var(--color-fg)}
 /* organograma */
 .tx-orgwrap{overflow-x:auto;padding:8px 0 4px}
 .tx-orgtop{display:flex;justify-content:center;align-items:stretch;gap:0;flex-wrap:wrap}
@@ -339,6 +366,75 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 
   <!-- VISÃO GERAL -->
 
+
+  <!-- PASTA INDICADORES FISCAIS (Eixo 1) -->
+  <div id="fiscal" class="tx-sec" hidden>
+    <section class="tx-card">
+      <div class="tx-row"><div><span class="tx-eyebrow">Pasta · Eixo 1 – Gestão Fiscal, Orçamento e Finanças Públicas.</span><h2>Indicadores Fiscais</h2></div><button class="tx-btn" type="button" id="fvoltar">Voltar ao Eixo 1</button></div>
+      <p class="tx-muted">Dados das apresentações "Indicadores fiscais de 2026" (execução de janeiro a agosto, RREO e RGF no SICONFI) e "PLOA 2027 · Guia para novos gestores" (orçamento proposto comparado à LOA 2026). Valores nominais.</p>
+      <div class="tx-fnav">
+        <button class="tx-ochip" type="button" data-fgo="f-exec">Execução 2026</button><button class="tx-ochip" type="button" data-fgo="f-pessoal">RCL, pessoal e dívida</button><button class="tx-ochip" type="button" data-fgo="f-tabs">Receitas e despesas</button><button class="tx-ochip" type="button" data-fgo="f-ploa">PLOA 2027</button><button class="tx-ochip" type="button" data-fgo="f-cmp">PLOA 2027 × LOA 2026</button>
+      </div>
+    </section>
+    <section class="tx-card" id="f-exec">
+      <span class="tx-eyebrow">Execução 2026 · jan–ago</span><h2 data-draw="fx" data-k="titulo" data-source="fiscal">—</h2>
+      <p class="tx-muted" data-draw="fx" data-k="subtitulo" data-source="fiscal">—</p>
+      <div class="tx-fk" data-draw="fkpis" data-k="execucao" data-source="fiscal"></div>
+      <div class="tx-f2" data-draw="fsintese" data-source="fiscal"></div>
+    </section>
+    <section class="tx-card" id="f-pessoal">
+      <span class="tx-eyebrow">Indicadores de 12 meses e de saldo</span><h2>RCL, despesa com pessoal e dívida</h2>
+      <div class="tx-f2">
+        <div><h3>Receita Corrente Líquida (R$ bi, 12 meses)</h3><div class="tx-chart" data-draw="frcl" data-source="fiscal"></div><p class="tx-fnote" data-draw="fx" data-k="rcl.nota" data-source="fiscal"></p></div>
+        <div><h3>Despesa com pessoal / RCL (Executivo)</h3><div class="tx-chart" data-draw="fpes" data-source="fiscal"></div><p class="tx-fnote" data-draw="fx" data-k="pessoal.nota" data-source="fiscal"></p></div>
+        <div><h3>DCL / RCL ajustada</h3><div class="tx-chart" data-draw="fdcl" data-source="fiscal"></div><p class="tx-fnote">Limite do Senado: 200% da RCL (R$ 41,9 bi); o RN usa cerca de 1/5 dele.</p></div>
+        <div><h3>Mínimos de educação e saúde (jan–ago/26)</h3><div class="tx-fmin" data-draw="fmin" data-k="execucao" data-source="fiscal"></div></div>
+      </div>
+    </section>
+    <section class="tx-card" id="f-tabs">
+      <span class="tx-eyebrow">Execução 2026 · tabelas dos quatro recortes</span><h2>Receitas, despesas, previdência, resultado, dívida e restos a pagar</h2>
+      <div class="tx-f2" style="margin-bottom:var(--cds-gap-md)">
+        <div><h3>Principais receitas, jan–ago (R$ mi)</h3><div class="tx-chart" data-draw="fpair" data-k="principais_receitas" data-source="fiscal"></div><p class="tx-fnote" data-draw="fx" data-k="principais_receitas_nota" data-source="fiscal"></p></div>
+        <div><h3>Despesa por função, liquidado jan–ago (R$ mi)</h3><div class="tx-chart" data-draw="fpair" data-k="funcoes" data-source="fiscal"></div><p class="tx-fnote" data-draw="fx" data-k="funcoes_nota" data-source="fiscal"></p></div>
+      </div>
+      <p class="tx-fnote">Nos dois gráficos acima, o valor de jan–ago/25 é calculado a partir do valor de 2026 e da variação informada, porque a apresentação só rotula 2026.</p>
+      <div data-draw="ftabs" data-k="execucao" data-source="fiscal"></div>
+      <div class="tx-f2" data-draw="finv" data-source="fiscal"></div>
+      <p class="tx-fnote" data-draw="fx" data-k="leitura" data-source="fiscal"></p>
+    </section>
+    <section class="tx-card" id="f-ploa">
+      <span class="tx-eyebrow">Projeto de Lei Orçamentária Anual</span><h2 data-draw="fx" data-k="ploa.titulo" data-source="fiscal">—</h2>
+      <p class="tx-muted" data-draw="fx" data-k="ploa.subtitulo" data-source="fiscal">—</p>
+      <div class="tx-fk" data-draw="fkpis" data-k="ploa" data-source="fiscal"></div>
+      <p class="tx-fnote" data-draw="fx" data-k="ploa.atencao" data-source="fiscal"></p>
+      <div class="tx-f2" style="margin-top:var(--cds-gap-md)">
+        <div><h3>Receita estimada por origem (R$ bi)</h3><div class="tx-chart" data-draw="fbar" data-k="receita_composicao" data-source="fiscal"></div><p class="tx-fnote" data-draw="fx" data-k="ploa.receita_composicao_nota" data-source="fiscal"></p></div>
+        <div><h3>Receita por fonte de recursos (R$ bi)</h3><div class="tx-chart" data-draw="fbar" data-k="fontes" data-source="fiscal"></div><p class="tx-fnote" data-draw="fx" data-k="ploa.fontes_nota" data-source="fiscal"></p></div>
+        <div><h3>Despesa fixada por grupo de natureza (R$ bi)</h3><div class="tx-chart" data-draw="fbar" data-k="despesa_gnd" data-source="fiscal"></div><p class="tx-fnote" data-draw="fx" data-k="ploa.despesa_gnd_nota" data-source="fiscal"></p></div>
+        <div><h3>De cada R$ 100 do Tesouro (R$ 18,54 bi fixados)</h3><div data-draw="ftes" data-source="fiscal"></div><h3 style="margin-top:var(--cds-gap-md)">Principais receitas livres (R$ bi) e conta do FUNDEB</h3><div class="tx-chart" data-draw="fbar" data-k="principais_receitas" data-source="fiscal"></div><div data-draw="ffundeb" data-source="fiscal"></div></div>
+      </div>
+      <h3>Mínimos constitucionais na PLOA 2027</h3>
+      <div class="tx-fmin" data-draw="fmin" data-k="ploa" data-source="fiscal"></div>
+      <p class="tx-fnote" data-draw="fx" data-k="ploa.minimos_nota" data-source="fiscal"></p>
+      <div class="tx-f2" style="margin-top:var(--cds-gap-md)">
+        <div><h3>Composição do mínimo da educação (R$ bi)</h3><div class="tx-chart" data-draw="fbar" data-k="comp_educacao" data-source="fiscal"></div></div>
+        <div><h3>Composição do mínimo da segurança (R$ bi)</h3><div class="tx-chart" data-draw="fbar" data-k="comp_seguranca" data-source="fiscal"></div></div>
+      </div>
+      <p class="tx-fnote" data-draw="fx" data-k="ploa.comp_nota" data-source="fiscal"></p>
+      <div data-draw="ftabs" data-k="ploa" data-only="fiscal_seguridade poupanca rcl comprometimento" data-source="fiscal"></div>
+      <div class="tx-f2" data-draw="fploatxt" data-source="fiscal"></div>
+    </section>
+    <section class="tx-card" id="f-cmp">
+      <span class="tx-eyebrow">Comparação</span><h2>PLOA 2027 × LOA 2026</h2>
+      <div class="tx-f2" style="margin-bottom:var(--cds-gap-md)">
+        <div><h3>Receita (R$ mi)</h3><div class="tx-chart" data-draw="fcmp" data-k="cmp_receita" data-source="fiscal"></div></div>
+        <div><h3>Despesa (R$ mi)</h3><div class="tx-chart" data-draw="fcmp" data-k="cmp_despesa" data-source="fiscal"></div></div>
+      </div>
+      <div data-draw="ftabs" data-k="ploa" data-only="cmp_geral cmp_receita cmp_receita_bruta cmp_despesa cmp_indicadores cmp_minimos" data-source="fiscal"></div>
+      <p class="tx-fnote" data-draw="fx" data-k="ploa.fonte" data-source="fiscal"></p>
+    </section>
+  </div>
+
   <!-- ORGANOGRAMA -->
   <div id="org" class="tx-sec" hidden>
     <section class="tx-card">
@@ -389,6 +485,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
       <div class="tx-card tx-kpi"><span class="tx-muted">Precatórios</span><span class="v" data-draw="g" data-source="c_geral" data-field="precatorios_valor" data-row="0" data-fmt="brl">—</span><span class="s"><span data-draw="g" data-source="c_geral" data-field="precatorios" data-row="0" data-fmt="n">—</span> registros</span></div>
     </div>
 
+    <div class="tx-fban-wrap" data-fban="geral" hidden><button class="tx-fbanner" type="button" data-draw="fban" data-source="fiscal">Indicadores Fiscais</button></div>
     <section class="tx-card" id="recebimento">
       <span class="tx-eyebrow">Recebimento dos dados · art. 4º da IN</span><h2>Percentual de recebimento</h2>
       <p class="tx-muted">O percentual de cada unidade soma três partes: identificação (20%, campos obrigatórios preenchidos), incisos (40%, quantos dos 26 tiveram a aplicabilidade informada) e detalhamento (40%, quantos incisos marcados como aplicáveis têm dados na aba correspondente; se nenhum foi marcado, conta o envio de alguma aba com dados). Quem não enviou formulário fica com 0%. O geral é a média das unidades.</p>
@@ -450,6 +547,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
   <!-- EIXO -->
   <div id="eixo" class="tx-sec" hidden>
     <div class="tx-eixohead" data-eixohead="1" hidden><span class="num">01</span><h2>Eixo 1 – Gestão Fiscal, Orçamento e Finanças Públicas.</h2></div>
+    <div class="tx-fban-wrap" data-fban="eixo" hidden><button class="tx-fbanner" type="button" data-draw="fban" data-source="fiscal">Indicadores Fiscais</button></div>
     <div class="tx-eixohead" data-eixohead="2" hidden><span class="num">02</span><h2>Eixo 2 – Gestão Administrativa e Organização do Estado.</h2></div>
     <div class="tx-eixohead" data-eixohead="3" hidden><span class="num">03</span><h2>Eixo 3 – Políticas Públicas e Serviços Essenciais.</h2></div>
     <div class="tx-eixohead" data-eixohead="4" hidden><span class="num">04</span><h2>Eixo 4 – Infraestrutura, Investimentos e Desenvolvimento.</h2></div>
@@ -980,13 +1078,16 @@ dash.calc('c_geo_obras', {
 
 // Mostra a visão geral ou a pasta, e esconde as seções sem dados.
 dash.onData(() => {
-  const p = TX.pasta(), a = TX.aba(), f = TX.feixo(), v = !p && String(dash.params().vista || '') === 'org';
+  const p = TX.pasta(), a = TX.aba(), f = TX.feixo(), v = !p && String(dash.params().vista || '') === 'org', fz = p === 'INDICADORES-FISCAIS';
   document.querySelectorAll('#geral').forEach((e) => { e.hidden = !!p || !!a || v; });
   document.querySelectorAll('#eixo').forEach((e) => { e.hidden = !!p || !a || v; });
   document.querySelectorAll('#org').forEach((e) => { e.hidden = !v; });
-  document.querySelectorAll('#resumo').forEach((e) => { e.hidden = v; });
+  document.querySelectorAll('#resumo').forEach((e) => { e.hidden = v || fz; });
   document.querySelectorAll('.tx-tab-org').forEach((e) => { e.classList.toggle('on', v); e.setAttribute('aria-current', v ? 'page' : 'false'); });
-  document.querySelectorAll('#pasta').forEach((e) => { e.hidden = !p; });
+  document.querySelectorAll('#pasta').forEach((e) => { e.hidden = !p || fz; });
+  document.querySelectorAll('#fiscal').forEach((e) => { e.hidden = !fz; });
+  document.querySelectorAll('[data-fban="eixo"]').forEach((e) => { e.hidden = a !== '1'; });
+  document.querySelectorAll('[data-fban="geral"]').forEach((e) => { e.hidden = !!f && f !== '1'; });
   document.querySelectorAll('[data-eixohead]').forEach((e) => { e.hidden = e.dataset.eixohead !== a; });
   const mu = TX.mun();
   document.querySelectorAll('#municipio').forEach((e) => { e.hidden = !!p || !mu || v; });
@@ -1005,6 +1106,9 @@ dash.onData(() => {
   if (r && r.pessoal === 0) document.querySelectorAll('#pessoal').forEach((e) => { e.hidden = true; });
 });
 
+document.querySelectorAll('#fvoltar').forEach((b) => b.addEventListener('click', () => { dash.setParams({ pasta: '', aba: '1', vista: '' }); dash.setLink('eixo-1'); window.scrollTo({ top: 0 }); }));
+document.querySelectorAll('[data-fgo]').forEach((b) => b.addEventListener('click', () => document.querySelectorAll('#' + b.dataset.fgo).forEach((x) => x.scrollIntoView({ block: 'start', behavior: 'smooth' }))));
+document.querySelectorAll('.tx-fbanner').forEach((b) => b.addEventListener('click', () => TX.go('INDICADORES-FISCAIS')));
 document.querySelectorAll('#voltar').forEach((b) => b.addEventListener('click', () => { const a = TX.aba(); dash.setParams({ pasta: '' }); dash.setLink(a ? 'eixo-' + a : 'geral'); window.scrollTo({ top: 0 }); }));
 document.querySelectorAll('.tx-tab[data-aba]').forEach((b) => b.addEventListener('click', () => TX.goAba(b.dataset.aba)));
 document.querySelectorAll('.tx-tab-org').forEach((b) => b.addEventListener('click', () => { dash.setParams({ vista: 'org', pasta: '', aba: '' }); dash.setLink('organograma'); }));
@@ -1022,7 +1126,7 @@ window.TX.go = (p) => { dash.setParams({ pasta: p, vista: '' }); dash.setLink(p)
 
 dash.draw('pick', (sel) => {
   const rows = TX.rowsOf('pastas') || [];
-  sel.replaceChildren(new Option('Visão geral — todas as pastas', ''), ...rows.map((r) => new Option(r.sigla + ' — ' + r.nome, r.pasta)));
+  sel.replaceChildren(new Option('Visão geral — todas as pastas', ''), new Option('Indicadores Fiscais — Eixo 1 (RREO/RGF 2026 e PLOA 2027)', 'INDICADORES-FISCAIS'), ...rows.map((r) => new Option(r.sigla + ' — ' + r.nome, r.pasta)));
   sel.value = TX.pasta();
   sel.onchange = () => TX.go(sel.value);
 });
@@ -1257,6 +1361,140 @@ dash.draw('prec', (el) => {
 });
 
 
+
+// Pasta Indicadores Fiscais (Eixo 1)
+const TXF = (() => {
+  const D = () => { const d = dash.data('fiscal'); return d.status === 'ok' && Array.isArray(d.data) && d.data[0] ? d.data[0] : null; };
+  const get = (o, path) => path.split('.').reduce((a, k) => (a == null ? a : a[k]), o);
+  const nf = (v, d) => v == null || v === '' ? '—' : typeof v === 'number' ? v.toLocaleString('pt-BR', { minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d }) : String(v);
+  const mi = (v) => v == null ? '—' : Math.abs(v) >= 1000 ? 'R$ ' + (v / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2, minimumFractionDigits: 2 }) + ' bi' : 'R$ ' + v.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' mi';
+  const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+  const tone = { ok: 'var(--color-ok)', warn: 'var(--color-warn)', bad: 'var(--color-bad)', '': 'var(--tx-a1)' };
+  return { D, get, nf, mi, el, tone };
+})();
+dash.draw('fx', (e) => { const o = TXF.D(); if (!o) { e.textContent = '—'; return; } const k = e.dataset.k; const v = k.startsWith('ploa.') ? TXF.get(o.ploa, k.slice(5)) : TXF.get(o.execucao, k); e.textContent = v || ''; });
+dash.draw('fban', (b) => {
+  const o = TXF.D(); const { el } = TXF;
+  const h = el('span'); h.append(el('span', 'tx-eyebrow', 'Pasta do Eixo 1'), el('br'), el('span', 'h', 'Indicadores Fiscais'));
+  const go = el('span', 'tx-pill ok', 'Abrir pasta');
+  const kk = el('span', 'kk');
+  if (o) [['RCL', 'R$ 20,97 bi'], ['Pessoal/RCL (Executivo)', '55,17%'], ['DCL/RCL', '39,2%'], ['Primário jan–ago', '+R$ 387 mi'], ['PLOA 2027', 'R$ 28,55 bi'], ['Pessoal orçado/RCL', '≈ 70%']].forEach(([a, v]) => { const s = el('span'); s.append(a + ' '); s.appendChild(el('b', '', v)); kk.appendChild(s); });
+  b.replaceChildren(h, go, kk);
+});
+dash.draw('fkpis', (root) => {
+  const o = TXF.D(); if (!o) { root.textContent = '—'; return; } const { el } = TXF;
+  const ks = root.dataset.k === 'ploa' ? o.ploa.kpis : o.execucao.kpis;
+  root.replaceChildren(...ks.map((k) => { const t = el('div', 't'); t.style.setProperty('--fc', TXF.tone[k.tom || '']);
+    const v = typeof k.valor === 'string' ? k.valor : k.fmt === 'pct' ? TXF.nf(k.valor, 2) + '%' : (k.valor > 0 && /primário/i.test(k.rotulo) ? '+' : '') + TXF.mi(k.valor);
+    t.append(el('span', 'l', k.rotulo), el('span', 'v', v), el('span', 's', k.nota)); return t; }));
+});
+dash.draw('fsintese', (root) => {
+  const o = TXF.D(); if (!o) { root.replaceChildren(); return; } const { el } = TXF; const E = o.execucao;
+  const blk = (t, xs, c) => { const d = el('div'); const h = el('h3', '', t); h.style.color = c; const ul = el('ul', 'tx-flist'); xs.forEach((x) => ul.appendChild(el('li', '', x))); d.append(h, ul); return d; };
+  root.replaceChildren(blk('Avanços', E.avancos, 'var(--color-ok)'), blk('Pontos de atenção', E.atencao, 'var(--color-bad)'));
+});
+// colunas simples com linhas de referência
+const txFCols = (el, labels, vals, o) => {
+  el.querySelectorAll('svg').forEach((x) => x.remove());
+  const W = el.clientWidth || 360, H = 220, m = { t: 22, r: 8, b: 26, l: 8 };
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', o.aria);
+  const x = d3.scaleBand().domain(labels).range([m.l, W - m.r]).padding(0.28);
+  const mx = Math.max(d3.max(vals), ...(o.refs || []).map((r) => r.v)) * 1.08;
+  const y = d3.scaleLinear().domain([o.min || 0, mx]).range([H - m.b, m.t]);
+  const gid = 'txf' + Math.random().toString(36).slice(2, 8);
+  const lg = svg.append('defs').append('linearGradient').attr('id', gid).attr('x1', 0).attr('x2', 0).attr('y1', 0).attr('y2', 1);
+  lg.append('stop').attr('offset', 0).style('stop-color', 'var(--tx-a2)'); lg.append('stop').attr('offset', 1).style('stop-color', 'var(--tx-a1)');
+  const t = TX.tip(el);
+  svg.append('g').selectAll('rect').data(vals).join('rect').attr('x', (d, i) => x(labels[i])).attr('width', x.bandwidth()).attr('y', (d) => y(d)).attr('height', (d) => Math.max(1, y(o.min || 0) - y(d))).attr('rx', 4)
+    .style('fill', (d, i) => (o.color && o.color(d, i)) || `url(#${gid})`)
+    .on('mousemove', (ev, d) => { const i = vals.indexOf(d); t.show(ev, [[labels[i]], ['', o.fmt(d)]]); }).on('mouseleave', () => t.hide());
+  svg.append('g').selectAll('text').data(vals).join('text').attr('x', (d, i) => x(labels[i]) + x.bandwidth() / 2).attr('y', (d) => y(d) - 5).attr('text-anchor', 'middle').style('font-size', '11px').style('font-family', 'var(--tx-mono)').text((d) => o.fmt(d));
+  svg.append('g').selectAll('text').data(labels).join('text').attr('class', 'lbl').attr('x', (d) => x(d) + x.bandwidth() / 2).attr('y', H - 8).attr('text-anchor', 'middle').style('font-size', '11px').text((d) => d);
+  (o.refs || []).forEach((r) => {
+    svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(r.v)).attr('y2', y(r.v)).style('stroke', r.c).style('stroke-width', 1.5).style('stroke-dasharray', r.dash || '0');
+    svg.append('text').attr('x', W - m.r).attr('y', y(r.v) - 4).attr('text-anchor', 'end').style('font-size', '10px').style('fill', r.c).style('paint-order', 'stroke').style('stroke', 'var(--color-panel)').style('stroke-width', 3).text(r.l);
+  });
+};
+dash.draw('frcl', (el) => { const o = TXF.D(); if (!o) return; const r = o.execucao.rcl; txFCols(el, r.periodos, r.valores, { min: 16, aria: 'RCL de 12 meses, em bilhões de reais', fmt: (v) => TXF.nf(v, 2) }); });
+dash.draw('fpes', (el) => { const o = TXF.D(); if (!o) return; const p = o.execucao.pessoal;
+  txFCols(el, p.periodos, p.valores, { min: 40, aria: 'Despesa com pessoal do Executivo em percentual da RCL', fmt: (v) => TXF.nf(v, 2) + '%', color: (d) => d > p.limite_maximo ? 'var(--color-bad)' : 'var(--tx-a1)',
+    refs: [{ v: p.trajetoria_2026, l: 'Trajetória 2026: 52,34%', c: 'var(--color-warn)', dash: '5 3' }, { v: p.limite_maximo, l: 'Limite máximo: 49%', c: 'var(--color-bad)' }, { v: p.limite_prudencial, l: 'Prudencial: 46,55%', c: 'var(--cds-chart-reference)', dash: '2 3' }] }); });
+dash.draw('fdcl', (el) => { const o = TXF.D(); if (!o) return; const r = o.execucao.dcl_rcl; txFCols(el, r.periodos, r.valores, { aria: 'DCL sobre RCL ajustada', fmt: (v) => TXF.nf(v, 2) + '%' }); });
+dash.draw('fmin', (root) => {
+  const o = TXF.D(); if (!o) { root.replaceChildren(); return; } const { el } = TXF;
+  const ms = root.dataset.k === 'ploa' ? o.ploa.minimos : o.execucao.minimos;
+  root.replaceChildren(...ms.map((m) => { const t = el('div', 't'); const ok = m.atual >= m.minimo; const mx = Math.max(m.minimo * 2, m.atual * 1.15);
+    const bar = el('span', 'tx-fmeter'); const i = el('i'); i.style.width = (100 * m.atual / mx) + '%'; i.style.background = ok ? 'var(--color-ok)' : 'var(--color-warn)'; const mk = el('b'); mk.style.left = (100 * m.minimo / mx) + '%'; mk.title = 'Mínimo ' + TXF.nf(m.minimo, 1) + '%'; bar.append(i, mk);
+    const sub = root.dataset.k === 'ploa' ? 'Mínimo ' + TXF.nf(m.minimo, 1) + '% (' + m.base + '). Fixado ' + m.fixado + ' · mínimo ' + m.valor_minimo + ' · folga ' + m.folga : 'Mínimo ' + TXF.nf(m.minimo, 0) + '%. ' + m.ant + (ok ? '' : '. Acumulado até agosto; o mínimo é anual.');
+    t.append(el('span', 'tx-muted', m.nome), el('span', 'v', TXF.nf(m.atual, 2) + '%'), bar, el('span', 'tx-fnote', sub)); return t; }));
+});
+// barras pareadas 2025 x 2026 (horizontal)
+const txFPair = (el, rows, a, b, la, lb, fmt, aria) => {
+  el.querySelectorAll('svg').forEach((x) => x.remove());
+  const W = el.clientWidth || 360, bh = 9, gap = 12, lw = Math.min(150, W * 0.36), H = rows.length * (bh * 2 + gap) + 24;
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', aria);
+  const x = d3.scaleLinear().domain([0, d3.max(rows, (r) => Math.max(r[a] || 0, r[b] || 0)) || 1]).range([lw + 8, W - 64]);
+  const t = TX.tip(el);
+  const lg = svg.append('g'); [[la, 'color-mix(in srgb, var(--cds-chart-reference) 55%, var(--color-panel))'], [lb, 'var(--tx-a1)']].forEach(([l, c], i) => { lg.append('rect').attr('x', lw + 8 + i * 150).attr('y', 2).attr('width', 10).attr('height', 10).attr('rx', 2).style('fill', c); lg.append('text').attr('x', lw + 22 + i * 150).attr('y', 11).style('font-size', '11px').text(l); });
+  const g = svg.append('g').attr('transform', 'translate(0,22)');
+  const r = g.selectAll('g').data(rows).join('g').attr('transform', (d, i) => `translate(0,${i * (bh * 2 + gap)})`);
+  r.append('text').attr('class', 'lbl').attr('x', 0).attr('y', bh).attr('dy', '0.35em').style('font-size', '11px').text((d) => d.item);
+  r.append('rect').attr('x', lw + 8).attr('y', 0).attr('height', bh - 1).attr('rx', 2).attr('width', (d) => Math.max(1, x(d[a] || 0) - lw - 8)).style('fill', 'color-mix(in srgb, var(--cds-chart-reference) 55%, var(--color-panel))');
+  r.append('rect').attr('x', lw + 8).attr('y', bh).attr('height', bh - 1).attr('rx', 2).attr('width', (d) => Math.max(1, x(d[b] || 0) - lw - 8)).style('fill', 'var(--tx-a1)');
+  r.append('text').attr('x', (d) => x(d[b] || 0) + 4).attr('y', bh * 1.5).attr('dy', '0.35em').style('font-size', '10px').style('font-family', 'var(--tx-mono)').text((d) => d.vtxt || '');
+  r.append('rect').attr('x', 0).attr('width', W).attr('height', bh * 2).style('fill', 'transparent')
+    .on('mousemove', (ev, d) => t.show(ev, [[d.item], [la + ':', fmt(d[a])], [lb + ':', fmt(d[b])], d.vtxt ? ['Variação:', d.vtxt] : ['', '']])).on('mouseleave', () => t.hide());
+};
+dash.draw('fpair', (el) => { const o = TXF.D(); if (!o) return; const rows = o.execucao[el.dataset.k].map((d) => ({ ...d, vtxt: (d.var > 0 ? '+' : '') + TXF.nf(d.var, 1) + '%' }));
+  txFPair(el, rows, 'v2025', 'v2026', 'Jan–Ago/25 (calc.)', 'Jan–Ago/26', (v) => TXF.mi(v), 'Comparação jan–ago 2025 e 2026'); });
+dash.draw('fcmp', (el) => { const o = TXF.D(); if (!o) return; const t = o.ploa.tabelas.find((x) => x.id === el.dataset.k);
+  const rows = t.linhas.filter((l) => l.item !== 'Total').map((l) => ({ item: l.item, a: l.valores[0], b: l.valores[1], vtxt: l.var }));
+  txFPair(el, rows, 'a', 'b', 'LOA 2026', 'PLOA 2027', (v) => TXF.mi(v), 'Comparação LOA 2026 e PLOA 2027'); });
+dash.draw('fbar', (el) => { const o = TXF.D(); if (!o) return; const rows = o.ploa[el.dataset.k];
+  TX.hbar(el, rows, { source: 'fiscal', label: 'item', value: 'valor', aria: 'Valores em bilhões de reais', fmt: (v) => TXF.nf(v, 2), tip: (d) => [[d.item], ['R$ bi:', TXF.nf(d.valor, 2)], d.pct != null ? ['Participação:', TXF.nf(d.pct, 1) + '%'] : ['', '']] }); });
+dash.draw('ftes', (root) => {
+  const o = TXF.D(); if (!o) { root.replaceChildren(); return; } const { el } = TXF;
+  const cs = ['var(--color-bad)', 'var(--tx-a1)', 'var(--color-warn)', 'var(--tx-a2)', 'var(--cds-chart-reference)'];
+  const st = el('div', 'tx-fstack'); const ul = el('ul', 'tx-flist');
+  o.ploa.tesouro.forEach((x, i) => { const s = el('i', '', x.por100 >= 8 ? 'R$ ' + TXF.nf(x.por100, 1) : ''); s.style.width = x.por100 + '%'; s.style.background = cs[i]; s.title = x.item + ': R$ ' + TXF.nf(x.por100, 1) + ' de cada R$ 100'; st.appendChild(s);
+    const li = el('li'); const sw = el('span'); sw.style.cssText = 'display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:' + cs[i]; li.append(sw, x.item + ': R$ ' + TXF.nf(x.por100, 1) + ' (R$ ' + TXF.nf(x.valor, 2) + ' bi)'); ul.appendChild(li); });
+  root.replaceChildren(st, ul, el('p', 'tx-fnote', o.ploa.tesouro_nota));
+});
+dash.draw('ffundeb', (root) => { const o = TXF.D(); if (!o) { root.replaceChildren(); return; } const { el } = TXF; const ul = el('ul', 'tx-flist'); o.ploa.fundeb.forEach((x) => ul.appendChild(el('li', '', x.rotulo + ': R$ ' + TXF.nf(x.valor, 2) + ' bi'))); root.replaceChildren(ul); });
+const txFTable = (t) => {
+  const { el } = TXF; const box = el('div'); box.style.marginTop = 'var(--cds-gap-md)';
+  box.appendChild(el('h3', '', t.titulo));
+  const w = el('div', 'tx-scroll'); const tb = el('table', 'tx-ftab'); const th = el('thead'); const tr = el('tr');
+  tr.appendChild(el('th', '', t.unidade || 'Indicador'));
+  const dec = t.unidade === 'R$ bilhões' ? 2 : t.linhas.some((l) => l.valores.some((v) => typeof v === 'number' && !Number.isInteger(v))) ? 1 : 0;
+  t.colunas.forEach((c) => tr.appendChild(el('th', 'n', c))); if (t.var_nome) tr.appendChild(el('th', 'n', t.var_nome)); th.appendChild(tr);
+  const bd = el('tbody');
+  t.linhas.forEach((l) => { const r = el('tr', l.nivel ? '' : 'b'); r.appendChild(el('td', l.nivel ? 'sub' : '', l.item.trim()));
+    l.valores.forEach((v) => { const td = el('td', 'n' + (typeof v === 'number' && v < 0 ? ' neg' : ''), typeof v === 'number' ? TXF.nf(v, dec) : (v == null ? '—' : v)); r.appendChild(td); });
+    if (t.var_nome) r.appendChild(el('td', 'n', l.var == null ? '—' : l.var)); bd.appendChild(r); });
+  tb.append(th, bd); w.appendChild(tb); box.appendChild(w);
+  if (t.nota) box.appendChild(el('p', 'tx-fnote', t.nota));
+  box.appendChild(el('p', 'tx-fnote', 'Fonte: ' + t.fonte + '.'));
+  return box;
+};
+dash.draw('ftabs', (root) => {
+  const o = TXF.D(); if (!o) { root.replaceChildren(); return; }
+  const src = root.dataset.k === 'ploa' ? o.ploa.tabelas : o.execucao.tabelas; const only = (root.dataset.only || '').split(' ').filter(Boolean);
+  root.replaceChildren(...src.filter((t) => !only.length || only.includes(t.id)).map(txFTable));
+});
+dash.draw('finv', (root) => {
+  const o = TXF.D(); if (!o) { root.replaceChildren(); return; } const { el } = TXF; const E = o.execucao;
+  const blk = (t, xs, nota) => { const d = el('div'); d.appendChild(el('h3', '', t)); const k = el('div', 'tx-fk'); k.style.margin = '0';
+    xs.forEach((x) => { const c = el('div', 't'); c.append(el('span', 'l', x.rotulo), el('span', 'v', x.valor), el('span', 's', x.nota)); k.appendChild(c); }); d.append(k, el('p', 'tx-fnote', nota)); return d; };
+  root.replaceChildren(blk('Investimentos', E.investimentos, E.investimentos_nota), blk('Operações de crédito', E.credito, E.credito_nota));
+});
+dash.draw('fploatxt', (root) => {
+  const o = TXF.D(); if (!o) { root.replaceChildren(); return; } const { el } = TXF; const P = o.ploa;
+  const a = el('div'); a.appendChild(el('h3', '', 'Cinco recados para o novo gestor')); const ol = el('ol', 'tx-flist'); P.recados.forEach(([t, d]) => { const li = el('li'); li.append(el('b', '', t + '. '), d); ol.appendChild(li); }); a.appendChild(ol);
+  const b = el('div'); b.appendChild(el('h3', '', 'Cinco conceitos para ler o orçamento')); const ul = el('ul', 'tx-flist'); P.conceitos.forEach(([t, d]) => { const li = el('li'); li.append(el('b', '', t + ': '), d); ul.appendChild(li); }); b.appendChild(ul);
+  root.replaceChildren(a, b);
+});
+
 // Organograma (cronograma executivo da transição)
 const TXG = (() => {
   const O = () => { const d = dash.data('organograma'); return d.status === 'ok' && Array.isArray(d.data) && d.data[0] ? d.data[0] : null; };
@@ -1353,6 +1591,7 @@ dash.draw('orgdet', (root) => {
   if (n.id !== 'comissao') { const bk = el('button', 'tx-btn', 'Voltar à Comissão Mista'); bk.type = 'button'; bk.addEventListener('click', () => dash.setParams({ onode: 'comissao' })); h.appendChild(bk); }
   out.push(h);
   if (n.descricao) out.push(el('p', '', n.descricao));
+  if (n.id === 'eixo1') { const fb = el('button', 'tx-btn', 'Abrir a pasta Indicadores Fiscais (RREO/RGF 2026 e PLOA 2027)'); fb.type = 'button'; fb.addEventListener('click', () => TX.go('INDICADORES-FISCAIS')); out.push(fb); }
   const at = TXG.ativDe(o, n.id).slice().sort((a, b) => (a.prazo_iso || '').localeCompare(b.prazo_iso || ''));
   const facts = el('div', 'tx-ofacts');
   const f = (lbl, val) => { const s = el('span'); s.append(lbl + ' '); s.appendChild(el('b', '', val)); facts.appendChild(s); };
