@@ -16,7 +16,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 (function(){
-  const SRC=['pastas','controle','contratos','obras','convenios','financas','pessoal','patrimonio','precatorios','programas','sistemas','pendencias','tac_tag','atos','previdencia','incentivos','malha','eixos','recebimento','organograma','fiscal'];
+  const SRC=['pastas','controle','contratos','obras','convenios','financas','pessoal','patrimonio','precatorios','programas','sistemas','pendencias','tac_tag','atos','previdencia','incentivos','malha','eixos','recebimento','organograma','fiscal','mun_refs'];
   const DS={}, ST={}, calcs={}, draws={}, ons=[];
   const P={pasta:'',aba:'',feixo:'',mun:'',osit:'',opasta:'',vista:'',onode:'',ofrente:''};
   const run=()=>{ons.forEach(f=>{try{f()}catch(e){console.error(e)}});Object.keys(draws).forEach(n=>document.querySelectorAll('[data-draw="'+n+'"]').forEach(el=>{if(el.closest('[hidden]'))return;try{draws[n](el)}catch(e){console.error(n,e)}}));};
@@ -28,7 +28,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     calc(id,o){calcs[id]=o}, loader(){}, refresh(){}, onData(fn){ons.push(fn)},
     draw(name,fn){ if(typeof fn==='function'||(fn&&fn.update)){draws[name]=typeof fn==='function'?fn:fn.update} else document.querySelectorAll('[data-draw="'+name+'"]').forEach(el=>{try{draws[name](el)}catch(e){console.error(e)}}); }
   };
-  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261117a').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
+  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261118a').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
   let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,150)});
   window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));if(h==='organograma'){P.vista='org';P.pasta='';P.aba='';run();return}const m=h.match(/^eixo-([1-6])$/);if(m){if(P.aba!==m[1]||P.pasta||P.vista){P.aba=m[1];P.pasta='';P.vista='';run()}return}const v=h==='geral'?'':h;if(h==='geral'&&(P.aba||P.pasta||P.vista)){P.aba='';P.pasta='';P.vista='';run();return}if(v)P.vista='';if(v!==P.pasta){P.pasta=v;run()}});
 })();
@@ -229,6 +229,23 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 .tx-legend span{display:inline-flex;align-items:center;gap:6px}
 .tx-legend i{width:12px;height:12px;border-radius:50%;display:inline-block}
 .tx-scroll{overflow-x:auto;max-width:100%}
+.tx-morg{display:flex;flex-direction:column;gap:var(--cds-gap-sm)}
+.tx-mo{border:1px solid var(--tx-line);border-radius:var(--cds-radius);background:var(--color-panel)}
+.tx-mo[open]{border-color:var(--tx-a2)}
+.tx-mo>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 12px;color:var(--color-fg)}
+.tx-mo>summary::-webkit-details-marker{display:none}
+.tx-mo>summary:focus-visible{outline:2px solid var(--color-fg);border-radius:var(--cds-radius)}
+.tx-mo .t{font-weight:600}.tx-mo .t small{font-weight:400;color:var(--color-fg-muted);margin-left:6px}
+.tx-mo .v{font-family:var(--tx-mono);text-align:right;white-space:nowrap}
+.tx-mo .cs{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+.tx-mo .cs span{font-family:var(--tx-mono);font-size:11px;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--tx-a1) 10%,transparent);color:var(--color-fg-muted)}
+.tx-mo .cs span.bad{background:color-mix(in srgb,var(--color-bad) 18%,transparent);color:var(--color-fg)}
+.tx-mo .b{padding:0 12px 12px;display:flex;flex-direction:column;gap:var(--cds-gap-md)}
+.tx-mo h4{margin:6px 0 2px;font-size:var(--cds-font-size-body);font-weight:600}
+.tx-mo h4 small{font-weight:400;color:var(--color-fg-muted);margin-left:6px}
+.tx-mo .tx-tbl{max-height:360px;background:var(--color-bg);border:1px solid var(--color-border-line);border-radius:calc(var(--cds-radius) - 2px)}
+.tx-mo .tx-tbl td.w{min-width:200px;max-width:360px}
+.tx-mo .ac{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);align-items:center}
 .tx table{border-collapse:collapse;width:100%;font-size:var(--cds-font-size-caption);font-variant-numeric:tabular-nums}
 .tx th{text-align:left;font-weight:500;font-family:var(--tx-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-fg-muted);border-bottom:1px solid var(--color-border-line);padding:6px 8px;white-space:nowrap;position:sticky;top:0;background:var(--color-panel)}
 .tx td{border-bottom:1px solid var(--color-border-line);padding:6px 8px;vertical-align:top}
@@ -342,20 +359,16 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     <button class="tx-tab" type="button" data-aba="6">Eixo 6 – Planejamento Governamental e Gestão de Resultados.<span class="c" data-draw="ecount" data-eixo="6" data-source="c_eixo_tot" data-field="pastas">—</span></button>
     <button class="tx-tab tx-tab-org" type="button" data-vista="org">Organograma</button>
   </nav>
-  <div class="tx-munbar" id="filtro-municipio"><span class="tx-eyebrow">Município</span><select id="mun" class="dash-select" data-draw="munsel" data-source="c_mun" aria-label="Filtrar por município"></select><button class="tx-btn" type="button" id="limpar-mun" hidden>Limpar município</button><span class="tx-muted">Obras e bens com município informado. Também dá para clicar num município no mapa.</span></div>
+  <div class="tx-munbar" id="filtro-municipio"><span class="tx-eyebrow">Município</span><select id="mun" class="dash-select" data-draw="munsel" data-source="c_mun" aria-label="Filtrar por município"></select><button class="tx-btn" type="button" id="limpar-mun" hidden>Limpar município</button><span class="tx-muted">Escolha um município para ver, órgão por órgão, as obras, bens, contratos, convênios, programas, TAC/TAG e pendências ligados a ele. Também dá para clicar no mapa.</span></div>
 
   <p class="tx-lede" id="resumo" data-draw="lede">—</p>
 
   <!-- MUNICÍPIO -->
   <section class="tx-sec" id="municipio" hidden>
-    <div class="tx-kpis"><div class="tx-card tx-kpi"><span class="tx-muted">Obras no município</span><span class="v" data-draw="mk" data-source="c_mun" data-field="obras" data-fmt="n">—</span><span class="s"><span data-draw="mk" data-source="c_mun" data-field="paralisadas" data-fmt="n">—</span> paralisadas ou inacabadas</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Valor das obras</span><span class="v" data-draw="mk" data-source="c_mun" data-field="obras_valor" data-fmt="brl">—</span><span class="s">soma do valor total</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Bens localizados</span><span class="v" data-draw="mk" data-source="c_mun" data-field="bens" data-fmt="n">—</span><span class="s">itens de patrimônio e estoque</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Valor dos bens</span><span class="v" data-draw="mk" data-source="c_mun" data-field="bens_valor" data-fmt="brl">—</span><span class="s">valor contábil informado</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Pastas presentes</span><span class="v" data-draw="mk" data-source="c_mun" data-field="npastas" data-fmt="n">—</span><span class="s">com obra ou bem no município</span></div></div>
-    <div class="tx-grid2">
-      <div class="tx-card tx-scroll tx-tbl"><span class="tx-eyebrow">Inciso XIV</span><h3>Obras no município</h3>
-        <table data-source="obras" data-row-key="id"><thead><tr><th data-field="pasta">Pasta</th><th data-field="objeto">Obra</th><th data-field="situacao">Situação</th><th data-field="execucao_pct" class="n">Execução</th><th data-field="valor_total" class="n">Valor</th></tr></thead><tbody data-draw="mobras"></tbody></table>
-        <p class="tx-muted" data-draw="mobrasn">—</p></div>
-      <div class="tx-card tx-scroll tx-tbl"><span class="tx-eyebrow">Incisos VI e VII</span><h3>Bens no município (maiores valores)</h3>
-        <table data-source="patrimonio" data-row-key="id"><thead><tr><th data-field="pasta">Pasta</th><th data-field="descricao">Descrição</th><th data-field="localizacao">Localização</th><th data-field="valor" class="n">Valor</th></tr></thead><tbody data-draw="mbens"></tbody></table>
-        <p class="tx-muted" data-draw="mbensn">—</p></div>
+    <div class="tx-kpis"><div class="tx-card tx-kpi"><span class="tx-muted">Obras no município</span><span class="v" data-draw="mk" data-source="c_mun" data-field="obras" data-fmt="n">—</span><span class="s"><span data-draw="mk" data-source="c_mun" data-field="paralisadas" data-fmt="n">—</span> paralisadas ou inacabadas</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Valor das obras</span><span class="v" data-draw="mk" data-source="c_mun" data-field="obras_valor" data-fmt="brl">—</span><span class="s">soma do valor total</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Bens localizados</span><span class="v" data-draw="mk" data-source="c_mun" data-field="bens" data-fmt="n">—</span><span class="s">itens de patrimônio e estoque</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Valor dos bens</span><span class="v" data-draw="mk" data-source="c_mun" data-field="bens_valor" data-fmt="brl">—</span><span class="s">valor contábil informado</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Contratos e convênios</span><span class="v" data-draw="mk" data-source="c_mun" data-field="cc" data-fmt="n">—</span><span class="s">que citam o município</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Pastas presentes</span><span class="v" data-draw="mk" data-source="c_mun" data-field="npastas" data-fmt="n">—</span><span class="s">com algum registro no município</span></div></div>
+    <div class="tx-card tx-sec"><div><span class="tx-eyebrow">Por órgão</span><h3>O que cada órgão informou sobre o município</h3></div>
+      <p class="tx-muted" data-draw="morgn" data-source="mun_refs obras patrimonio contratos convenios programas tac_tag pendencias pastas eixos">—</p>
+      <div class="tx-morg" data-draw="morg" data-source="mun_refs obras patrimonio contratos convenios programas tac_tag pendencias pastas eixos"></div>
     </div>
   </section>
 
@@ -747,7 +760,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
       <li>Foram verificadas as 51 pastas de unidades em "DADOS - IN - ART. 4º", incluindo as subpastas (a pasta "1. ESPECÍFICOS" só tem PDFs da SEPLAN). 44 têm formulário com conteúdo; GVG, IPERN, PGE, SAPE, SEDEC, SEGP e SETHAS ainda estão só com o modelo em branco. O formulário da DATANORTE foi salvo numa subpasta "DATANORTE" dentro da pasta da SESAP e é lido como da DATANORTE. Planilhas de apoio fora do modelo (por exemplo, editais da SECULT, listas da EMGERN, da SESAP, da SEFAZ e da PC/RN, os inventários da SIN e os mapas de inventário da FUNDASE) não entram nos números.</li>
       <li>Quando uma pasta tinha mais de uma planilha (cópias, versões convertidas para Google Planilhas), cada aba vem da versão com mais linhas preenchidas.</li>
       <li>Situações escritas livremente foram agrupadas (por exemplo "ATENDIDO", "Disponibilizado" e "Concluída" contam como Atendido). O texto original continua na fonte.</li>
-      <li>Obras e bens são localizados pela sede do município informado. Textos que não citam um município do RN ficam fora do mapa.</li>
+      <li>Obras e bens são localizados pela sede do município informado. Textos que não citam um município do RN ficam fora do mapa. Na seção do município, contratos, convênios, programas, TAC/TAG e pendências entram quando o objeto, as partes ou a descrição citam o nome do município; nomes que também são palavras comuns ou sobrenomes (como Pendências, Passagem, Martins ou Lajes) só contam quando vêm depois de "município de", "prefeitura de" ou expressão parecida, e nomes de rua não contam. Um mesmo registro pode aparecer em mais de um município.</li>
       <li>Valores em branco contam como não informados, não como zero. "Saldo a pagar" usa o saldo informado ou, sem ele, contratado menos pago.</li>
       <li>Os eixos vêm da planilha "UGs por eixo" do acompanhamento dos processos SEI. Unidades listadas em dois eixos (CONTROL, JUCERN e SEPLAN) aparecem nas duas abas, e nos totais de cada eixo; o total geral conta cada pasta uma vez.</li>
       <li>Os dados são uma cópia de 17/11/2026, com todas as planilhas das 51 pastas e subpastas conferidas. Desde 16/11/2026 entrou a DATANORTE; CAERN, CONTROL, FJA, FUNDASE, GAC, IFESP, JUCERN, PC/RN, SEMJIDH e SESAP atualizaram seus formulários. A SIN preencheu as abas de detalhe, mas a Identificação está em branco e só o inciso III do Controle art. 4 foi respondido. Quando uma unidade envia formulários de subunidades diferentes (como a CONTROL, com ASTEC, NMI, OUGE, UIFP, Integridade e Transparência), as linhas de cada aba são somadas; quando são cópias ou versões do mesmo formulário, vale a mais completa. Alterações feitas depois nas planilhas só aparecem quando os arquivos forem lidos de novo.</li>
@@ -773,7 +786,7 @@ window.TX = (function () {
   const aba = () => String(dash.params().aba || '');
   const feixo = () => String(dash.params().feixo || '');
   const mun = () => String(dash.params().mun || '');
-  const munSet = (m) => { const s = new Set(); for (const id of ['obras', 'patrimonio']) { const d = dash.data(id); if (d.status === 'ok') for (const r of d.data) if (r.municipio === m) s.add(r.pasta); } return s; };
+  const munSet = (m) => { const s = new Set(); for (const id of ['obras', 'patrimonio', 'mun_refs']) { const d = dash.data(id); if (d.status === 'ok') for (const r of d.data) if (r.municipio === m) s.add(r.pasta); } return s; };
   const eixoSet = (n) => { const r = (dash.data('eixos').status === 'ok' ? dash.data('eixos').data : []) || []; return new Set(r.filter((e) => String(e.eixo_num) === String(n) && e.pasta).map((e) => e.pasta)); };
   const enc = (s) => encodeURIComponent(String(s));
   const rowsOf = (id) => { const d = dash.data(id); return d.status === 'ok' && Array.isArray(d.data) ? d.data : null; };
@@ -840,6 +853,7 @@ window.TX = (function () {
     const proj = d3.geoMercator().fitExtent([[8, 8], [W - 8, H - 8]], geo), path = d3.geoPath(proj);
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', o.aria);
     const has = new Set(pts.filter((p) => p.obras > 0 || p.bens > 0).map((p) => p.municipio));
+    const cm = dash.data('c_mun'); if (cm.status === 'ok' && cm.data) for (const x of cm.data) if (x.eixo_num === 0) has.add(x.municipio);
     const t = tip(el);
     // contorno do estado: traço grosso por baixo, coberto pelo preenchimento dos municípios
     svg.append('g').selectAll('path').data(geo.features).join('path').attr('d', path)
@@ -957,16 +971,20 @@ dash.calc('c_geo_obras_eixo', {
   }
 });
 dash.calc('c_mun', {
-  title: 'Obras e bens por município', description: 'Obras e bens patrimoniais agrupados por município da sede, para todas as pastas (eixo_num 0) e para cada eixo.',
-  inputs: ['obras', 'patrimonio', 'eixos'],
-  fn: (obras, patrimonio, eixos) => {
+  title: 'Registros por município', description: 'Obras, bens e demais registros (contratos, convênios, programas, TAC/TAG, pendências) ligados a cada município, para todas as pastas (eixo_num 0) e para cada eixo.',
+  inputs: ['obras', 'patrimonio', 'eixos', 'mun_refs'],
+  fn: (obras, patrimonio, eixos, refs) => {
     const ex = new Map(); for (const e of eixos) { if (!e.pasta) continue; if (!ex.has(e.pasta)) ex.set(e.pasta, []); ex.get(e.pasta).push(Number(e.eixo_num)); }
+    const ob = new Map(obras.map((o) => [o.id, o]));
     const m = new Map();
-    const get = (n, mun, lat, lon) => { const k = n + '|' + mun; if (!m.has(k)) m.set(k, { eixo_num: n, municipio: mun, lat, lon, obras: 0, obras_valor: 0, paralisadas: 0, bens: 0, bens_valor: 0, ps: new Set() }); return m.get(k); };
+    const get = (n, mun, lat, lon) => { const k = n + '|' + mun; if (!m.has(k)) m.set(k, { eixo_num: n, municipio: mun, lat, lon, obras: 0, obras_valor: 0, paralisadas: 0, bens: 0, bens_valor: 0, contratos: 0, convenios: 0, programas: 0, tac: 0, pendencias: 0, ps: new Set() }); const r = m.get(k); if (r.lat == null && lat != null) { r.lat = lat; r.lon = lon; } return r; };
     const add = (r, f) => { for (const n of [0, ...(ex.get(r.pasta) || [])]) f(get(n, r.municipio, r.lat, r.lon), r); };
-    for (const o of obras) if (o.lat != null) add(o, (g, x) => { g.obras++; g.obras_valor += Number(x.valor_total) || 0; if (x.situacao === 'Paralisada' || x.situacao === 'Inacabada') g.paralisadas++; g.ps.add(x.pasta); });
-    for (const b of patrimonio) if (b.lat != null) add(b, (g, x) => { g.bens++; g.bens_valor += Number(x.valor) || 0; g.ps.add(x.pasta); });
-    return [...m.values()].map(({ ps, ...r }) => ({ ...r, npastas: ps.size, pastas: [...ps].sort().join(', ') }));
+    for (const x of refs || []) {
+      if (x.fonte === 'obras') { const o = ob.get(x.ref); if (!o) continue; add(x, (g) => { g.obras++; g.obras_valor += Number(o.valor_total) || 0; if (o.situacao === 'Paralisada' || o.situacao === 'Inacabada') g.paralisadas++; g.ps.add(x.pasta); }); }
+      else { const f = x.fonte === 'tac_tag' ? 'tac' : x.fonte; add(x, (g) => { g[f]++; g.ps.add(x.pasta); }); }
+    }
+    for (const b of patrimonio) if (b.municipio) add(b, (g, x) => { g.bens++; g.bens_valor += Number(x.valor) || 0; g.ps.add(x.pasta); });
+    return [...m.values()].map(({ ps, ...r }) => ({ ...r, cc: r.contratos + r.convenios, outros: r.contratos + r.convenios + r.programas + r.tac + r.pendencias, npastas: ps.size, pastas: [...ps].sort().join(', ') }));
   }
 });
 dash.calc('c_contr_sit', {
@@ -1139,10 +1157,10 @@ dash.draw('lede', (el) => {
     const e = TX.aba() || TX.feixo() || '0', m = TX.mun();
     const r = (TX.rowsOf('c_mun') || []).find((x) => String(x.eixo_num) === e && x.municipio === m);
     const pre = e !== '0' ? 'No Eixo ' + e + ', em ' : 'Em ';
-    if (!r) { el.replaceChildren(pre + m + ' não há obra nem bem informado' + (e !== '0' ? ' pelas pastas deste eixo.' : '.')); return; }
+    if (!r) { el.replaceChildren(pre + m + ' não há registro informado' + (e !== '0' ? ' pelas pastas deste eixo.' : '.')); return; }
     const w = 'eixo_num=' + e + '&municipio=' + TX.enc(m);
     const m3 = (f, fmt) => { const b = document.createElement('b'); b.dataset.source = 'c_mun'; b.dataset.field = f; b.dataset.where = w; b.textContent = TX.fmt(r[f], fmt); return b; };
-    el.replaceChildren(pre + m + ', ', m3('npastas', 'n'), r.npastas === 1 ? ' pasta informou ' : ' pastas informaram ', m3('obras', 'n'), ' obras (', m3('obras_valor', 'brl'), ') e ', m3('bens', 'n'), ' bens (', m3('bens_valor', 'brl'), ').');
+    el.replaceChildren(pre + m + ', ', m3('npastas', 'n'), r.npastas === 1 ? ' órgão tem registros: ' : ' órgãos têm registros: ', m3('obras', 'n'), ' obras (', m3('obras_valor', 'brl'), '), ', m3('bens', 'n'), ' bens (', m3('bens_valor', 'brl'), '), ', m3('contratos', 'n'), ' contratos, ', m3('convenios', 'n'), ' convênios e ', m3('programas', 'n'), ' programas. Abaixo, o detalhe de cada órgão.');
     return;
   }
   if (!p && TX.aba()) { eixoLede(TX.aba()); return; }
@@ -1180,7 +1198,7 @@ dash.draw('g', (el) => {
 dash.draw('munsel', (sel) => {
   const d = dash.data('c_mun');
   const rows = d.status === 'ok' ? (d.data || []).filter((r) => r.eixo_num === 0).sort((a, b) => a.municipio.localeCompare(b.municipio, 'pt-BR')) : [];
-  sel.replaceChildren(new Option('Todos os municípios', ''), ...rows.map((r) => new Option(r.municipio + ' · ' + r.obras + ' obras · ' + r.bens + ' bens', r.municipio)));
+  sel.replaceChildren(new Option('Todos os municípios', ''), ...rows.map((r) => new Option(r.municipio + ' · ' + r.npastas + (r.npastas === 1 ? ' órgão' : ' órgãos') + ' · ' + r.obras + ' obras · ' + r.bens + ' bens' + (r.outros ? ' · ' + r.outros + ' outros registros' : ''), r.municipio)));
   sel.value = TX.mun();
   sel.onchange = () => TX.setMun(sel.value);
 });
@@ -1195,6 +1213,80 @@ dash.draw('mobras', (el) => TX.tbody(el, 'obras', [['pasta'], ['objeto', 'w'], [
 dash.draw('mobrasn', (el) => { const n = txMunRows('obras').length; el.textContent = n ? n + (n === 1 ? ' obra.' : ' obras.') : 'Nenhuma obra informada neste município.'; });
 dash.draw('mbens', (el) => TX.tbody(el, 'patrimonio', [['pasta'], ['descricao', 'w'], ['localizacao'], ['valor', 'brl']], () => txMunRows('patrimonio').sort((a, b) => (b.valor || 0) - (a.valor || 0)).slice(0, 40)));
 dash.draw('mbensn', (el) => { const n = txMunRows('patrimonio').length; el.textContent = n ? (n > 40 ? 'Mostrando os 40 maiores de ' + n + ' bens.' : n + (n === 1 ? ' bem.' : ' bens.')) : 'Nenhum bem localizado neste município.'; });
+// Município → por órgão: tudo o que cada pasta informou ligado ao município escolhido.
+const TXM = (() => {
+  const FONTES = [
+    { id: 'obras', um: 'obra', vs: 'obras', tit: 'Obras', inc: 'Inciso XIV', ord: (r) => -(Number(r.valor_total) || 0), cols: [['Nº', 'numero'], ['Obra', 'objeto', 'w'], ['Município informado', 'municipio_informado'], ['Situação', 'situacao', 'pill'], ['Execução', 'execucao_pct', 'pct'], ['Valor total', 'valor_total', 'brl'], ['Pago', 'valor_pago', 'brl'], ['Saldo', 'saldo', 'brl'], ['Prazo', 'prazo'], ['Motivo da paralisação', 'motivo_paralisacao', 'w'], ['Providência', 'providencia', 'w'], ['SEI', 'sei']] },
+    { id: 'convenios', um: 'convênio', vs: 'convênios', tit: 'Convênios e transferências', inc: 'Incisos V e XIII', ord: (r) => -(Number(r.valor_global) || 0), cols: [['Nº', 'numero'], ['Tipo', 'tipo'], ['Partes', 'partes', 'w'], ['Objeto', 'objeto', 'w'], ['Início', 'inicio'], ['Fim', 'fim'], ['Valor global', 'valor_global', 'brl'], ['Recebido', 'valor_recebido', 'brl'], ['Executado', 'valor_executado', 'brl'], ['Prestação de contas', 'prestacao_contas', 'pill'], ['Pendência', 'pendencia', 'w']] },
+    { id: 'contratos', um: 'contrato', vs: 'contratos', tit: 'Contratos', inc: 'Incisos V e XII', ord: (r) => -(Number(r.valor_contratado) || 0), cols: [['Nº / SEI', 'numero'], ['Objeto', 'objeto', 'w'], ['Contratado', 'contratado'], ['Tipo', 'tipo'], ['Início', 'inicio'], ['Fim', 'fim'], ['Valor contratado', 'valor_contratado', 'brl'], ['Pago', 'valor_pago', 'brl'], ['Saldo', 'saldo', 'brl'], ['Situação', 'situacao', 'pill'], ['Medida necessária', 'medida', 'w'], ['Prazo crítico', 'prazo_critico']] },
+    { id: 'programas', um: 'programa', vs: 'programas', tit: 'Programas e projetos', inc: '§ 5º', ord: (r) => -(Number(r.valor_previsto) || 0), cols: [['Programa', 'programa', 'w'], ['Objeto', 'objeto', 'w'], ['Situação', 'situacao', 'pill'], ['Previsto', 'valor_previsto', 'brl'], ['Executado', 'valor_executado', 'brl'], ['Próximo marco', 'proximo_marco', 'w'], ['Prazo', 'prazo'], ['Risco', 'risco', 'w']] },
+    { id: 'tac_tag', um: 'TAC/TAG', vs: 'TAC/TAG', tit: 'TAC e TAG', inc: 'Inciso XVI', ord: (r) => -(Number(r.valor) || 0), cols: [['Tipo', 'tipo'], ['Nº', 'numero'], ['Objeto', 'objeto', 'w'], ['Órgão externo', 'orgao_externo'], ['Valor', 'valor', 'brl'], ['Situação', 'situacao', 'pill'], ['Prazo', 'prazo']] },
+    { id: 'pendencias', um: 'pendência', vs: 'pendências', tit: 'Pendências e riscos', inc: '§ 5º', ord: () => 0, cols: [['Tipo', 'tipo'], ['Descrição', 'descricao', 'w'], ['Impacto', 'impacto', 'w'], ['Prioridade', 'prioridade', 'pill'], ['Providência', 'providencia', 'w'], ['Prazo', 'prazo'], ['Situação', 'situacao', 'pill']] },
+    { id: 'patrimonio', um: 'bem', vs: 'bens', tit: 'Bens (patrimônio e estoque)', inc: 'Incisos VI e VII', ord: (r) => -(Number(r.valor) || 0), lim: 60, cols: [['Tipo', 'tipo'], ['Descrição', 'descricao', 'w'], ['Localização', 'localizacao', 'w'], ['Qtd.', 'quantidade', 'num'], ['Valor', 'valor', 'brl'], ['Conservação', 'conservacao'], ['Restrição', 'restricao']] }
+  ];
+  const SRC = ['mun_refs', 'obras', 'patrimonio', 'contratos', 'convenios', 'programas', 'tac_tag', 'pendencias', 'pastas'];
+  const ready = () => SRC.every((s) => dash.data(s).status === 'ok');
+  // { pasta: { obras: [...], convenios: [...], ... } } para o município e o eixo escolhidos
+  const porOrgao = () => {
+    const m = TX.mun(), e = TX.aba() || TX.feixo(); const s = e ? TX.eixoSet(e) : null;
+    const idx = {}; for (const f of FONTES) if (f.id !== 'patrimonio') idx[f.id] = new Map((TX.rowsOf(f.id) || []).map((r) => [r.id, r]));
+    const out = new Map(); const slot = (p) => { if (!out.has(p)) out.set(p, {}); return out.get(p); };
+    const push = (p, f, r) => { const o = slot(p); (o[f] = o[f] || []).push(r); };
+    for (const x of TX.rowsOf('mun_refs') || []) { if (x.municipio !== m || (s && !s.has(x.pasta))) continue; const r = idx[x.fonte] && idx[x.fonte].get(x.ref); if (r) push(x.pasta, x.fonte, r); }
+    for (const b of TX.rowsOf('patrimonio') || []) if (b.municipio === m && (!s || s.has(b.pasta))) push(b.pasta, 'patrimonio', b);
+    return out;
+  };
+  const tot = (o) => (o.obras || []).reduce((a, r) => a + (Number(r.valor_total) || 0), 0) + (o.convenios || []).reduce((a, r) => a + (Number(r.valor_global) || 0), 0) + (o.contratos || []).reduce((a, r) => a + (Number(r.valor_contratado) || 0), 0) + (o.patrimonio || []).reduce((a, r) => a + (Number(r.valor) || 0), 0);
+  return { FONTES, SRC, ready, porOrgao, tot };
+})();
+const txMOCell = (r, f, kind) => {
+  const td = document.createElement('td'); const v = r[f];
+  if (kind === 'brl') { td.className = 'n'; td.textContent = v == null || v === '' ? '—' : TX.brlFull(v); }
+  else if (kind === 'num') { td.className = 'n'; td.textContent = v == null || v === '' ? '—' : TX.n(v); }
+  else if (kind === 'pct') { td.className = 'n'; if (v == null) td.textContent = '—'; else { const b = document.createElement('span'); b.className = 'tx-bar'; const i = document.createElement('i'); i.style.width = Math.min(100, v) + '%'; i.style.background = v >= 100 ? 'var(--color-ok)' : 'var(--color-warn)'; b.appendChild(i); td.append(b, TX.n(v) + '%'); } }
+  else if (kind === 'pill') { if (v == null || v === '') td.textContent = '—'; else { const s = document.createElement('span'); s.className = 'tx-pill ' + TX.sitClass(v); s.textContent = v; td.appendChild(s); } }
+  else { if (kind === 'w') td.className = 'w'; td.textContent = v == null || v === '' ? '—' : String(v); }
+  return td;
+};
+dash.draw('morgn', (el) => {
+  if (!TXM.ready()) { el.textContent = '—'; return; }
+  const o = TXM.porOrgao(); const n = o.size;
+  el.textContent = n ? (n === 1 ? '1 órgão tem registros ligados ao município.' : n + ' órgãos têm registros ligados ao município.') + ' Clique num órgão para abrir o detalhe. Obras e bens entram pelo município ou endereço informado; contratos, convênios, programas, TAC/TAG e pendências entram quando o texto cita o município.' : 'Nenhum órgão deste filtro informou registro ligado ao município.';
+});
+dash.draw('morg', (el) => {
+  if (!TXM.ready()) { el.replaceChildren(); return; }
+  const aberto = new Set([...el.querySelectorAll('details[open]')].map((d) => d.dataset.pasta));
+  const mantem = el.dataset.mun === TX.mun(); el.dataset.mun = TX.mun();
+  const P = new Map((TX.rowsOf('pastas') || []).map((r) => [r.pasta, r]));
+  const lista = [...TXM.porOrgao().entries()].map(([p, o]) => ({ p, o, v: TXM.tot(o), n: Object.values(o).reduce((a, x) => a + x.length, 0) })).sort((a, b) => b.v - a.v || b.n - a.n || a.p.localeCompare(b.p, 'pt-BR'));
+  el.replaceChildren(...lista.map(({ p, o, v }, k) => {
+    const pr = P.get(p) || {}; const d = document.createElement('details'); d.className = 'tx-mo'; d.dataset.pasta = p;
+    if (mantem ? aberto.has(p) : k === 0) d.open = true;
+    const sm = document.createElement('summary');
+    const t = document.createElement('span'); t.className = 't'; t.textContent = pr.sigla || p; const sn = document.createElement('small'); sn.textContent = pr.nome && pr.nome !== pr.sigla ? pr.nome : ''; t.appendChild(sn);
+    const vv = document.createElement('span'); vv.className = 'v'; vv.textContent = v ? TX.brl(v) : ''; vv.title = 'Soma do valor de obras, convênios, contratos e bens ligados ao município';
+    const cs = document.createElement('span'); cs.className = 'cs';
+    for (const f of TXM.FONTES) { const rs = o[f.id]; if (!rs || !rs.length) continue; const c = document.createElement('span'); c.textContent = TX.n(rs.length) + ' ' + (rs.length === 1 ? f.um : f.vs); cs.appendChild(c); if (f.id === 'obras') { const par = rs.filter((r) => r.situacao === 'Paralisada' || r.situacao === 'Inacabada').length; if (par) { const c2 = document.createElement('span'); c2.className = 'bad'; c2.textContent = par + (par === 1 ? ' paralisada ou inacabada' : ' paralisadas ou inacabadas'); cs.appendChild(c2); } } }
+    sm.append(t, vv, cs); d.appendChild(sm);
+    const b = document.createElement('div'); b.className = 'b';
+    for (const f of TXM.FONTES) {
+      let rs = o[f.id]; if (!rs || !rs.length) continue;
+      rs = rs.slice().sort((x, y) => f.ord(x) - f.ord(y)); const tot = rs.length; if (f.lim) rs = rs.slice(0, f.lim);
+      const h = document.createElement('h4'); h.textContent = f.tit; const hs = document.createElement('small'); hs.textContent = f.inc + ' · ' + (f.lim && tot > f.lim ? 'os ' + f.lim + ' de maior valor, de ' + TX.n(tot) : TX.n(tot) + (tot === 1 ? ' registro' : ' registros')); h.appendChild(hs);
+      const wrap = document.createElement('div'); wrap.className = 'tx-scroll tx-tbl';
+      const tb = document.createElement('table'); tb.dataset.source = f.id; tb.dataset.rowKey = 'id';
+      const th = document.createElement('thead'); const hr = document.createElement('tr');
+      for (const [lab, fld, kind] of f.cols) { const c = document.createElement('th'); c.textContent = lab; c.dataset.field = fld; if (kind === 'brl' || kind === 'pct' || kind === 'num') c.className = 'n'; hr.appendChild(c); }
+      th.appendChild(hr); const bd = document.createElement('tbody');
+      for (const r of rs) { const tr = document.createElement('tr'); tr.dataset.key = r.id; for (const [, fld, kind] of f.cols) tr.appendChild(txMOCell(r, fld, kind)); bd.appendChild(tr); }
+      tb.append(th, bd); wrap.appendChild(tb); b.append(h, wrap);
+    }
+    const ac = document.createElement('div'); ac.className = 'ac';
+    const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'tx-btn'; bt.textContent = 'Abrir a pasta completa de ' + (pr.sigla || p); bt.addEventListener('click', () => TX.go(p)); ac.appendChild(bt);
+    if (pr.pasta_url) { const a = document.createElement('a'); a.href = pr.pasta_url; a.target = '_blank'; a.rel = 'noopener'; a.className = 'tx-muted'; a.textContent = 'Pasta no Google Drive'; ac.appendChild(a); }
+    b.appendChild(ac); d.appendChild(b); return d;
+  }));
+});
 const txPend = () => {
   const d = dash.data('eixos'); if (d.status !== 'ok') return null;
   const f = TX.feixo(); const m = new Map();
