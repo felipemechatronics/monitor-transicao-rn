@@ -28,7 +28,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     calc(id,o){calcs[id]=o}, loader(){}, refresh(){}, onData(fn){ons.push(fn)},
     draw(name,fn){ if(typeof fn==='function'||(fn&&fn.update)){draws[name]=typeof fn==='function'?fn:fn.update} else document.querySelectorAll('[data-draw="'+name+'"]').forEach(el=>{try{draws[name](el)}catch(e){console.error(e)}}); }
   };
-  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261118a').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
+  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261118b').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
   let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,150)});
   window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));if(h==='organograma'){P.vista='org';P.pasta='';P.aba='';run();return}const m=h.match(/^eixo-([1-6])$/);if(m){if(P.aba!==m[1]||P.pasta||P.vista){P.aba=m[1];P.pasta='';P.vista='';run()}return}const v=h==='geral'?'':h;if(h==='geral'&&(P.aba||P.pasta||P.vista)){P.aba='';P.pasta='';P.vista='';run();return}if(v)P.vista='';if(v!==P.pasta){P.pasta=v;run()}});
 })();
@@ -229,6 +229,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 .tx-legend span{display:inline-flex;align-items:center;gap:6px}
 .tx-legend i{width:12px;height:12px;border-radius:50%;display:inline-block}
 .tx-scroll{overflow-x:auto;max-width:100%}
+.tx-mdet{scroll-margin-top:12px}
 .tx-morg{display:flex;flex-direction:column;gap:var(--cds-gap-sm)}
 .tx-mo{border:1px solid var(--tx-line);border-radius:var(--cds-radius);background:var(--color-panel)}
 .tx-mo[open]{border-color:var(--tx-a2)}
@@ -359,17 +360,13 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     <button class="tx-tab" type="button" data-aba="6">Eixo 6 – Planejamento Governamental e Gestão de Resultados.<span class="c" data-draw="ecount" data-eixo="6" data-source="c_eixo_tot" data-field="pastas">—</span></button>
     <button class="tx-tab tx-tab-org" type="button" data-vista="org">Organograma</button>
   </nav>
-  <div class="tx-munbar" id="filtro-municipio"><span class="tx-eyebrow">Município</span><select id="mun" class="dash-select" data-draw="munsel" data-source="c_mun" aria-label="Filtrar por município"></select><button class="tx-btn" type="button" id="limpar-mun" hidden>Limpar município</button><span class="tx-muted">Escolha um município para ver, órgão por órgão, as obras, bens, contratos, convênios, programas, TAC/TAG e pendências ligados a ele. Também dá para clicar no mapa.</span></div>
+  <div class="tx-munbar" id="filtro-municipio"><span class="tx-eyebrow">Município</span><select id="mun" class="dash-select" data-draw="munsel" data-source="c_mun" aria-label="Filtrar por município"></select><button class="tx-btn" type="button" id="limpar-mun" hidden>Limpar município</button><span class="tx-muted">Escolha um município para ver o Detalhamento Por Município (logo abaixo do mapa): órgão por órgão, as obras, bens, contratos, convênios, programas, TAC/TAG e pendências ligados a ele. Clicando no mapa, a página vai direto para ele.</span></div>
 
   <p class="tx-lede" id="resumo" data-draw="lede">—</p>
 
   <!-- MUNICÍPIO -->
   <section class="tx-sec" id="municipio" hidden>
     <div class="tx-kpis"><div class="tx-card tx-kpi"><span class="tx-muted">Obras no município</span><span class="v" data-draw="mk" data-source="c_mun" data-field="obras" data-fmt="n">—</span><span class="s"><span data-draw="mk" data-source="c_mun" data-field="paralisadas" data-fmt="n">—</span> paralisadas ou inacabadas</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Valor das obras</span><span class="v" data-draw="mk" data-source="c_mun" data-field="obras_valor" data-fmt="brl">—</span><span class="s">soma do valor total</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Bens localizados</span><span class="v" data-draw="mk" data-source="c_mun" data-field="bens" data-fmt="n">—</span><span class="s">itens de patrimônio e estoque</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Valor dos bens</span><span class="v" data-draw="mk" data-source="c_mun" data-field="bens_valor" data-fmt="brl">—</span><span class="s">valor contábil informado</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Contratos e convênios</span><span class="v" data-draw="mk" data-source="c_mun" data-field="cc" data-fmt="n">—</span><span class="s">que citam o município</span></div><div class="tx-card tx-kpi"><span class="tx-muted">Pastas presentes</span><span class="v" data-draw="mk" data-source="c_mun" data-field="npastas" data-fmt="n">—</span><span class="s">com algum registro no município</span></div></div>
-    <div class="tx-card tx-sec"><div><span class="tx-eyebrow">Por órgão</span><h3>O que cada órgão informou sobre o município</h3></div>
-      <p class="tx-muted" data-draw="morgn" data-source="mun_refs obras patrimonio contratos convenios programas tac_tag pendencias pastas eixos">—</p>
-      <div class="tx-morg" data-draw="morg" data-source="mun_refs obras patrimonio contratos convenios programas tac_tag pendencias pastas eixos"></div>
-    </div>
   </section>
 
   <!-- VISÃO GERAL -->
@@ -525,7 +522,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
       </section>
     <section class="tx-card" id="mapa-obras">
         <div class="tx-omap-top"><div><span class="tx-eyebrow">Geo · Rio Grande do Norte</span><h2>Mapa das obras</h2></div><button class="tx-btn tx-olimpar" type="button" hidden>Limpar filtros do mapa</button></div>
-        <p class="tx-muted">O mapa mostra sempre o estado inteiro. Cada círculo é um município; o tamanho é o valor total das obras. Clique num município para filtrar o painel por ele.</p>
+        <p class="tx-muted">O mapa mostra sempre o estado inteiro. Cada círculo é um município; o tamanho é o valor total das obras. Clique num município para ver, logo abaixo do mapa, o Detalhamento Por Município.</p>
         <div class="tx-omap-ctl">
           <div class="tx-omap-row"><span class="tx-eyebrow">Situação</span><button class="tx-ochip" type="button" data-osit="">Todas <b data-draw="ocnt" data-k="" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="andamento"><i style="background:var(--color-warn)"></i>Em andamento <b data-draw="ocnt" data-k="andamento" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="parada"><i style="background:var(--color-bad)"></i>Paralisada ou inacabada <b data-draw="ocnt" data-k="parada" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="naoini"><i style="background:var(--tx-a2)"></i>Não iniciada <b data-draw="ocnt" data-k="naoini" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="concl"><i style="background:var(--color-ok)"></i>Concluída <b data-draw="ocnt" data-k="concl" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="outro"><i style="background:var(--cds-chart-reference)"></i>Sem situação clara <b data-draw="ocnt" data-k="outro" data-source="obras eixos">—</b></button></div>
           <div class="tx-omap-row"><span class="tx-eyebrow">Pasta</span><select class="dash-select" data-draw="opsel" data-source="obras eixos" aria-label="Filtrar o mapa por pasta"></select></div>
@@ -537,6 +534,11 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
         </div>
         <div class="tx-legend"><span><i style="background:var(--color-warn)"></i>Obras</span><span><i style="background:var(--color-bad)"></i>Com obra paralisada ou inacabada</span><span><i style="border-radius:3px;background:color-mix(in srgb,var(--tx-a1) 30%,var(--color-panel))"></i>Município com obra no filtro</span><span><i style="border-radius:3px;background:none;border:2px solid var(--tx-a2)"></i>Município selecionado</span></div>
       </section>
+    <section class="tx-card tx-sec tx-mdet" id="detalhe-municipio" hidden>
+      <div class="tx-omap-top"><div><span class="tx-eyebrow" data-draw="mdetnome" data-source="c_mun">Município</span><h2>Detalhamento Por Município</h2></div><button class="tx-btn tx-mlimpar" type="button">Limpar município</button></div>
+      <p class="tx-muted" data-draw="morgn" data-source="mun_refs obras patrimonio contratos convenios programas tac_tag pendencias pastas eixos">—</p>
+      <div class="tx-morg" data-draw="morg" data-source="mun_refs obras patrimonio contratos convenios programas tac_tag pendencias pastas eixos"></div>
+    </section>
 
     <section class="tx-card" id="preenchimento">
       <span class="tx-eyebrow">Cobertura do formulário</span><h2>Preenchimento por aba</h2>
@@ -579,7 +581,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
       </section>
     <section class="tx-card" id="emapa-obras">
         <div class="tx-omap-top"><div><span class="tx-eyebrow">Geo · Rio Grande do Norte</span><h2>Mapa das obras do eixo</h2></div><button class="tx-btn tx-olimpar" type="button" hidden>Limpar filtros do mapa</button></div>
-        <p class="tx-muted">O mapa mostra sempre o estado inteiro. Cada círculo é um município; o tamanho é o valor total das obras. Clique num município para filtrar o painel por ele.</p>
+        <p class="tx-muted">O mapa mostra sempre o estado inteiro. Cada círculo é um município; o tamanho é o valor total das obras. Clique num município para ver, logo abaixo do mapa, o Detalhamento Por Município.</p>
         <div class="tx-omap-ctl">
           <div class="tx-omap-row"><span class="tx-eyebrow">Situação</span><button class="tx-ochip" type="button" data-osit="">Todas <b data-draw="eocnt" data-k="" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="andamento"><i style="background:var(--color-warn)"></i>Em andamento <b data-draw="eocnt" data-k="andamento" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="parada"><i style="background:var(--color-bad)"></i>Paralisada ou inacabada <b data-draw="eocnt" data-k="parada" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="naoini"><i style="background:var(--tx-a2)"></i>Não iniciada <b data-draw="eocnt" data-k="naoini" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="concl"><i style="background:var(--color-ok)"></i>Concluída <b data-draw="eocnt" data-k="concl" data-source="obras eixos">—</b></button><button class="tx-ochip" type="button" data-osit="outro"><i style="background:var(--cds-chart-reference)"></i>Sem situação clara <b data-draw="eocnt" data-k="outro" data-source="obras eixos">—</b></button></div>
           <div class="tx-omap-row"><span class="tx-eyebrow">Pasta</span><select class="dash-select" data-draw="eopsel" data-source="obras eixos" aria-label="Filtrar o mapa por pasta"></select></div>
@@ -591,6 +593,11 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
         </div>
         <div class="tx-legend"><span><i style="background:var(--color-warn)"></i>Obras</span><span><i style="background:var(--color-bad)"></i>Com obra paralisada ou inacabada</span><span><i style="border-radius:3px;background:color-mix(in srgb,var(--tx-a1) 30%,var(--color-panel))"></i>Município com obra no filtro</span><span><i style="border-radius:3px;background:none;border:2px solid var(--tx-a2)"></i>Município selecionado</span></div>
       </section>
+    <section class="tx-card tx-sec tx-mdet" id="edetalhe-municipio" hidden>
+      <div class="tx-omap-top"><div><span class="tx-eyebrow" data-draw="mdetnome" data-source="c_mun">Município</span><h2>Detalhamento Por Município</h2></div><button class="tx-btn tx-mlimpar" type="button">Limpar município</button></div>
+      <p class="tx-muted" data-draw="morgn" data-source="mun_refs obras patrimonio contratos convenios programas tac_tag pendencias pastas eixos">—</p>
+      <div class="tx-morg" data-draw="morg" data-source="mun_refs obras patrimonio contratos convenios programas tac_tag pendencias pastas eixos"></div>
+    </section>
 
     <section class="tx-sec" id="eixo-cards">
       <span class="tx-eyebrow">Pastas</span><h2>Cartões das pastas do eixo</h2>
@@ -864,7 +871,7 @@ window.TX = (function () {
       .style('cursor', (f) => has.has(f.properties.nome) ? 'pointer' : 'default')
       .on('mousemove', (ev, f) => { const p = pts.find((q) => q.municipio === f.properties.nome); t.show(ev, o.tip(f.properties.nome, p)); })
       .on('mouseleave', () => t.hide())
-      .on('click', (ev, f) => { const nm = f.properties.nome; if (!nm || !window.TX.setMun) return; if (dash.params().mun === nm) { window.TX.setMun(''); return; } if (has.has(nm)) window.TX.setMun(nm); });
+      .on('click', (ev, f) => { const nm = f.properties.nome; if (!nm || !window.TX.setMun) return; if (dash.params().mun === nm) { window.TX.setMun(''); return; } if (has.has(nm)) window.TX.setMun(nm, true); });
     const selm = dash.params().mun;
     if (selm) svg.append('g').selectAll('path').data(geo.features.filter((f) => f.properties.nome === selm)).join('path').attr('d', path).style('fill', 'color-mix(in srgb, var(--tx-a2) 18%, transparent)').style('stroke', 'var(--tx-a2)').style('stroke-width', 2.5).style('pointer-events', 'none');
     const r = d3.scaleSqrt().domain([0, d3.max(pts, (p) => p.obras_valor || 0) || 1]).range([3, Math.max(10, W / 26)]);
@@ -875,7 +882,7 @@ window.TX = (function () {
       .style('fill', col).style('fill-opacity', 0.72).style('stroke', (p) => p.municipio === selm ? 'var(--tx-a2)' : 'var(--color-bg)').style('stroke-width', (p) => p.municipio === selm ? 2.5 : 1)
       .style('cursor', 'pointer')
       .on('mousemove', (ev, p) => t.show(ev, o.tip(p.municipio, p))).on('mouseleave', () => t.hide())
-      .on('click', (ev, p) => { if (!window.TX.setMun) return; window.TX.setMun(dash.params().mun === p.municipio ? '' : p.municipio); });
+      .on('click', (ev, p) => { if (!window.TX.setMun) return; window.TX.setMun(dash.params().mun === p.municipio ? '' : p.municipio, true); });
     if (o.bens) {
       const bp = pts.filter((p) => p.bens > 0);
       const rb = d3.scaleSqrt().domain([0, d3.max(bp, (p) => p.bens) || 1]).range([3, 9]);
@@ -1102,6 +1109,7 @@ dash.onData(() => {
   document.querySelectorAll('#municipio').forEach((e) => { e.hidden = !!p || !mu || v; });
   document.querySelectorAll('#filtro-municipio').forEach((e) => { e.hidden = !!p || v; });
   document.querySelectorAll('#limpar-mun').forEach((e) => { e.hidden = !mu; });
+  document.querySelectorAll('.tx-mdet').forEach((e) => { e.hidden = !mu; });
   document.querySelectorAll('#kpis-geral, #kpis-eixo, #pendentes').forEach((e) => { e.hidden = !!mu; });
   document.querySelectorAll('.tx-tab[data-aba]').forEach((e) => { const on = !p && !v && e.dataset.aba === a; e.classList.toggle('on', on); e.setAttribute('aria-current', on ? 'page' : 'false'); });
   const os = String(dash.params().osit || ''), op = String(dash.params().opasta || '');
@@ -1121,10 +1129,16 @@ document.querySelectorAll('#voltar').forEach((b) => b.addEventListener('click', 
 document.querySelectorAll('.tx-tab[data-aba]').forEach((b) => b.addEventListener('click', () => TX.goAba(b.dataset.aba)));
 document.querySelectorAll('.tx-tab-org').forEach((b) => b.addEventListener('click', () => { dash.setParams({ vista: 'org', pasta: '', aba: '' }); dash.setLink('organograma'); }));
 document.querySelectorAll('.tx-fchip').forEach((b) => b.addEventListener('click', () => dash.setParams({ feixo: b.dataset.feixo })));
-document.querySelectorAll('#limpar-mun').forEach((b) => b.addEventListener('click', () => dash.setParams({ mun: '' })));
+document.querySelectorAll('#limpar-mun, .tx-mlimpar').forEach((b) => b.addEventListener('click', () => dash.setParams({ mun: '' })));
 document.querySelectorAll('.tx-ochip').forEach((b) => b.addEventListener('click', () => dash.setParams({ osit: b.dataset.osit })));
 document.querySelectorAll('.tx-olimpar').forEach((b) => b.addEventListener('click', () => dash.setParams({ osit: '', opasta: '', mun: '' })));
-window.TX.setMun = (m) => { dash.setParams({ mun: m || '' }); };
+window.TX.setMun = (m, ir) => {
+  dash.setParams({ mun: m || '' });
+  if (!m || !ir) return;
+  // vai para o Detalhamento Por Município visível (geral ou eixo) assim que ele aparecer
+  let k = 0; const go = () => { const el = [...document.querySelectorAll('.tx-mdet')].find((e) => !e.hidden && !e.closest('[hidden]')); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); else if (k++ < 20) setTimeout(go, 50); };
+  setTimeout(go, 30);
+};
 window.__txAll = false;
 const txToggle = (all) => { window.__txAll = all; document.querySelectorAll('#mais-contratos').forEach((e) => { e.hidden = all; }); document.querySelectorAll('#menos-contratos').forEach((e) => { e.hidden = !all; }); dash.draw('tcontr'); dash.draw('ncontr'); };
 document.querySelectorAll('#mais-contratos').forEach((b) => b.addEventListener('click', () => txToggle(true)));
@@ -1160,7 +1174,7 @@ dash.draw('lede', (el) => {
     if (!r) { el.replaceChildren(pre + m + ' não há registro informado' + (e !== '0' ? ' pelas pastas deste eixo.' : '.')); return; }
     const w = 'eixo_num=' + e + '&municipio=' + TX.enc(m);
     const m3 = (f, fmt) => { const b = document.createElement('b'); b.dataset.source = 'c_mun'; b.dataset.field = f; b.dataset.where = w; b.textContent = TX.fmt(r[f], fmt); return b; };
-    el.replaceChildren(pre + m + ', ', m3('npastas', 'n'), r.npastas === 1 ? ' órgão tem registros: ' : ' órgãos têm registros: ', m3('obras', 'n'), ' obras (', m3('obras_valor', 'brl'), '), ', m3('bens', 'n'), ' bens (', m3('bens_valor', 'brl'), '), ', m3('contratos', 'n'), ' contratos, ', m3('convenios', 'n'), ' convênios e ', m3('programas', 'n'), ' programas. Abaixo, o detalhe de cada órgão.');
+    el.replaceChildren(pre + m + ', ', m3('npastas', 'n'), r.npastas === 1 ? ' órgão tem registros: ' : ' órgãos têm registros: ', m3('obras', 'n'), ' obras (', m3('obras_valor', 'brl'), '), ', m3('bens', 'n'), ' bens (', m3('bens_valor', 'brl'), '), ', m3('contratos', 'n'), ' contratos, ', m3('convenios', 'n'), ' convênios e ', m3('programas', 'n'), ' programas. O Detalhamento Por Município, órgão por órgão, fica logo abaixo do mapa.');
     return;
   }
   if (!p && TX.aba()) { eixoLede(TX.aba()); return; }
@@ -1248,6 +1262,7 @@ const txMOCell = (r, f, kind) => {
   else { if (kind === 'w') td.className = 'w'; td.textContent = v == null || v === '' ? '—' : String(v); }
   return td;
 };
+dash.draw('mdetnome', (el) => { const m = TX.mun(); const e = TX.aba(); el.textContent = m ? m + (e ? ' · Eixo ' + e : '') + ' · por órgão' : 'Município'; });
 dash.draw('morgn', (el) => {
   if (!TXM.ready()) { el.textContent = '—'; return; }
   const o = TXM.porOrgao(); const n = o.size;
@@ -1875,7 +1890,7 @@ const txOMun = (el, pref) => {
     const bar = document.createElement('span'); bar.className = 'bar'; const i = document.createElement('i'); i.style.width = (100 * p.obras / mx) + '%'; bar.appendChild(i);
     const sub = document.createElement('span'); sub.className = 's'; sub.textContent = TX.brl(p.obras_valor) + (p.paralisadas ? ' · ' + TX.n(p.paralisadas) + ' paralisada(s)/inacabada(s)' : '');
     bt.append(m, v, bar, sub);
-    bt.addEventListener('click', () => TX.setMun(p.municipio === TX.mun() ? '' : p.municipio));
+    bt.addEventListener('click', () => TX.setMun(p.municipio === TX.mun() ? '' : p.municipio, true));
     li.appendChild(bt); return li;
   }));
 };
