@@ -28,7 +28,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     calc(id,o){calcs[id]=o}, loader(){}, refresh(){}, onData(fn){ons.push(fn)},
     draw(name,fn){ if(typeof fn==='function'||(fn&&fn.update)){draws[name]=typeof fn==='function'?fn:fn.update} else document.querySelectorAll('[data-draw="'+name+'"]').forEach(el=>{try{draws[name](el)}catch(e){console.error(e)}}); }
   };
-  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261118d').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
+  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261118e').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
   let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,150)});
   window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));if(h==='organograma'){P.vista='org';P.pasta='';P.aba='';run();return}if(h==='relatorio'){P.vista='rel';P.pasta='';P.aba='';run();return}const m=h.match(/^eixo-([1-6])$/);if(m){if(P.aba!==m[1]||P.pasta||P.vista){P.aba=m[1];P.pasta='';P.vista='';run()}return}const v=h==='geral'?'':h;if(h==='geral'&&(P.aba||P.pasta||P.vista)){P.aba='';P.pasta='';P.vista='';run();return}if(v)P.vista='';if(v!==P.pasta){P.pasta=v;run()}});
 })();
@@ -1522,9 +1522,9 @@ const TXREL = (() => {
     { id: 'incentivos', src: 'incentivos', t: 'Incentivos fiscais', inc: 'Inciso XXV', cols: [['Programa', 'programa', 'w'], ['Tributo', 'tributo'], ['Fundamento', 'fundamento', 'w'], ['Situação', 'situacao', 'w']] }
   ];
   const ALLSEC = SECS.map((s) => s.id);
-  const S = { recorte: 'pasta', pasta: '', mun: '', eixo: '', secs: new Set(ALLSEC), osit: '', cvig: '', cate: '2026-12-31', prio: '', cpend: false, ctrl: '', lim: 50, agrupar: true, orient: 'l', titulo: '' };
+  const S = { recorte: 'pasta', pasta: '', pmun: '', mun: '', eixo: '', secs: new Set(ALLSEC), osit: '', cvig: '', cate: '2026-12-31', prio: '', cpend: false, ctrl: '', lim: 50, agrupar: true, orient: 'l', titulo: '' };
   const PRESETS = [
-    { id: 'ficha', t: 'Ficha completa de uma pasta', d: 'Todas as abas de uma secretaria ou órgão.', s: { recorte: 'pasta', secs: ALLSEC, osit: '', cvig: '', prio: '', cpend: false, ctrl: '', lim: 0, agrupar: true } },
+    { id: 'ficha', t: 'Ficha completa de uma pasta', d: 'Todas as abas de uma secretaria ou órgão.', s: { recorte: 'pasta', pmun: '', secs: ALLSEC, osit: '', cvig: '', prio: '', cpend: false, ctrl: '', lim: 0, agrupar: true } },
     { id: 'mun', t: 'Raio-x de um município', d: 'Obras, bens, contratos, convênios e programas, órgão por órgão.', s: { recorte: 'municipio', eixo: '', secs: ['resumo', 'obras', 'convenios', 'contratos', 'programas', 'tac_tag', 'pendencias', 'patrimonio'], osit: '', cvig: '', prio: '', cpend: false, lim: 0, agrupar: true } },
     { id: 'eixo', t: 'Resumo de um eixo', d: 'Recebimento e totais das pastas do eixo, com as maiores obras e contratos.', s: { recorte: 'eixo', secs: ['ident', 'resumo', 'obras', 'contratos', 'pendencias'], osit: '', cvig: '', prio: '', cpend: false, lim: 25, agrupar: false } },
     { id: 'paradas', t: 'Obras paralisadas e inacabadas', d: 'Todas as pastas, com motivo e providência.', s: { recorte: 'geral', eixo: '', secs: ['obras'], osit: 'parada', lim: 0, agrupar: false } },
@@ -1547,7 +1547,7 @@ const TXREL = (() => {
   const rmap = () => new Map((TX.rowsOf('recebimento') || []).map((r) => [r.pasta, r]));
   const sig = (p, P) => { const r = (P || pmap()).get(p) || rmap().get(p); return r ? r.sigla : p; };
   const escopo = () => {
-    if (S.recorte === 'pasta') return { ps: new Set([S.pasta]), mun: '', multi: false };
+    if (S.recorte === 'pasta') return { ps: new Set([S.pasta]), mun: S.pmun, multi: false };
     if (S.recorte === 'eixo') return { ps: TX.eixoSet(S.eixo), mun: '', multi: true, eixo: S.eixo };
     if (S.recorte === 'municipio') return { ps: S.eixo ? TX.eixoSet(S.eixo) : null, mun: S.mun, multi: true, eixo: S.eixo };
     return { ps: null, mun: '', multi: true };
@@ -1606,12 +1606,12 @@ const TXREL = (() => {
     return f;
   };
   const recorteTexto = (P) => {
-    if (S.recorte === 'pasta') { const r = P.get(S.pasta) || rmap().get(S.pasta) || {}; return (r.sigla || S.pasta) + (r.nome && r.nome !== r.sigla ? ' – ' + r.nome : ''); }
+    if (S.recorte === 'pasta') { const r = P.get(S.pasta) || rmap().get(S.pasta) || {}; return (r.sigla || S.pasta) + (r.nome && r.nome !== r.sigla ? ' – ' + r.nome : '') + (S.pmun ? ' · registros ligados ao município de ' + S.pmun : ''); }
     if (S.recorte === 'municipio') return 'Município de ' + S.mun + (S.eixo ? ', pastas do Eixo ' + S.eixo : ', todas as pastas');
     if (S.recorte === 'eixo') return (EIXOS.find((x) => x[0] === S.eixo) || ['', 'Eixo ' + S.eixo])[1];
     return 'Todas as pastas com formulário (51 unidades no Drive)';
   };
-  const titulo = (P) => S.titulo.trim() || ({ pasta: 'Relatório da pasta ', municipio: 'Relatório do município de ', eixo: 'Relatório do ', geral: 'Relatório geral' }[S.recorte] + ({ pasta: sig(S.pasta, P), municipio: S.mun, eixo: 'Eixo ' + S.eixo, geral: '' }[S.recorte]));
+  const titulo = (P) => S.titulo.trim() || (S.recorte === 'pasta' && S.pmun ? 'Relatório da pasta ' + sig(S.pasta, P) + ' em ' + S.pmun : '') || ({ pasta: 'Relatório da pasta ', municipio: 'Relatório do município de ', eixo: 'Relatório do ', geral: 'Relatório geral' }[S.recorte] + ({ pasta: sig(S.pasta, P), municipio: S.mun, eixo: 'Eixo ' + S.eixo, geral: '' }[S.recorte]));
 
   const modelo = () => {
     const P = pmap(), R = rmap(), e = escopo(), B = [];
@@ -1622,6 +1622,8 @@ const TXREL = (() => {
     const ft = filtrosTexto(); if (ft.length) meta.splice(1, 0, ['Filtros', ft.join('; ')]);
     B.push({ k: 'kv', rows: meta });
     const secs = SECS.filter((s) => S.secs.has(s.id));
+    const fora = e.mun ? secs.filter((x) => x.src && !x.geo) : [];
+    if (fora.length) B.push({ k: 'p', t: 'Abas sem município associado ficam fora deste recorte: ' + fora.map((x) => x.t).join(', ') + '.', muted: 1 });
     if (!secs.length) { B.push({ k: 'p', t: 'Nenhuma seção escolhida.', muted: 1 }); return { titulo: titulo(P), blocos: B }; }
     // por município: o que cada órgão tem
     const munPorOrgao = () => {
@@ -1648,7 +1650,12 @@ const TXREL = (() => {
       }
       if (sec.id === 'resumo') {
         B.push({ k: 'h2', t: sec.t });
-        if (!e.multi) {
+        if (!e.multi && e.mun) {
+          const g = (id) => regs(SECS.find((x) => x.id === id), e) || [];
+          const ob = g('obras'), pt = g('patrimonio'), ct = g('contratos'), cv = g('convenios');
+          B.push({ k: 'kpis', items: [['Obras', TX.n(ob.length)], ['Valor das obras', TX.brl(soma(ob, 'valor_total'))], ['Obras paralisadas/inacabadas', TX.n(ob.filter((x) => x.situacao === 'Paralisada' || x.situacao === 'Inacabada').length)], ['Bens', TX.n(pt.length)], ['Valor dos bens', TX.brl(soma(pt, 'valor'))], ['Contratos', TX.n(ct.length)], ['Valor contratado', TX.brl(soma(ct, 'valor_contratado'))], ['Convênios', TX.n(cv.length)], ['Valor dos convênios', TX.brl(soma(cv, 'valor_global'))], ['Programas', TX.n(g('programas').length)], ['TAC/TAG', TX.n(g('tac_tag').length)], ['Pendências', TX.n(g('pendencias').length)]] });
+          B.push({ k: 'p', t: 'Obras e bens pelo município ou endereço informado; contratos, convênios, programas, TAC/TAG e pendências quando o texto cita o município. As demais abas não têm município e ficam fora deste recorte.', muted: 1 });
+        } else if (!e.multi) {
           const r = P.get(S.pasta);
           if (!r) { B.push({ k: 'p', t: 'Sem números: a pasta não tem formulário com conteúdo.', muted: 1 }); continue; }
           B.push({ k: 'kpis', items: [['Contratos', TX.n(r.contratos)], ['Valor contratado', TX.brl(r.contratos_valor)], ['Saldo a pagar', TX.brl(r.contratos_saldo)], ['Obras', TX.n(r.obras)], ['Valor das obras', TX.brl(r.obras_valor)], ['Obras paralisadas/inacabadas', TX.n(r.obras_paralisadas)], ['Convênios', TX.n(r.convenios)], ['Valor dos convênios', TX.brl(r.convenios_valor)], ['Bens (itens)', TX.n(r.patrimonio)], ['Valor dos bens', TX.brl(r.patrimonio_valor)], ['Programas', TX.n(r.programas)], ['Pendências', TX.n(r.pendencias)], ['Incisos informados', TX.n(r.incisos_informados) + ' de 26'], ['Incisos atendidos', TX.n(r.incisos_atendidos) + ' de ' + TX.n(r.incisos_aplicaveis)], ['Abas preenchidas', TX.n(r.abas_preenchidas) + ' de 14'], ['Municípios citados', TX.n(r.municipios)]] });
@@ -1668,8 +1675,8 @@ const TXREL = (() => {
         continue;
       }
       const rs = regs(sec, e);
+      if (rs === null) continue;
       B.push({ k: 'h2', t: sec.t, sub: sec.inc });
-      if (rs === null) { B.push({ k: 'p', t: 'Esta aba não tem município associado e não entra no recorte por município.', muted: 1 }); continue; }
       if (!rs.length) { B.push({ k: 'p', t: 'Nenhum registro neste recorte' + (filtrosTexto().length ? ' com os filtros escolhidos.' : '.'), muted: 1 }); continue; }
       if (e.multi && S.agrupar) {
         const g = new Map(); for (const r of rs) { if (!g.has(r.pasta)) g.set(r.pasta, []); g.get(r.pasta).push(r); }
@@ -1776,11 +1783,15 @@ dash.draw('rel', (el) => {
   // recorte
   const rec = mk('div', 'tx-relseg'); rec.setAttribute('role', 'radiogroup');
   const recBtns = TXREL.RECORTES.map(([v, t]) => { const b = mk('button', 'tx-ochip', t); b.type = 'button'; b.dataset.v = v; b.addEventListener('click', () => { S.recorte = v; if (v === 'eixo' && !S.eixo) S.eixo = '4'; sync(); prev(); }); rec.appendChild(b); return b; });
-  const pastaSel = sel(R.slice().sort((a, b) => a.sigla.localeCompare(b.sigla, 'pt-BR')).map((r) => [r.pasta, r.sigla + ' – ' + r.nome + (r.enviou ? '' : ' (sem formulário)')]), S.pasta, (v) => { S.pasta = v; prev(); });
+  const munsDa = (p) => { const c = new Map(); const inc = (m) => { if (m) c.set(m, (c.get(m) || 0) + 1); }; for (const id of ['obras', 'patrimonio']) for (const r of TX.rowsOf(id) || []) if (r.pasta === p) inc(r.municipio); for (const x of TX.rowsOf('mun_refs') || []) if (x.pasta === p && x.fonte !== 'obras') inc(x.municipio); return [...c.entries()].sort((a, b) => a[0].localeCompare(b[0], 'pt-BR')); };
+  const pmunSel = mk('select', 'dash-select');
+  const pmunFill = () => { const L = munsDa(S.pasta); if (S.pmun && !L.some(([m]) => m === S.pmun)) S.pmun = ''; pmunSel.replaceChildren(new Option(L.length ? 'Todos os municípios (' + L.length + ' com registros)' : 'Nenhum município ligado a esta pasta', ''), ...L.map(([m, n]) => new Option(m + ' · ' + n + (n === 1 ? ' registro' : ' registros'), m))); pmunSel.value = S.pmun; pmunSel.disabled = !L.length; };
+  pmunSel.addEventListener('change', () => { S.pmun = pmunSel.value; prev(); });
+  const pastaSel = sel(R.slice().sort((a, b) => a.sigla.localeCompare(b.sigla, 'pt-BR')).map((r) => [r.pasta, r.sigla + ' – ' + r.nome + (r.enviou ? '' : ' (sem formulário)')]), S.pasta, (v) => { S.pasta = v; pmunFill(); prev(); });
   const munSel = sel(munOpts.map((m) => [m, m]), S.mun, (v) => { S.mun = v; prev(); });
   const eixoSel = sel([['', 'Todos os eixos']].concat(TXREL.EIXOS), S.eixo, (v) => { S.eixo = v; prev(); });
-  const lPasta = lab('Pasta (secretaria ou órgão)', pastaSel), lMun = lab('Município', munSel), lEixo = lab('Eixo', eixoSel);
-  const alvo = mk('div', 'tx-relrow'); alvo.append(lPasta, lMun, lEixo);
+  const lPasta = lab('Pasta (secretaria ou órgão)', pastaSel), lPmun = lab('Município da pasta (opcional)', pmunSel), lMun = lab('Município', munSel), lEixo = lab('Eixo', eixoSel);
+  const alvo = mk('div', 'tx-relrow'); alvo.append(lPasta, lPmun, lMun, lEixo);
   // seções
   const secBox = mk('div', 'tx-relsecs'); const cks = {};
   for (const s of TXREL.SECS) { const l = mk('label', 'tx-relck'); const c = document.createElement('input'); c.type = 'checkbox'; c.checked = S.secs.has(s.id); c.addEventListener('change', () => { if (c.checked) S.secs.add(s.id); else S.secs.delete(s.id); sync(); prev(); }); cks[s.id] = c; const tx = mk('span'); tx.append(mk('b', '', s.t), mk('small', '', s.inc || s.d || '')); l.append(c, tx); secBox.appendChild(l); }
@@ -1815,9 +1826,9 @@ dash.draw('rel', (el) => {
   let M = null;
   const sync = () => {
     recBtns.forEach((b) => { const on = b.dataset.v === S.recorte; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
-    lPasta.hidden = S.recorte !== 'pasta'; lMun.hidden = S.recorte !== 'municipio'; lEixo.hidden = !(S.recorte === 'eixo' || S.recorte === 'municipio');
+    lPasta.hidden = S.recorte !== 'pasta'; lPmun.hidden = S.recorte !== 'pasta'; lMun.hidden = S.recorte !== 'municipio'; lEixo.hidden = !(S.recorte === 'eixo' || S.recorte === 'municipio');
     eixoSel.options[0].disabled = S.recorte === 'eixo'; if (S.recorte === 'eixo' && !S.eixo) S.eixo = '4';
-    pastaSel.value = S.pasta; munSel.value = S.mun; eixoSel.value = S.eixo;
+    pastaSel.value = S.pasta; pmunFill(); munSel.value = S.mun; eixoSel.value = S.eixo;
     for (const s of TXREL.SECS) cks[s.id].checked = S.secs.has(s.id);
     lOs.hidden = !S.secs.has('obras'); lCv.hidden = !S.secs.has('contratos'); lDt.hidden = !S.secs.has('contratos') || !(S.cvig === 'ate' || S.cvig === 'vencate'); lPr.hidden = !S.secs.has('pendencias'); lCp.hidden = !S.secs.has('convenios'); lCt.hidden = !S.secs.has('controle');
     fOs.value = S.osit; fCv.value = S.cvig; fDt.value = S.cate; fPr.value = S.prio; fCp.checked = S.cpend; fCt.value = S.ctrl; oLim.value = String(S.lim); oAg.checked = S.agrupar; oTi.value = S.titulo; oOr.value = S.orient;
