@@ -28,7 +28,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     calc(id,o){calcs[id]=o}, loader(){}, refresh(){}, onData(fn){ons.push(fn)},
     draw(name,fn){ if(typeof fn==='function'||(fn&&fn.update)){draws[name]=typeof fn==='function'?fn:fn.update} else document.querySelectorAll('[data-draw="'+name+'"]').forEach(el=>{try{draws[name](el)}catch(e){console.error(e)}}); }
   };
-  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261118c').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
+  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261118d').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
   let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,150)});
   window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));if(h==='organograma'){P.vista='org';P.pasta='';P.aba='';run();return}if(h==='relatorio'){P.vista='rel';P.pasta='';P.aba='';run();return}const m=h.match(/^eixo-([1-6])$/);if(m){if(P.aba!==m[1]||P.pasta||P.vista){P.aba=m[1];P.pasta='';P.vista='';run()}return}const v=h==='geral'?'':h;if(h==='geral'&&(P.aba||P.pasta||P.vista)){P.aba='';P.pasta='';P.vista='';run();return}if(v)P.vista='';if(v!==P.pasta){P.pasta=v;run()}});
 })();
@@ -1355,6 +1355,150 @@ dash.draw('morg', (el) => {
     b.appendChild(ac); d.appendChild(b); return d;
   }));
 });
+// Gerador de PDF próprio (sem bibliotecas externas): Helvetica padrão, tabelas com quebra de linha e de página.
+const TXPDF = (() => {
+  // larguras (1/1000 em) de Helvetica e Helvetica-Bold, ASCII 32–126
+  const WR = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+  const WB = [278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584];
+  const EXTRA = { '–': 556, '—': 1000, '‘': 222, '’': 222, '“': 333, '”': 333, '•': 350, '…': 1000, '€': 556, '§': 556, 'º': 365, 'ª': 370, '°': 400, '·': 278, '«': 556, '»': 556, '²': 333, '³': 333, '¹': 333, '½': 834, '×': 584, '÷': 584, '±': 584, '©': 737, '®': 737, '¿': 611, '¡': 333, 'ß': 611, 'Æ': 1000, 'æ': 889, 'Ø': 778, 'ø': 611, '¢': 556, '£': 556, '¥': 556, '¦': 260, '¨': 333, '¬': 584, '¯': 333, 'µ': 556, '¶': 537, '¸': 333, '¼': 834, '¾': 834 };
+  const WIN = { 0x20AC: 0x80, 0x201A: 0x82, 0x0192: 0x83, 0x201E: 0x84, 0x2026: 0x85, 0x2020: 0x86, 0x2021: 0x87, 0x02C6: 0x88, 0x2030: 0x89, 0x0160: 0x8A, 0x2039: 0x8B, 0x0152: 0x8C, 0x017D: 0x8E, 0x2018: 0x91, 0x2019: 0x92, 0x201C: 0x93, 0x201D: 0x94, 0x2022: 0x95, 0x2013: 0x96, 0x2014: 0x97, 0x02DC: 0x98, 0x2122: 0x99, 0x0161: 0x9A, 0x203A: 0x9B, 0x0153: 0x9C, 0x017E: 0x9E, 0x0178: 0x9F };
+  const norm = (s) => String(s == null ? '' : s).normalize('NFC').replace(/[    \t]/g, ' ').replace(/[‐‑−]/g, '-').replace(/≥/g, '>=').replace(/≤/g, '<=').replace(/→/g, '->').replace(/[​-‍﻿⚠️\r]/g, '').replace(/\n+/g, ' ');
+  const cw = (ch, b) => {
+    const c = ch.codePointAt(0);
+    if (c >= 32 && c <= 126) return (b ? WB : WR)[c - 32];
+    if (EXTRA[ch] != null) return EXTRA[ch];
+    const base = ch.normalize('NFD')[0]; const d = base.codePointAt(0);
+    if (base !== ch && d >= 32 && d <= 126) return (b ? WB : WR)[d - 32];
+    return 556;
+  };
+  const width = (s, f, size) => { let w = 0; for (const ch of s) w += cw(ch, f === 'B'); return w * size / 1000; };
+  const enc = (s) => { const out = []; for (const ch of s) { const c = ch.codePointAt(0); let b = (c >= 32 && c < 127) || (c >= 0xA0 && c <= 0xFF) ? c : WIN[c]; if (b == null) b = 0x3F; if (b === 0x28 || b === 0x29 || b === 0x5C) out.push(0x5C); out.push(b); } return out; };
+  const wrap = (s, f, size, maxW) => {
+    s = norm(s).trim(); if (!s) return [''];
+    const words = s.split(/ +/); const lines = []; let cur = '';
+    const push = (w) => { // quebra palavras maiores que a coluna
+      while (width(w, f, size) > maxW && w.length > 1) { let k = w.length - 1; while (k > 1 && width(w.slice(0, k), f, size) > maxW) k--; lines.push(w.slice(0, k)); w = w.slice(k); }
+      return w;
+    };
+    for (let w of words) {
+      const t = cur ? cur + ' ' + w : w;
+      if (width(t, f, size) <= maxW) { cur = t; continue; }
+      if (cur) lines.push(cur);
+      cur = push(w);
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  };
+  const N = (v) => (Math.round(v * 100) / 100).toString();
+
+  function create(o) {
+    const land = o.orient !== 'p';
+    const W = land ? 841.89 : 595.28, H = land ? 595.28 : 841.89;
+    const MX = 34, TOP = 48, BOT = 40;
+    const pages = []; let ops = null; let y = TOP; const images = [];
+    const add = () => { ops = []; pages.push(ops); y = TOP; };
+    add();
+    const col = (c) => c.map((v) => N(v / 255)).join(' ');
+    const doc = {
+      W, H, MX, TOP, BOT, get y() { return y; }, set y(v) { y = v; },
+      width, wrap, newPage: add,
+      room: (h) => { if (y + h > H - BOT) add(); },
+      text(x, yy, s, f, size, c, align) {
+        s = norm(s); let xx = x; if (align === 'right') xx = x - width(s, f, size); else if (align === 'center') xx = x - width(s, f, size) / 2;
+        ops.push({ t: 'T', x: xx, y: yy, s, f, size, c });
+      },
+      rect(x, yy, w, h, c) { ops.push('q ' + col(c) + ' rg ' + N(x) + ' ' + N(H - yy - h) + ' ' + N(w) + ' ' + N(h) + ' re f Q'); },
+      line(x1, y1, x2, y2, c, lw) { ops.push('q ' + col(c) + ' RG ' + N(lw || 0.5) + ' w ' + N(x1) + ' ' + N(H - y1) + ' m ' + N(x2) + ' ' + N(H - y2) + ' l S Q'); },
+      image(jpegBytes, pw, ph, x, yy, w, h) { const i = images.length; images.push({ b: jpegBytes, pw, ph }); ops.push('q ' + N(w) + ' 0 0 ' + N(h) + ' ' + N(x) + ' ' + N(H - yy - h) + ' cm /Im' + i + ' Do Q'); },
+      pages: () => pages.length,
+      onPage(i, fn) { const keep = ops; ops = pages[i]; fn(); ops = keep; },
+      async output() {
+        const te = new TextEncoder(); const chunks = []; let len = 0; const offs = [];
+        const put = (x) => { const b = typeof x === 'string' ? te.encode(x) : x; chunks.push(b); len += b.length; };
+        const obj = (n, body) => { offs[n] = len; put(n + ' 0 obj\n'); if (Array.isArray(body)) body.forEach(put); else put(body); put('\nendobj\n'); };
+        const deflate = async (bytes) => { if (typeof CompressionStream !== 'function') return null; try { const s = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate')); return new Uint8Array(await new Response(s).arrayBuffer()); } catch (e) { return null; } };
+        put('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'.replace(/[\u0080-ÿ]/g, (c) => c)); // cabeçalho
+        const nImg = images.length, base = 6, pageObj = (i) => base + nImg + i * 2, contObj = (i) => base + nImg + i * 2 + 1;
+        obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+        obj(2, '<< /Type /Pages /Count ' + pages.length + ' /Kids [' + pages.map((_, i) => pageObj(i) + ' 0 R').join(' ') + '] >>');
+        obj(3, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+        obj(4, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+        obj(5, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>');
+        images.forEach((im, i) => obj(base + i, ['<< /Type /XObject /Subtype /Image /Width ' + im.pw + ' /Height ' + im.ph + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + im.b.length + ' >>\nstream\n', im.b, '\nendstream']));
+        const xo = nImg ? ' /XObject << ' + images.map((_, i) => '/Im' + i + ' ' + (base + i) + ' 0 R').join(' ') + ' >>' : '';
+        for (let i = 0; i < pages.length; i++) {
+          const parts = [];
+          for (const op of pages[i]) {
+            if (typeof op === 'string') { parts.push(te.encode(op + '\n')); continue; }
+            const fnt = op.f === 'B' ? '/F2' : op.f === 'I' ? '/F3' : '/F1';
+            parts.push(te.encode('BT ' + fnt + ' ' + N(op.size) + ' Tf ' + col(op.c || [0, 0, 0]) + ' rg ' + N(op.x) + ' ' + N(H - op.y) + ' Td (')); parts.push(new Uint8Array(enc(op.s))); parts.push(te.encode(') Tj ET\n'));
+          }
+          let raw = new Uint8Array(parts.reduce((a, p) => a + p.length, 0)); let k = 0; for (const p of parts) { raw.set(p, k); k += p.length; }
+          const z = await deflate(raw);
+          obj(pageObj(i), '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + N(W) + ' ' + N(H) + '] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >>' + xo + ' >> /Contents ' + contObj(i) + ' 0 R >>');
+          obj(contObj(i), z ? ['<< /Length ' + z.length + ' /Filter /FlateDecode >>\nstream\n', z, '\nendstream'] : ['<< /Length ' + raw.length + ' >>\nstream\n', raw, '\nendstream']);
+        }
+        const total = base + nImg + pages.length * 2; const xref = len;
+        let x = 'xref\n0 ' + total + '\n0000000000 65535 f \n'; for (let n = 1; n < total; n++) x += String(offs[n]).padStart(10, '0') + ' 00000 n \n';
+        put(x + 'trailer\n<< /Size ' + total + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF\n');
+        return new Blob(chunks, { type: 'application/pdf' });
+      }
+    };
+    // parágrafo
+    doc.para = (s, f, size, c, gap, x0, maxW) => { const lh = size * 1.28; const x = x0 == null ? MX : x0; for (const l of wrap(s, f, size, maxW || W - 2 * MX - (x - MX))) { doc.room(lh); doc.text(x, y + size, l, f, size, c); y += lh; } y += gap || 0; };
+    // tabela com cabeçalho repetido a cada página
+    doc.table = (cols, rows, opt) => {
+      opt = opt || {}; const fs = opt.size || 7.4, hs = fs, pad = 2.6, lh = fs * 1.22, avail = W - 2 * MX;
+      const isNum = cols.map((c) => c.n), isW = cols.map((c) => c.w);
+      const nat = cols.map((c, i) => Math.min(avail * 0.45, Math.max(width(norm(c.t), 'B', hs), ...rows.map((r) => width(norm(r[i]), opt.bold && opt.bold(r) ? 'B' : 'R', fs))) + 2 * pad + 1));
+      const lw = (s, f, sz) => { let m = 0; for (const w of norm(s).split(' ')) { const x = width(w, f, sz); if (x > m) m = x; } return m; };
+      const minw = cols.map((c, i) => { if (isNum[i]) return nat[i]; let m = lw(c.t, 'B', hs); for (const r of rows) { const x = lw(r[i], 'R', fs); if (x > m) m = x; } return Math.min(nat[i], Math.max(isW[i] ? 90 : 18, Math.min(m + 2 * pad + 1, isW[i] ? 140 : 96))); });
+      let wd;
+      const sumNat = nat.reduce((a, b) => a + b, 0);
+      if (sumNat <= avail) { const extra = avail - sumNat; const ws = isW.filter(Boolean).length; wd = nat.map((v, i) => v + (ws ? (isW[i] ? extra / ws : 0) : extra * v / sumNat)); }
+      else {
+        const fixed = minw.reduce((a, b) => a + b, 0);
+        if (fixed >= avail) wd = minw.map((v) => v * avail / fixed);
+        else { const flex = nat.map((v, i) => Math.max(0, v - minw[i])); const fs2 = flex.reduce((a, b) => a + b, 0) || 1; wd = minw.map((v, i) => v + flex[i] * (avail - fixed) / fs2); }
+      }
+      const head = () => {
+        const hl = cols.map((c, i) => wrap(c.t, 'B', hs, wd[i] - 2 * pad)); const hh = Math.max(...hl.map((l) => l.length)) * lh + 2 * pad;
+        doc.room(hh + lh + 2 * pad);
+        doc.rect(MX, y, avail, hh, [31, 41, 55]);
+        let x = MX; hl.forEach((ls, i) => { ls.forEach((l, j) => doc.text(isNum[i] ? x + wd[i] - pad : x + pad, y + pad + hs + j * lh, l, 'B', hs, [255, 255, 255], isNum[i] ? 'right' : null)); x += wd[i]; });
+        y += hh;
+      };
+      head();
+      const maxLines = Math.floor((H - BOT - TOP - 40) / lh);
+      rows.forEach((r, ri) => {
+        const b = opt.bold && opt.bold(r);
+        let cl = r.map((v, i) => isNum[i] ? [norm(v)] : wrap(v, b ? 'B' : 'R', fs, wd[i] - 2 * pad));
+        cl = cl.map((l) => l.length > maxLines ? l.slice(0, maxLines - 1).concat([l[maxLines - 1] + ' ...']) : l);
+        const rh = Math.max(...cl.map((l) => l.length)) * lh + 2 * pad;
+        if (y + rh > H - BOT) { add(); head(); }
+        if (b) doc.rect(MX, y, avail, rh, [226, 238, 238]); else if (ri % 2) doc.rect(MX, y, avail, rh, [246, 247, 245]);
+        let x = MX; cl.forEach((ls, i) => { ls.forEach((l, j) => doc.text(isNum[i] ? x + wd[i] - pad : x + pad, y + pad + fs + j * lh, l, b ? 'B' : 'R', fs, [29, 31, 34], isNum[i] ? 'right' : null)); x += wd[i]; });
+        doc.line(MX, y + rh, MX + avail, y + rh, [226, 226, 222], 0.3);
+        y += rh;
+      });
+    };
+    // pares rótulo/valor
+    doc.kv = (pairs, cols2) => {
+      const fs = 8.5, lh = fs * 1.28, avail = W - 2 * MX;
+      if (!cols2) {
+        const lw = Math.min(170, Math.max(...pairs.map(([a]) => width(norm(a), 'B', fs))) + 12);
+        for (const [a, v] of pairs) { const ls = wrap(v, 'R', fs, avail - lw); const h = ls.length * lh + 3; doc.room(h); doc.text(MX, y + fs, a, 'B', fs, [100, 104, 110]); ls.forEach((l, j) => doc.text(MX + lw, y + fs + j * lh, l, 'R', fs, [29, 31, 34])); y += h; }
+      } else {
+        const n = 4, cw2 = avail / n;
+        for (let i = 0; i < pairs.length; i += n) { doc.room(30); for (let j = 0; j < n && i + j < pairs.length; j++) { const [a, v] = pairs[i + j]; const x = MX + j * cw2; doc.rect(x + 1, y, cw2 - 4, 26, [246, 247, 245]); doc.text(x + 6, y + 9, a, 'R', 7, [100, 104, 110]); doc.text(x + 6, y + 21, v, 'B', 10.5, [29, 31, 34]); } y += 30; }
+      }
+      y += 4;
+    };
+    return doc;
+  }
+  return { create, norm, width, wrap };
+})();
+window.TXPDF = TXPDF;
 // ===== Relatório: monta um documento a partir de recorte + seções + filtros, com prévia e PDF =====
 const TXREL = (() => {
   const LEIT = '2026-11-17', LEIT_BR = '17/11/2026';
@@ -1562,68 +1706,43 @@ const TXREL = (() => {
   };
 
   // ---------- PDF ----------
-  const loadJs = (u) => new Promise((ok, no) => { if (document.querySelector('script[data-u="' + u + '"]')) { ok(); return; } const s = document.createElement('script'); s.src = u; s.dataset.u = u; s.onload = () => ok(); s.onerror = () => no(new Error('load ' + u)); document.head.appendChild(s); });
-  const libs = async () => {
-    if (!(window.jspdf && window.jspdf.jsPDF)) await loadJs('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-    const J = window.jspdf && window.jspdf.jsPDF; if (!J) throw new Error('jspdf');
-    if (!(J.API && J.API.autoTable)) await loadJs('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js');
-    if (!J.API.autoTable) throw new Error('autotable');
-    return J;
-  };
-  // fontes padrão do PDF usam o alfabeto latino (WinAnsi): troca o que estiver fora dele
-  const san = (s) => String(s == null ? '' : s).normalize('NFC').replace(/[    ]/g, ' ').replace(/[‐-―−]/g, '-').replace(/[“”„]/g, '"').replace(/[‘’‚]/g, "'").replace(/…/g, '...').replace(/≥/g, '>=').replace(/≤/g, '<=').replace(/[→➔]/g, '->').replace(/[​-‍﻿⚠️]/g, '').replace(/[^\x09\x0a\x0d\x20-\x7e\xa0-\xff€]/g, '?');
   const logo = () => new Promise((ok) => {
     try {
       const im = document.querySelector('.tx-logo'); if (!im || !im.complete || !im.naturalWidth) { ok(null); return; }
       const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0);
-      ok({ d: c.toDataURL('image/jpeg', 0.9), w: c.width, h: c.height });
+      const u = c.toDataURL('image/jpeg', 0.9); const bin = atob(u.split(',')[1]); const b = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i);
+      ok({ b, w: c.width, h: c.height });
     } catch (e) { ok(null); }
   });
   const pdf = async (M) => {
-    const J = await libs();
-    const doc = new J({ orientation: S.orient === 'p' ? 'portrait' : 'landscape', unit: 'pt', format: 'a4', compress: true });
-    const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), MX = 34, TOP = 50, BOT = 40;
+    const D = TXPDF.create({ orient: S.orient }); const MX = D.MX, W = D.W, H = D.H;
     const AC = [14, 130, 130], INK = [29, 31, 34], MUT = [100, 104, 110];
-    let y = TOP;
-    const novo = () => { doc.addPage(); y = TOP; };
-    const cabe = (h) => { if (y + h > H - BOT) novo(); };
     const lg = await logo();
-    if (lg) { const lw = 150, lh = lw * lg.h / lg.w; doc.addImage(lg.d, 'JPEG', MX, y - 14, lw, lh); y += lh - 2; }
-    const texto = (t, size, style, color, gap) => { doc.setFont('helvetica', style); doc.setFontSize(size); doc.setTextColor(...color); const ls = doc.splitTextToSize(san(t), W - 2 * MX); const lh = size * 1.25; for (const l of ls) { cabe(lh); doc.text(l, MX, y + size); y += lh; } y += gap; };
+    if (lg) { const lw = 150, lh = lw * lg.h / lg.w; D.image(lg.b, lg.w, lg.h, MX, D.y - 10, lw, lh); D.y += lh - 4; }
     for (const b of M.blocos) {
-      if (b.k === 'h1') texto(b.t, 18, 'bold', INK, 4);
-      else if (b.k === 'h2') { cabe(40); y += 8; texto(b.t + (b.sub ? '  ·  ' + b.sub : ''), 12.5, 'bold', AC, 2); doc.setDrawColor(...AC); doc.setLineWidth(0.8); doc.line(MX, y, W - MX, y); y += 8; }
-      else if (b.k === 'h3') { cabe(30); y += 4; texto(b.t, 10, 'bold', INK, 2); }
-      else if (b.k === 'p') texto(b.t, 8.8, 'normal', b.muted ? MUT : INK, 6);
-      else if (b.k === 'kv' || b.k === 'kpis') {
-        const rows = b.k === 'kv' ? b.rows.map(([a, c]) => [san(a), san(c == null || c === '' ? '—' : c)]) : (() => { const r = []; for (let i = 0; i < b.items.length; i += 4) { const row = []; for (let j = 0; j < 4; j++) { const it = b.items[i + j]; row.push(it ? san(it[0]) : '', it ? san(it[1]) : ''); } r.push(row); } return r; })();
-        const cs = b.k === 'kv' ? { 0: { fontStyle: 'bold', cellWidth: 150, textColor: MUT } } : { 0: { textColor: MUT }, 1: { fontStyle: 'bold' }, 2: { textColor: MUT }, 3: { fontStyle: 'bold' }, 4: { textColor: MUT }, 5: { fontStyle: 'bold' }, 6: { textColor: MUT }, 7: { fontStyle: 'bold' } };
-        doc.autoTable({ startY: y, body: rows, theme: 'plain', styles: { font: 'helvetica', fontSize: 8.5, cellPadding: 2.5, textColor: INK, overflow: 'linebreak' }, columnStyles: cs, margin: { left: MX, right: MX, top: TOP, bottom: BOT } });
-        y = doc.lastAutoTable.finalY + 8;
-      } else if (b.k === 'table') {
-        const cs = {}; b.cols.forEach(([, k], i) => { if (k && k !== 'w' && k !== 'sig') cs[i] = { halign: 'right' }; else if (k === 'w') cs[i] = { cellWidth: 'auto', minCellWidth: 110 }; });
-        cabe(50);
-        doc.autoTable({
-          startY: y, head: [b.cols.map(([c]) => san(c))], body: b.rows.map((r) => r.map(san)), theme: 'striped',
-          styles: { font: 'helvetica', fontSize: b.cols.length > 10 ? 6.6 : 7.4, cellPadding: 2.6, overflow: 'linebreak', valign: 'top', textColor: INK, lineColor: [226, 226, 222], lineWidth: 0.3 },
-          headStyles: { fillColor: [31, 41, 55], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: b.cols.length > 10 ? 6.4 : 7 },
-          alternateRowStyles: { fillColor: [246, 247, 245] }, columnStyles: cs, margin: { left: MX, right: MX, top: TOP, bottom: BOT },
-          didParseCell: (d) => { if (b.total && d.section === 'body' && d.row.index === b.rows.length - 1) { d.cell.styles.fontStyle = 'bold'; d.cell.styles.fillColor = [232, 240, 240]; } }
-        });
-        y = doc.lastAutoTable.finalY + 4;
-        if (b.nota) texto(b.nota, 7.5, 'italic', MUT, 6);
+      if (b.k === 'h1') D.para(b.t, 'B', 18, INK, 4);
+      else if (b.k === 'h2') { D.room(48); D.y += 8; D.para(b.t + (b.sub ? '  ·  ' + b.sub : ''), 'B', 12.5, AC, 2); D.line(MX, D.y, W - MX, D.y, AC, 0.8); D.y += 8; }
+      else if (b.k === 'h3') { D.room(40); D.y += 4; D.para(b.t, 'B', 10, INK, 3); }
+      else if (b.k === 'p') D.para(b.t, 'R', 8.8, b.muted ? MUT : INK, 6);
+      else if (b.k === 'kv') D.kv(b.rows.map(([a, c]) => [a, c == null || c === '' ? '—' : c]));
+      else if (b.k === 'kpis') D.kv(b.items, true);
+      else if (b.k === 'table') {
+        const cols = b.cols.map(([t, k]) => ({ t, n: !!(k && k !== 'w' && k !== 'sig'), w: k === 'w' }));
+        const last = b.rows.length - 1;
+        D.table(cols, b.rows, { size: cols.length > 10 ? 6.6 : 7.4, bold: b.total ? (r) => r === b.rows[last] : null });
+        D.y += 4; if (b.nota) D.para(b.nota, 'I', 7.5, MUT, 6);
       }
     }
-    const n = doc.getNumberOfPages(), quando = agora();
-    for (let i = 1; i <= n; i++) {
-      doc.setPage(i); doc.setFont('helvetica', 'normal'); doc.setFontSize(7.2); doc.setTextColor(...MUT);
-      doc.text(san('Monitor da Transição RN · ' + M.titulo), MX, 24, { maxWidth: W - 2 * MX - 80 }); doc.text(san('CONTROL · Governo do RN'), W - MX, 24, { align: 'right' });
-      doc.setDrawColor(226, 226, 222); doc.setLineWidth(0.5); doc.line(MX, 30, W - MX, 30);
-      doc.text(san('Leitura dos formulários: ' + LEIT_BR + ' · gerado em ' + quando), MX, H - 18); doc.text(san('Página ' + i + ' de ' + n), W - MX, H - 18, { align: 'right' });
-    }
-    return doc.output('blob');
+    const n = D.pages(), quando = agora();
+    for (let i = 0; i < n; i++) D.onPage(i, () => {
+      D.text(MX, 24, 'Monitor da Transição RN · ' + M.titulo, 'R', 7.2, MUT); D.text(W - MX, 24, 'CONTROL · Governo do RN', 'R', 7.2, MUT, 'right');
+      D.line(MX, 30, W - MX, 30, [226, 226, 222], 0.5);
+      D.text(MX, H - 18, 'Leitura dos formulários: ' + LEIT_BR + ' · gerado em ' + quando, 'R', 7.2, MUT); D.text(W - MX, H - 18, 'Página ' + (i + 1) + ' de ' + n, 'R', 7.2, MUT, 'right');
+    });
+    return D.output();
   };
-  const nomeArq = (M) => 'Relatorio_' + san(M.titulo).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 80) + '_' + LEIT.replace(/-/g, '') + '.pdf';
+  const san = (s) => TXPDF.norm(s);
+  const nomeArq = (M) => san(/^relat/i.test(M.titulo) ? M.titulo : 'Relatorio ' + M.titulo).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 80) + '_' + LEIT.replace(/-/g, '') + '.pdf';
   const salvar = async (blob, nome) => {
     try {
       const c = window.claude && typeof window.claude.use === 'function' ? await Promise.race([window.claude.use('downloads'), new Promise((r) => setTimeout(() => r(null), 2500))]) : null;
@@ -1686,6 +1805,7 @@ dash.draw('rel', (el) => {
   // ações
   const acts = mk('div', 'tx-relact'); const bPdf = mk('button', 'tx-relgo', 'Gerar PDF'); bPdf.type = 'button'; const bPr = mk('button', 'tx-btn', 'Imprimir ou salvar pela impressão'); bPr.type = 'button'; const st = mk('span', 'tx-muted'); st.setAttribute('aria-live', 'polite');
   acts.append(bPdf, bPr, st);
+  if (/claudeusercontent\.com$/.test(location.hostname)) bPr.hidden = true;
   const sec = (t, ...xs) => { const d = mk('div', 'tx-relblk'); d.append(mk('h3', '', t), ...xs); return d; };
   form.append(sec('1. Modelos prontos', mk('p', 'tx-muted', 'Um clique preenche as escolhas abaixo; depois dá para ajustar.'), pre), sec('2. Recorte', rec, alvo), sec('3. Seções do relatório', secBox, secAc), sec('4. Filtros', filt), sec('5. Opções', opts), acts);
   const head = mk('div', 'tx-relhead'); const hn = mk('span', 'tx-eyebrow', 'Prévia'); const hs = mk('span', 'tx-muted'); head.append(hn, hs);
@@ -1715,7 +1835,7 @@ dash.draw('rel', (el) => {
       const blob = await TXREL.pdf(M); const r = await TXREL.salvar(blob, TXREL.nomeArq(M));
       st.textContent = r === 'recusado' ? 'Download cancelado.' : r === 'aguarde' ? 'Já há um download aguardando confirmação.' : 'PDF pronto (' + Math.max(1, Math.round(blob.size / 1024)) + ' KB): ' + TXREL.nomeArq(M);
     } catch (e) {
-      st.textContent = 'Não deu para gerar o PDF direto nesta visualização. Use "Imprimir ou salvar pela impressão" e escolha "Salvar como PDF".';
+      st.textContent = 'Não deu para gerar o PDF: ' + (e && e.message ? e.message : e) + '.';
     }
     bPdf.disabled = false;
   });
