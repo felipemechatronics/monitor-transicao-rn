@@ -28,7 +28,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     calc(id,o){calcs[id]=o}, loader(){}, refresh(){}, onData(fn){ons.push(fn)},
     draw(name,fn){ if(typeof fn==='function'||(fn&&fn.update)){draws[name]=typeof fn==='function'?fn:fn.update} else document.querySelectorAll('[data-draw="'+name+'"]').forEach(el=>{try{draws[name](el)}catch(e){console.error(e)}}); }
   };
-  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261118e').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
+  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261118f').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
   let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,150)});
   window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));if(h==='organograma'){P.vista='org';P.pasta='';P.aba='';run();return}if(h==='relatorio'){P.vista='rel';P.pasta='';P.aba='';run();return}const m=h.match(/^eixo-([1-6])$/);if(m){if(P.aba!==m[1]||P.pasta||P.vista){P.aba=m[1];P.pasta='';P.vista='';run()}return}const v=h==='geral'?'':h;if(h==='geral'&&(P.aba||P.pasta||P.vista)){P.aba='';P.pasta='';P.vista='';run();return}if(v)P.vista='';if(v!==P.pasta){P.pasta=v;run()}});
 })();
@@ -485,7 +485,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
   <!-- RELATÓRIO -->
   <div id="relatorio" class="tx-sec" hidden>
     <div class="tx-sec" style="gap:4px"><span class="tx-eyebrow">Relatório em PDF</span><h2 style="margin:0">Monte o seu relatório</h2>
-      <p class="tx-muted" style="margin:0;max-width:90ch">Escolha um modelo pronto ou combine o recorte (por pasta, por município, por eixo ou geral), as seções e os filtros. A prévia mostra o conteúdo do PDF; no PDF, as tabelas vêm completas, conforme o tamanho escolhido.</p></div>
+      <p class="tx-muted" style="margin:0;max-width:90ch">Escolha o recorte (por pasta, por município, por eixo ou geral), as seções e os filtros. A prévia mostra o conteúdo do PDF; no PDF, as tabelas vêm completas, conforme o tamanho escolhido.</p></div>
     <div class="tx-sec" data-draw="rel" data-source="pastas recebimento eixos mun_refs c_mun controle contratos obras convenios financas pessoal patrimonio precatorios programas tac_tag sistemas pendencias atos previdencia incentivos"></div>
   </div>
 
@@ -1818,7 +1818,7 @@ dash.draw('rel', (el) => {
   acts.append(bPdf, bPr, st);
   if (/claudeusercontent\.com$/.test(location.hostname)) bPr.hidden = true;
   const sec = (t, ...xs) => { const d = mk('div', 'tx-relblk'); d.append(mk('h3', '', t), ...xs); return d; };
-  form.append(sec('1. Modelos prontos', mk('p', 'tx-muted', 'Um clique preenche as escolhas abaixo; depois dá para ajustar.'), pre), sec('2. Recorte', rec, alvo), sec('3. Seções do relatório', secBox, secAc), sec('4. Filtros', filt), sec('5. Opções', opts), acts);
+  form.append(sec('1. Recorte', rec, alvo), sec('2. Seções do relatório', secBox, secAc), sec('3. Filtros', filt), sec('4. Opções', opts), acts);
   const head = mk('div', 'tx-relhead'); const hn = mk('span', 'tx-eyebrow', 'Prévia'); const hs = mk('span', 'tx-muted'); head.append(hn, hs);
   const paper = mk('div', 'tx-reldoc'); paper.id = 'rel-doc';
   prevBox.append(head, paper);
