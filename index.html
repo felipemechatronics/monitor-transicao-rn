@@ -16,7 +16,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 (function(){
-  const SRC=['pastas','controle','contratos','obras','convenios','financas','pessoal','patrimonio','precatorios','programas','sistemas','pendencias','tac_tag','atos','previdencia','incentivos','malha','eixos','recebimento','organograma','fiscal','mun_refs'];
+  const SRC=['pastas','controle','contratos','obras','convenios','financas','pessoal','patrimonio','precatorios','programas','sistemas','pendencias','tac_tag','atos','previdencia','incentivos','malha','eixos','recebimento','organograma','fiscal','mun_refs','orcamento'];
   const DS={}, ST={}, calcs={}, draws={}, ons=[];
   const P={pasta:'',aba:'',feixo:'',mun:'',osit:'',opasta:'',vista:'',onode:'',ofrente:''};
   const run=()=>{ons.forEach(f=>{try{f()}catch(e){console.error(e)}});Object.keys(draws).forEach(n=>document.querySelectorAll('[data-draw="'+n+'"]').forEach(el=>{if(el.closest('[hidden]'))return;try{draws[n](el)}catch(e){console.error(n,e)}}));};
@@ -28,9 +28,9 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     calc(id,o){calcs[id]=o}, loader(){}, refresh(){}, onData(fn){ons.push(fn)},
     draw(name,fn){ if(typeof fn==='function'||(fn&&fn.update)){draws[name]=typeof fn==='function'?fn:fn.update} else document.querySelectorAll('[data-draw="'+name+'"]').forEach(el=>{try{draws[name](el)}catch(e){console.error(e)}}); }
   };
-  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261123a').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
+  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261123b').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
   let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,150)});
-  window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));if(h==='organograma'){P.vista='org';P.pasta='';P.aba='';run();return}if(h==='relatorio'){P.vista='rel';P.pasta='';P.aba='';run();return}const m=h.match(/^eixo-([1-6])$/);if(m){if(P.aba!==m[1]||P.pasta||P.vista){P.aba=m[1];P.pasta='';P.vista='';run()}return}const v=h==='geral'?'':h;if(h==='geral'&&(P.aba||P.pasta||P.vista)){P.aba='';P.pasta='';P.vista='';run();return}if(v)P.vista='';if(v!==P.pasta){P.pasta=v;run()}});
+  window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));if(h==='organograma'){P.vista='org';P.pasta='';P.aba='';run();return}if(h==='relatorio'){P.vista='rel';P.pasta='';P.aba='';run();return}if(h==='orcamento'){P.vista='orc';P.pasta='';P.aba='';run();return}const m=h.match(/^eixo-([1-6])$/);if(m){if(P.aba!==m[1]||P.pasta||P.vista){P.aba=m[1];P.pasta='';P.vista='';run()}return}const v=h==='geral'?'':h;if(h==='geral'&&(P.aba||P.pasta||P.vista)){P.aba='';P.pasta='';P.vista='';run();return}if(v)P.vista='';if(v!==P.pasta){P.pasta=v;run()}});
 })();
 </script>
 </head>
@@ -229,6 +229,32 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 .tx-legend span{display:inline-flex;align-items:center;gap:6px}
 .tx-legend i{width:12px;height:12px;border-radius:50%;display:inline-block}
 .tx-scroll{overflow-x:auto;max-width:100%}
+.tx-ohead h2{margin:2px 0 4px}.tx-ohead p{margin:0;max-width:110ch}.tx-ohead a{color:inherit}
+.tx-ofilt{padding:12px;border:1px solid var(--color-border-line);border-radius:var(--cds-radius);background:var(--color-panel)}
+.tx-ores{margin:0;font-size:var(--cds-font-size-body);max-width:110ch}
+.tx-okpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:var(--cds-gap-sm)}
+.tx-okpis .tx-kpi .v{font-size:22px}.tx-okpis .tx-kpi .s{overflow-wrap:anywhere}
+.tx-ogauges{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,180px),1fr));gap:var(--cds-gap-sm)}
+.tx-ogauge{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px}
+.tx-ogauge svg{width:100%;max-width:170px;height:auto}.tx-ogauge b{font-family:var(--tx-mono);font-size:20px;margin-top:-6px}
+.tx-obars{display:flex;flex-direction:column;gap:8px}
+.tx-obar{display:grid;grid-template-columns:minmax(120px,32%) 1fr;gap:10px;align-items:center}
+.tx-obar.clk{cursor:pointer;border-radius:6px}.tx-obar.clk:hover,.tx-obar.clk:focus-visible{background:var(--tx-tint);outline:none}
+.tx-obar .l{font-size:var(--cds-font-size-caption);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tx-obar .t{display:flex;flex-direction:column;gap:2px}
+.tx-obar .b{display:grid;grid-template-columns:1fr 92px;gap:8px;align-items:center}
+.tx-obar .b .k{position:relative;height:10px;background:color-mix(in srgb,var(--color-fg) 6%,transparent);border-radius:3px}
+.tx-obar .b i{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.tx-obar .b span{font-family:var(--tx-mono);font-size:11px;white-space:nowrap;color:var(--color-fg);text-align:right}
+.tx-olg{display:flex;flex-wrap:wrap;gap:12px;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.tx-olg span{display:inline-flex;align-items:center;gap:5px}.tx-olg i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.tx-oevo{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end}.tx-oevo .tx-olg{width:100%}
+.tx-oevc{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1 1 40px;min-width:36px}
+.tx-oevm{height:170px;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px;border-bottom:1px solid var(--color-border-line)}
+.tx-oevm i{width:28%;border-radius:2px 2px 0 0}.tx-oevm.off{align-items:center}.tx-oevm em{font-size:10px;color:var(--color-fg-muted)}
+.tx-oevc>span{font-size:11px;color:var(--color-fg-muted)}
+.tx-olink{all:unset;cursor:pointer;color:var(--tx-acc);font-weight:600;text-decoration:underline;text-underline-offset:2px}.tx-olink:focus-visible{outline:2px solid var(--color-fg)}
+@media (max-width:640px){.tx-obar{grid-template-columns:1fr}}
 .tx-relform,.tx-relprev{border:1px solid var(--color-border-line);border-radius:var(--cds-radius);background:var(--color-panel);padding:var(--cds-pad-lg);display:flex;flex-direction:column;gap:var(--cds-gap-lg)}
 .tx-relblk{display:flex;flex-direction:column;gap:var(--cds-gap-sm)}
 .tx-relblk>h3{margin:0;font-size:var(--cds-font-size-body);font-weight:600}
@@ -401,6 +427,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     <button class="tx-tab" type="button" data-aba="6">Eixo 6 – Planejamento Governamental e Gestão de Resultados.<span class="c" data-draw="ecount" data-eixo="6" data-source="c_eixo_tot" data-field="pastas">—</span></button>
     <button class="tx-tab tx-tab-org" type="button" data-vista="org">Organograma</button>
     <button class="tx-tab tx-tab-rel" type="button" data-vista="rel">Relatório</button>
+    <button class="tx-tab tx-tab-orc" type="button" data-vista="orc">Painel Orçamentário 2026</button>
   </nav>
   <div class="tx-munbar" id="filtro-municipio"><span class="tx-eyebrow">Município</span><select id="mun" class="dash-select" data-draw="munsel" data-source="c_mun" aria-label="Filtrar por município"></select><button class="tx-btn" type="button" id="limpar-mun" hidden>Limpar município</button><span class="tx-muted">Escolha um município para ver o Detalhamento Por Município (logo abaixo do mapa): órgão por órgão, as obras, bens, contratos, convênios, programas, TAC/TAG e pendências ligados a ele. Clicando no mapa, a página vai direto para ele.</span></div>
 
@@ -480,6 +507,11 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
       <div data-draw="ftabs" data-k="ploa" data-only="cmp_geral cmp_receita cmp_receita_bruta cmp_despesa cmp_indicadores cmp_minimos" data-source="fiscal"></div>
       <p class="tx-fnote" data-draw="fx" data-k="ploa.fonte" data-source="fiscal"></p>
     </section>
+  </div>
+
+  <!-- PAINEL ORÇAMENTÁRIO -->
+  <div id="orcamento" class="tx-sec" hidden>
+    <div class="tx-sec" data-draw="orc" data-source="orcamento pastas financas recebimento"></div>
   </div>
 
   <!-- RELATÓRIO -->
@@ -1141,19 +1173,22 @@ dash.calc('c_geo_obras', {
   if (m) dash.setParams({ aba: m[1], pasta: '' });
   else if (h === 'organograma') dash.setParams({ vista: 'org', pasta: '', aba: '' });
   else if (h === 'relatorio') dash.setParams({ vista: 'rel', pasta: '', aba: '' });
+  else if (h === 'orcamento') dash.setParams({ vista: 'orc', pasta: '', aba: '' });
   else if (h && h !== 'geral') dash.setParams({ pasta: h });
 })();
 
 // Mostra a visão geral ou a pasta, e esconde as seções sem dados.
 dash.onData(() => {
-  const p = TX.pasta(), a = TX.aba(), f = TX.feixo(), vs = !p ? String(dash.params().vista || '') : '', v = vs === 'org' || vs === 'rel', fz = p === 'INDICADORES-FISCAIS';
+  const p = TX.pasta(), a = TX.aba(), f = TX.feixo(), vs = !p ? String(dash.params().vista || '') : '', v = vs === 'org' || vs === 'rel' || vs === 'orc', fz = p === 'INDICADORES-FISCAIS';
   document.querySelectorAll('#geral').forEach((e) => { e.hidden = !!p || !!a || v; });
   document.querySelectorAll('#eixo').forEach((e) => { e.hidden = !!p || !a || v; });
   document.querySelectorAll('#org').forEach((e) => { e.hidden = vs !== 'org'; });
   document.querySelectorAll('#relatorio').forEach((e) => { e.hidden = vs !== 'rel'; });
+  document.querySelectorAll('#orcamento').forEach((e) => { e.hidden = vs !== 'orc'; });
   document.querySelectorAll('#resumo').forEach((e) => { e.hidden = v || fz; });
   document.querySelectorAll('.tx-tab-org').forEach((e) => { e.classList.toggle('on', vs === 'org'); e.setAttribute('aria-current', vs === 'org' ? 'page' : 'false'); });
   document.querySelectorAll('.tx-tab-rel').forEach((e) => { e.classList.toggle('on', vs === 'rel'); e.setAttribute('aria-current', vs === 'rel' ? 'page' : 'false'); });
+  document.querySelectorAll('.tx-tab-orc').forEach((e) => { e.classList.toggle('on', vs === 'orc'); e.setAttribute('aria-current', vs === 'orc' ? 'page' : 'false'); });
   document.querySelectorAll('#pasta').forEach((e) => { e.hidden = !p || fz; });
   document.querySelectorAll('#fiscal').forEach((e) => { e.hidden = !fz; });
   document.querySelectorAll('[data-eixohead]').forEach((e) => { e.hidden = e.dataset.eixohead !== a; });
@@ -1181,6 +1216,7 @@ document.querySelectorAll('#voltar').forEach((b) => b.addEventListener('click', 
 document.querySelectorAll('.tx-tab[data-aba]').forEach((b) => b.addEventListener('click', () => TX.goAba(b.dataset.aba)));
 document.querySelectorAll('.tx-tab-org').forEach((b) => b.addEventListener('click', () => { dash.setParams({ vista: 'org', pasta: '', aba: '' }); dash.setLink('organograma'); }));
 document.querySelectorAll('.tx-tab-rel').forEach((b) => b.addEventListener('click', () => { dash.setParams({ vista: 'rel', pasta: '', aba: '' }); dash.setLink('relatorio'); }));
+document.querySelectorAll('.tx-tab-orc').forEach((b) => b.addEventListener('click', () => { dash.setParams({ vista: 'orc', pasta: '', aba: '' }); dash.setLink('orcamento'); }));
 document.querySelectorAll('.tx-fchip').forEach((b) => b.addEventListener('click', () => dash.setParams({ feixo: b.dataset.feixo })));
 document.querySelectorAll('#limpar-mun, .tx-mlimpar').forEach((b) => b.addEventListener('click', () => dash.setParams({ mun: '' })));
 document.querySelectorAll('.tx-ochip').forEach((b) => b.addEventListener('click', () => dash.setParams({ osit: b.dataset.osit })));
@@ -1852,6 +1888,152 @@ dash.draw('rel', (el) => {
   });
   bPr.addEventListener('click', () => { try { window.print(); } catch (e) { st.textContent = 'A impressão não está disponível nesta visualização.'; } });
   sync(); prev();
+});
+// ===== Painel Orçamentário 2026: execução por unidade gestora, cruzada com os formulários =====
+const TXORC = (() => {
+  const S = { pasta: '', ug: '', grupo: '', fonte: '', busca: '', sortUG: 'empenhado' };
+  const H = ['dotacao', 'atualizado', 'bloq', 'pre', 'empenhado', 'liquidado', 'disponivel', 'a_liquidar', 'a_pagar'];
+  const I = Object.fromEntries(H.map((h, i) => [h, 5 + i]));
+  const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  const ready = () => ['orcamento', 'pastas', 'financas', 'recebimento'].every((s) => dash.data(s).status === 'ok');
+  const O = () => (TX.rowsOf('orcamento') || [])[0];
+  const filtra = (o) => o.rows.filter((r) => {
+    const u = o.ugs[r[0]];
+    if (S.pasta && (S.pasta === '__sem' ? u.pasta : u.pasta !== S.pasta)) return false;
+    if (S.ug !== '' && String(r[0]) !== String(S.ug)) return false;
+    if (S.grupo && r[4] !== S.grupo) return false;
+    if (S.fonte !== '' && String(r[2]) !== String(S.fonte)) return false;
+    return true;
+  });
+  const soma = (rs) => { const t = Object.fromEntries(H.map((h) => [h, 0])); for (const r of rs) for (const h of H) t[h] += r[I[h]] || 0; t.pago = t.liquidado - t.a_pagar; return t; };
+  const agrupa = (rs, key) => { const m = new Map(); for (const r of rs) { const k = key(r); if (!m.has(k)) m.set(k, []); m.get(k).push(r); } return [...m.entries()].map(([k, v]) => ({ k, t: soma(v), n: v.length })); };
+  const pct = (a, b) => b ? a / b * 100 : 0;
+  return { S, H, I, MESES, ready, O, filtra, soma, agrupa, pct };
+})();
+window.TXORC = TXORC;
+
+dash.draw('orc', (el) => {
+  if (!TXORC.ready()) { if (!el.dataset.ok) TX.placeholder(el, 'Carregando o painel orçamentário…'); return; }
+  if (el.dataset.ok) { el._render && el._render(); return; }
+  el.dataset.ok = '1';
+  const S = TXORC.S, o = TXORC.O();
+  const P = new Map((TX.rowsOf('pastas') || []).map((p) => [p.pasta, p]));
+  const R = new Map((TX.rowsOf('recebimento') || []).map((p) => [p.pasta, p]));
+  const sigla = (p) => (P.get(p) || R.get(p) || {}).sigla || p;
+  const mk = (tag, cls, txt) => { const x = document.createElement(tag); if (cls) x.className = cls; if (txt != null) x.textContent = txt; return x; };
+  const sel = (opts, on) => { const s = mk('select', 'dash-select'); s.replaceChildren(...opts.map(([v, t]) => new Option(t, v))); s.addEventListener('change', () => on(s.value)); return s; };
+  const lab = (t, c) => { const l = mk('label', 'tx-rf'); l.append(mk('span', 'tx-eyebrow', t), c); return l; };
+  const card = (eyebrow, title, note) => { const c = mk('section', 'tx-card tx-sec'); const h = mk('div'); h.append(mk('span', 'tx-eyebrow', eyebrow), mk('h3', '', title)); c.appendChild(h); if (note) c.appendChild(mk('p', 'tx-muted tx-onote', note)); return c; };
+  const pastasOrc = [...new Set(o.ugs.map((u) => u.pasta).filter(Boolean))].sort((a, b) => sigla(a).localeCompare(sigla(b), 'pt-BR'));
+
+  // cabeçalho e filtros
+  const head = mk('div', 'tx-ohead');
+  const ht = mk('div'); ht.append(mk('span', 'tx-eyebrow', 'Execução orçamentária do Estado'), mk('h2', '', 'Painel Orçamentário Geral de 2026'));
+  const src = mk('p', 'tx-muted'); src.append('Fonte: ', Object.assign(mk('a', '', 'Painéis Orçamentários – Orçamentário Geral (Data Studio)'), { href: o.link, target: '_blank', rel: 'noopener' }), ', mês de novembro, valores acumulados no ano. Última atualização da fonte: ' + o.atualizado_em + '. Valores comparados com o "atualizado" (dotação inicial mais créditos).');
+  ht.appendChild(src); head.appendChild(ht);
+  const fPasta = sel([['', 'Todas as pastas']].concat(pastasOrc.map((p) => [p, sigla(p)])).concat([['__sem', 'Fora das pastas (Legislativo, Judiciário, MP, reserva)']]), (v) => { S.pasta = v; S.ug = ''; fillUG(); render(); });
+  const fUG = mk('select', 'dash-select'); fUG.addEventListener('change', () => { S.ug = fUG.value; render(); });
+  const fillUG = () => { const L = o.ugs.map((u, i) => [i, u]).filter(([, u]) => !S.pasta || (S.pasta === '__sem' ? !u.pasta : u.pasta === S.pasta)).sort((a, b) => a[1].cod.localeCompare(b[1].cod)); fUG.replaceChildren(new Option('Todas as unidades gestoras (' + L.length + ')', ''), ...L.map(([i, u]) => new Option(u.cod + ' ' + u.nome, String(i)))); fUG.value = S.ug; };
+  const fGrupo = sel([['', 'Todos os grupos']].concat(Object.entries(o.grupos).map(([k, v]) => [k, k + ' – ' + v])), (v) => { S.grupo = v; render(); });
+  const fFonte = sel([['', 'Todas as fontes']].concat(o.fontes.map((f, i) => [String(i), f]).sort((a, b) => a[1].localeCompare(b[1]))), (v) => { S.fonte = v; render(); });
+  const bLimpa = mk('button', 'tx-btn', 'Limpar filtros'); bLimpa.type = 'button'; bLimpa.addEventListener('click', () => { Object.assign(S, { pasta: '', ug: '', grupo: '', fonte: '' }); fPasta.value = ''; fGrupo.value = ''; fFonte.value = ''; fillUG(); render(); });
+  const filt = mk('div', 'tx-relrow tx-ofilt'); filt.append(lab('Pasta', fPasta), lab('Unidade gestora', fUG), lab('Grupo de despesa', fGrupo), lab('Fonte de recursos', fFonte), bLimpa);
+  fillUG();
+  const kpis = mk('div', 'tx-okpis'); const gauges = mk('div', 'tx-ogauges');
+  const resumo = mk('p', 'tx-ores');
+  const evo = card('Evolução no ano', 'Empenhado, liquidado e pago, mês a mês', 'Valores acumulados até cada mês.');
+  const evoBox = mk('div', 'tx-oevo'); evo.appendChild(evoBox);
+  const grp = card('Por grupo de despesa', 'Onde está o orçamento'); const grpBox = mk('div', 'tx-obars'); grp.appendChild(grpBox);
+  const fon = card('Por fonte de recursos', 'As 12 maiores fontes pelo atualizado'); const fonBox = mk('div', 'tx-obars'); fon.appendChild(fonBox);
+  const two = mk('div', 'tx-grid2'); two.append(grp, fon);
+  const top = card('Unidades gestoras', 'Empenhado × liquidado: as 15 maiores', 'Clique numa unidade para filtrar o painel por ela.'); const topBox = mk('div', 'tx-obars'); top.appendChild(topBox);
+  const tug = card('Tabela', 'Execução por unidade gestora'); const tugBox = mk('div', 'tx-scroll tx-tbl'); tug.appendChild(tugBox);
+  const cruz = card('Cruzamento com os formulários do art. 4º', 'Orçamento × o que cada pasta informou', 'Orçamento: Painéis Orçamentários (Data Studio). Formulário: contratos (valor e saldo a pagar), obras (saldo a pagar), convênios (valor global) e restos a pagar informados na aba Finanças saldos. Unidades gestoras somadas por pasta (fundos e encargos gerais entram na pasta que os administra).'); const cruzBox = mk('div', 'tx-scroll tx-tbl'); cruz.appendChild(cruzBox);
+  const det = card('Detalhamento', 'Unidade gestora × subação × fonte × elemento de despesa'); const busca = mk('input', 'dash-select'); busca.type = 'search'; busca.placeholder = 'Buscar por subação, fonte, elemento ou unidade'; let bt; busca.addEventListener('input', () => { clearTimeout(bt); bt = setTimeout(() => { S.busca = busca.value; renderDet(); }, 250); });
+  const detInfo = mk('p', 'tx-muted'); const detBox = mk('div', 'tx-scroll tx-tbl'); det.append(lab('Buscar', busca), detInfo, detBox);
+  el.replaceChildren(head, filt, resumo, kpis, gauges, evo, two, top, tug, cruz, det);
+
+  const fmtB = (v) => TX.brl(v), fmtF = (v) => TX.brlFull(v);
+  const bars = (box, items, series, onClick) => {
+    const max = Math.max(1, ...items.flatMap((it) => series.map((s) => it.t[s.k] || 0)));
+    box.replaceChildren(...items.map((it) => {
+      const row = mk('div', 'tx-obar' + (onClick ? ' clk' : '')); const lb = mk('div', 'l', it.label); lb.title = it.title || it.label;
+      const tr = mk('div', 't'); for (const s of series) { const v = it.t[s.k] || 0; const b = mk('div', 'b'); const tk = mk('div', 'k'); const i = mk('i'); i.style.width = Math.max(0.3, v / max * 100) + '%'; i.style.background = s.c; tk.appendChild(i); b.append(tk, mk('span', '', fmtB(v))); b.title = s.lab + ': ' + fmtF(v); tr.appendChild(b); }
+      row.append(lb, tr); if (onClick) { row.tabIndex = 0; row.setAttribute('role', 'button'); row.addEventListener('click', () => onClick(it)); row.addEventListener('keydown', (e) => { if (e.key === 'Enter') onClick(it); }); }
+      return row;
+    }));
+    const lg = mk('div', 'tx-olg'); for (const s of series) { const x = mk('span'); const sw = mk('i'); sw.style.background = s.c; x.append(sw, s.lab); lg.appendChild(x); } box.prepend(lg);
+  };
+  const C = { atualizado: 'var(--color-border-strong, #9aa3ad)', empenhado: '#3a8f5c', liquidado: '#3b6fb6', pago: '#0e8282', pre: '#c0392b', disponivel: '#e39a2b' };
+  const gauge = (lab, v, color) => {
+    const g = mk('div', 'tx-card tx-ogauge'); const r = 52, cx = 64, cy = 64, a = Math.PI * Math.min(1, Math.max(0, v / 100));
+    const p = (ang) => [cx - r * Math.cos(ang), cy - r * Math.sin(ang)];
+    const [x1, y1] = p(0), [x2, y2] = p(Math.PI), [x3, y3] = p(a);
+    g.innerHTML = '<svg viewBox="0 0 128 72" role="img" aria-label="' + lab + ': ' + TX.n(v) + '%"><path d="M' + x1 + ' ' + y1 + ' A' + r + ' ' + r + ' 0 0 1 ' + x2 + ' ' + y2 + '" fill="none" stroke="var(--color-border-line)" stroke-width="14"/><path d="M' + x1 + ' ' + y1 + ' A' + r + ' ' + r + ' 0 0 1 ' + x3.toFixed(2) + ' ' + y3.toFixed(2) + '" fill="none" stroke="' + color + '" stroke-width="14"/></svg>';
+    g.append(mk('b', '', TX.n(v) + '%'), mk('span', 'tx-muted', lab)); return g;
+  };
+  const th = (cols) => { const t = mk('thead'); const tr = mk('tr'); for (const [c, n] of cols) { const x = mk('th', n ? 'n' : '', c); tr.appendChild(x); } t.appendChild(tr); return t; };
+  const td = (v, n, cls) => { const x = mk('td', (n ? 'n' : '') + (cls ? ' ' + cls : ''), v); return x; };
+
+  const renderDet = () => {
+    const rs = TXORC.filtra(o); const q = S.busca.trim().toLowerCase();
+    let L = rs.filter((r) => !q || (o.ugs[r[0]].cod + ' ' + o.ugs[r[0]].nome + ' ' + o.subacoes[r[1]] + ' ' + o.fontes[r[2]] + ' ' + o.elementos[r[3]]).toLowerCase().includes(q));
+    L = L.slice().sort((a, b) => (b[TXORC.I.atualizado] || 0) - (a[TXORC.I.atualizado] || 0));
+    detInfo.textContent = TX.n(L.length) + (L.length === 1 ? ' linha' : ' linhas') + (L.length > 200 ? '; aparecem as 200 de maior valor atualizado.' : '.');
+    const t = mk('table'); t.appendChild(th([['Unidade gestora'], ['Subação'], ['Fonte'], ['Elemento'], ['Grupo'], ['Dotação inicial', 1], ['Atualizado', 1], ['Empenhado', 1], ['Liquidado', 1], ['Pago', 1], ['Disponível', 1], ['A pagar', 1]]));
+    const b = mk('tbody');
+    for (const r of L.slice(0, 200)) { const u = o.ugs[r[0]]; const tr = mk('tr'); const g = (k) => r[TXORC.I[k]] || 0; tr.append(td(u.cod + ' ' + u.nome, 0, 'w'), td(o.subacoes[r[1]], 0, 'w'), td(o.fontes[r[2]], 0, 'w'), td(o.elementos[r[3]], 0, 'w'), td(r[4]), td(fmtF(g('dotacao')), 1), td(fmtF(g('atualizado')), 1), td(fmtF(g('empenhado')), 1), td(fmtF(g('liquidado')), 1), td(fmtF(g('liquidado') - g('a_pagar')), 1), td(fmtF(g('disponivel')), 1), td(fmtF(g('a_pagar')), 1)); b.appendChild(tr); }
+    t.appendChild(b); detBox.replaceChildren(t);
+  };
+
+  const render = () => {
+    const rs = TXORC.filtra(o); const t = TXORC.soma(rs);
+    const fl = []; if (S.pasta) fl.push(S.pasta === '__sem' ? 'fora das pastas' : 'pasta ' + sigla(S.pasta)); if (S.ug !== '') fl.push(o.ugs[S.ug].cod + ' ' + o.ugs[S.ug].nome); if (S.grupo) fl.push('grupo ' + S.grupo + ' – ' + o.grupos[S.grupo]); if (S.fonte !== '') fl.push('fonte ' + o.fontes[S.fonte]);
+    resumo.textContent = (fl.length ? 'Filtro: ' + fl.join(' · ') + '. ' : 'Todo o orçamento do Estado. ') + 'Do atualizado de ' + fmtB(t.atualizado) + ', ' + TX.n(TXORC.pct(t.empenhado, t.atualizado)) + '% já foi empenhado, ' + TX.n(TXORC.pct(t.liquidado, t.atualizado)) + '% liquidado e ' + TX.n(TXORC.pct(t.pago, t.atualizado)) + '% pago. Ainda estão disponíveis ' + fmtB(t.disponivel) + '.';
+    const K = [['Dotação inicial', t.dotacao], ['Atualizado', t.atualizado], ['Bloqueado (emendas)', t.bloq], ['Pré-empenhado', t.pre], ['Empenhado', t.empenhado], ['Disponível', t.disponivel], ['Liquidado', t.liquidado], ['Pago', t.pago], ['A liquidar', t.a_liquidar], ['A pagar', t.a_pagar]];
+    kpis.replaceChildren(...K.map(([l, v]) => { const c = mk('div', 'tx-card tx-kpi'); const vv = mk('span', 'v', fmtB(v)); vv.title = fmtF(v); c.append(mk('span', 'tx-muted', l), vv, mk('span', 's', fmtF(v)), mk('span', 's', TX.n(TXORC.pct(v, t.atualizado)) + '% do atualizado')); return c; }));
+    gauges.replaceChildren(gauge('Pré-empenhado', TXORC.pct(t.pre, t.atualizado), C.pre), gauge('Empenhado', TXORC.pct(t.empenhado, t.atualizado), C.empenhado), gauge('Liquidado', TXORC.pct(t.liquidado, t.atualizado), C.disponivel), gauge('Pago', TXORC.pct(t.pago, t.atualizado), C.liquidado));
+    // evolução: só o total do Estado (a fonte mensal não tem o recorte por unidade aqui)
+    const ms = o.meses.filter((m) => m.ok); const maxM = Math.max(1, ...ms.map((m) => m.atualizado));
+    evoBox.replaceChildren(...o.meses.map((m) => {
+      const c = mk('div', 'tx-oevm' + (m.ok ? '' : ' off'));
+      if (m.ok) { for (const [k, col] of [['empenhado', C.empenhado], ['liquidado', C.liquidado], ['pago', C.pago]]) { const v = k === 'pago' ? m.liquidado - m.a_pagar : m[k]; const b = mk('i'); b.style.height = (v / maxM * 100) + '%'; b.style.background = col; b.title = TXORC.MESES[m.mes - 1] + ': ' + k + ' ' + fmtF(v); c.appendChild(b); } }
+      else { const b = mk('em', '', 's/d'); b.title = 'Dados deste mês com colunas deslocadas na fonte; não exibidos.'; c.appendChild(b); }
+      const lb = mk('span', '', TXORC.MESES[m.mes - 1]); const w = mk('div', 'tx-oevc'); w.append(c, lb); return w;
+    }));
+    const lg = mk('div', 'tx-olg'); for (const [k, c2] of [['Empenhado', C.empenhado], ['Liquidado', C.liquidado], ['Pago', C.pago]]) { const x = mk('span'); const sw = mk('i'); sw.style.background = c2; x.append(sw, k); lg.appendChild(x); }
+    evoBox.prepend(lg);
+    evo.querySelector('.tx-onote').textContent = 'Total do Estado, acumulado até cada mês (não muda com os filtros). Junho, agosto e setembro vêm com colunas deslocadas na fonte e ficam de fora. Em novembro: empenhado ' + fmtB(o.meses[10].empenhado) + ', liquidado ' + fmtB(o.meses[10].liquidado) + '.';
+    // grupos e fontes
+    bars(grpBox, TXORC.agrupa(rs, (r) => r[4]).sort((a, b) => b.t.atualizado - a.t.atualizado).map((g) => ({ label: g.k + ' – ' + (o.grupos[g.k] || ''), t: g.t })), [{ k: 'atualizado', lab: 'Atualizado', c: C.atualizado }, { k: 'empenhado', lab: 'Empenhado', c: C.empenhado }, { k: 'liquidado', lab: 'Liquidado', c: C.liquidado }]);
+    bars(fonBox, TXORC.agrupa(rs, (r) => r[2]).sort((a, b) => b.t.atualizado - a.t.atualizado).slice(0, 12).map((g) => ({ label: o.fontes[g.k], t: g.t })), [{ k: 'atualizado', lab: 'Atualizado', c: C.atualizado }, { k: 'empenhado', lab: 'Empenhado', c: C.empenhado }, { k: 'liquidado', lab: 'Liquidado', c: C.liquidado }]);
+    // unidades gestoras
+    const UG = TXORC.agrupa(rs, (r) => r[0]).sort((a, b) => b.t.empenhado - a.t.empenhado);
+    bars(topBox, UG.slice(0, 15).map((g) => ({ k: g.k, label: o.ugs[g.k].cod + ' ' + o.ugs[g.k].nome, t: g.t })), [{ k: 'empenhado', lab: 'Empenhado', c: C.empenhado }, { k: 'liquidado', lab: 'Liquidado', c: C.liquidado }], (it) => { S.ug = String(it.k); const u = o.ugs[it.k]; if (S.pasta && S.pasta !== (u.pasta || '__sem')) S.pasta = ''; fPasta.value = S.pasta; fillUG(); render(); el.scrollIntoView({ block: 'start', behavior: 'smooth' }); });
+    const tb = mk('table'); tb.appendChild(th([['Unidade gestora'], ['Pasta'], ['Dotação inicial', 1], ['Atualizado', 1], ['Empenhado', 1], ['Liquidado', 1], ['Pago', 1], ['Disponível', 1], ['A liquidar', 1], ['A pagar', 1], ['% liquidado', 1]]));
+    const bd = mk('tbody');
+    for (const g of UG) { const u = o.ugs[g.k]; const tr = mk('tr'); tr.append(td(u.cod + ' ' + u.nome, 0, 'w'), td(u.pasta ? sigla(u.pasta) : '—'), td(fmtF(g.t.dotacao), 1), td(fmtF(g.t.atualizado), 1), td(fmtF(g.t.empenhado), 1), td(fmtF(g.t.liquidado), 1), td(fmtF(g.t.pago), 1), td(fmtF(g.t.disponivel), 1), td(fmtF(g.t.a_liquidar), 1), td(fmtF(g.t.a_pagar), 1), td(TX.n(TXORC.pct(g.t.liquidado, g.t.atualizado)) + '%', 1)); bd.appendChild(tr); }
+    const tt = mk('tr', 'tot'); tt.append(td('Total (' + UG.length + ' unidades)'), td(''), td(fmtF(t.dotacao), 1), td(fmtF(t.atualizado), 1), td(fmtF(t.empenhado), 1), td(fmtF(t.liquidado), 1), td(fmtF(t.pago), 1), td(fmtF(t.disponivel), 1), td(fmtF(t.a_liquidar), 1), td(fmtF(t.a_pagar), 1), td(TX.n(TXORC.pct(t.liquidado, t.atualizado)) + '%', 1)); bd.appendChild(tt);
+    tb.appendChild(bd); tugBox.replaceChildren(tb);
+    // cruzamento por pasta (respeita grupo e fonte; pasta/UG restringem as linhas)
+    const FIN = TX.rowsOf('financas') || [];
+    const rap = new Map(); for (const f of FIN) { if (/rest(o|os)\s*(a|à)\s*pagar|^rp\b/i.test(String(f.tipo || '')) && typeof f.valor === 'number' && f.valor > 0) rap.set(f.pasta, (rap.get(f.pasta) || 0) + f.valor); }
+    const byP = TXORC.agrupa(rs, (r) => o.ugs[r[0]].pasta || '');
+    const ct = mk('table'); ct.appendChild(th([['Pasta'], ['Atualizado', 1], ['Empenhado', 1], ['Liquidado', 1], ['A pagar (orçamento)', 1], ['% liquidado', 1], ['Contratos informados', 1], ['Valor contratado', 1], ['Saldo dos contratos', 1], ['Saldo das obras', 1], ['Convênios (valor global)', 1], ['Restos a pagar informados', 1], ['Recebimento do formulário', 1]]));
+    const cb = mk('tbody');
+    for (const g of byP.sort((a, b) => b.t.atualizado - a.t.atualizado)) {
+      const p = P.get(g.k) || {}, rc = R.get(g.k); const tr = mk('tr');
+      const nome = g.k ? sigla(g.k) : 'Fora das pastas';
+      const c0 = mk('td'); if (g.k && P.get(g.k)) { const a = mk('button', 'tx-olink', nome); a.type = 'button'; a.addEventListener('click', () => TX.go(g.k)); c0.appendChild(a); } else c0.textContent = nome + (g.k && !P.get(g.k) ? ' (sem formulário)' : '');
+      tr.append(c0, td(fmtF(g.t.atualizado), 1), td(fmtF(g.t.empenhado), 1), td(fmtF(g.t.liquidado), 1), td(fmtF(g.t.a_pagar), 1), td(TX.n(TXORC.pct(g.t.liquidado, g.t.atualizado)) + '%', 1),
+        td(p.contratos != null ? TX.n(p.contratos) : '—', 1), td(p.contratos_valor != null ? fmtF(p.contratos_valor) : '—', 1), td(p.contratos_saldo != null ? fmtF(p.contratos_saldo) : '—', 1), td(p.obras_saldo != null ? fmtF(p.obras_saldo) : '—', 1), td(p.convenios_valor != null ? fmtF(p.convenios_valor) : '—', 1), td(rap.has(g.k) ? fmtF(rap.get(g.k)) : '—', 1), td(rc ? TX.n(rc.pct) + '%' : '—', 1));
+      cb.appendChild(tr);
+    }
+    ct.appendChild(cb); cruzBox.replaceChildren(ct);
+    renderDet();
+  };
+  el._render = render;
+  render();
 });
 const txPend = () => {
   const d = dash.data('eixos'); if (d.status !== 'ok') return null;
