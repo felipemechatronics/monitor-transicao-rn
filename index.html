@@ -28,7 +28,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
     calc(id,o){calcs[id]=o}, loader(){}, refresh(){}, onData(fn){ons.push(fn)},
     draw(name,fn){ if(typeof fn==='function'||(fn&&fn.update)){draws[name]=typeof fn==='function'?fn:fn.update} else document.querySelectorAll('[data-draw="'+name+'"]').forEach(el=>{try{draws[name](el)}catch(e){console.error(e)}}); }
   };
-  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261123c').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
+  window.__txStart=()=>Promise.all(SRC.map(s=>fetch('data/'+s+'.json?v=20261125a').then(r=>{if(!r.ok)throw new Error(s);return r.json()}).then(d=>{DS[s]=d}).catch(()=>{ST[s]='error'}))).then(run);
   let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,150)});
   window.addEventListener('hashchange',()=>{const h=decodeURIComponent(location.hash.slice(1));if(h==='organograma'){P.vista='org';P.pasta='';P.aba='';run();return}if(h==='relatorio'){P.vista='rel';P.pasta='';P.aba='';run();return}if(h==='orcamento'){P.vista='orc';P.pasta='';P.aba='';run();return}const m=h.match(/^eixo-([1-6])$/);if(m){if(P.aba!==m[1]||P.pasta||P.vista){P.aba=m[1];P.pasta='';P.vista='';run()}return}const v=h==='geral'?'':h;if(h==='geral'&&(P.aba||P.pasta||P.vista)){P.aba='';P.pasta='';P.vista='';run();return}if(v)P.vista='';if(v!==P.pasta){P.pasta=v;run()}});
 })();
@@ -411,7 +411,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
       <span class="tx-eyebrow"><i class="tx-dot"></i>Governo do RN · Transição 2026 · Art. 4º da IN</span>
       <h1>Monitor da Transição RN</h1>
       <p class="tx-muted">Formulários do Relatório Consolidado Setorial lidos das pastas do Google Drive.</p>
-      <div class="tx-chips"><span class="tx-chip">leitura · 23/11/2026</span><span class="tx-chip">48 pastas · 15 abas</span><span class="tx-chip">incisos I–XXVI</span></div>
+      <div class="tx-chips"><span class="tx-chip">leitura · 25/11/2026</span><span class="tx-chip">49 pastas · 15 abas</span><span class="tx-chip">incisos I–XXVI</span></div>
       </div>
     </div>
     <div class="tx-pick">
@@ -590,7 +590,7 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
 
     <section class="tx-card tx-sec" id="pendentes">
       <span class="tx-eyebrow">Pendências de envio</span><h2>Unidades que ainda não subiram formulário</h2>
-      <p class="tx-muted">Situação na leitura de 23/11/2026. O link abre a pasta da unidade no Google Drive. <span data-draw="npend" data-source="eixos">—</span></p>
+      <p class="tx-muted">Situação na leitura de 25/11/2026. O link abre a pasta da unidade no Google Drive. <span data-draw="npend" data-source="eixos">—</span></p>
       <div class="tx-scroll tx-tbl">
         <table data-source="eixos" data-row-key="id">
           <thead><tr><th data-field="sigla">Unidade</th><th data-field="ug">Nome</th><th data-field="eixo">Eixo</th><th data-field="pasta_drive">Pasta no Drive</th></tr></thead>
@@ -848,13 +848,13 @@ select.dash-select{appearance:auto;background-color:var(--color-panel);color:var
   <details id="notas">
     <summary>Como os dados foram lidos e tratados</summary>
     <ul>
-      <li>Foram verificadas as 51 pastas de unidades em "DADOS - IN - ART. 4º", incluindo as subpastas (a pasta "1. ESPECÍFICOS" só tem PDFs da SEPLAN). 48 têm formulário com conteúdo; PGE, SEDEC e SEGP ainda estão só com o modelo em branco. O formulário da DATANORTE foi salvo numa subpasta "DATANORTE" dentro da pasta da SESAP e é lido como da DATANORTE. Planilhas de apoio fora do modelo (por exemplo, editais da SECULT, listas da EMGERN, da SESAP, da SEFAZ e da PC/RN, os inventários da SIN, os mapas de inventário da FUNDASE, as planilhas avulsas de incisos da CAERN e as planilhas de contratos, bens, almoxarifado e conciliação do IPERN) não entram nos números.</li>
+      <li>Foram verificadas as 51 pastas de unidades em "DADOS - IN - ART. 4º", incluindo as subpastas (a pasta "1. ESPECÍFICOS" só tem PDFs da SEPLAN). 49 têm formulário com conteúdo; PGE e SEGP ainda estão só com o modelo em branco. A pasta da SESAP aparece no Drive como "SESAP_João". O formulário da DATANORTE foi salvo numa subpasta "DATANORTE" dentro da pasta da SESAP e é lido como da DATANORTE. Planilhas de apoio fora do modelo (por exemplo, editais da SECULT, listas da EMGERN, da SESAP (inclusive a planilha de monitoramento de emendas parlamentares estaduais), da SEFAZ e da PC/RN, os inventários da SIN, os mapas de inventário da FUNDASE, as planilhas avulsas de incisos da CAERN e as planilhas de contratos, bens, almoxarifado e conciliação do IPERN) não entram nos números.</li>
       <li>Quando uma pasta tinha mais de uma planilha (cópias, versões convertidas para Google Planilhas), cada aba vem da versão com mais linhas preenchidas.</li>
       <li>Situações escritas livremente foram agrupadas (por exemplo "ATENDIDO", "Disponibilizado" e "Concluída" contam como Atendido). O texto original continua na fonte.</li>
       <li>Obras e bens são localizados pela sede do município informado. Textos que não citam um município do RN ficam fora do mapa. Na seção do município, contratos, convênios, programas, TAC/TAG e pendências entram quando o objeto, as partes ou a descrição citam o nome do município; nomes que também são palavras comuns ou sobrenomes (como Pendências, Passagem, Martins ou Lajes) só contam quando vêm depois de "município de", "prefeitura de" ou expressão parecida, e nomes de rua não contam. Um mesmo registro pode aparecer em mais de um município.</li>
       <li>Valores em branco contam como não informados, não como zero. "Saldo a pagar" usa o saldo informado ou, sem ele, contratado menos pago.</li>
       <li>Os eixos vêm da planilha "UGs por eixo" do acompanhamento dos processos SEI. Unidades listadas em dois eixos (CONTROL, JUCERN e SEPLAN) aparecem nas duas abas, e nos totais de cada eixo; o total geral conta cada pasta uma vez.</li>
-      <li>Os dados são uma cópia de 23/11/2026, com todas as planilhas das 51 pastas e subpastas conferidas. Desde 19/11/2026 entrou a SETHAS e a GVG completou o formulário; antes disso, em 19/11, tinham entrado IPERN e SAPE. A CAERN informou o patrimônio item a item (266 mil linhas); no painel esses itens foram somados por tipo, município e estado de conservação, sem alterar o valor total (R$ 2,82 bi). A SIN preencheu as abas de detalhe, mas a Identificação está em branco e só o inciso III do Controle art. 4 foi respondido. Quando uma unidade envia formulários de subunidades diferentes (como a CONTROL, com ASTEC, NMI, OUGE, UIFP, Integridade e Transparência), as linhas de cada aba são somadas; quando são cópias ou versões do mesmo formulário, vale a mais completa. Alterações feitas depois nas planilhas só aparecem quando os arquivos forem lidos de novo.</li>
+      <li>Os dados são uma cópia de 25/11/2026, com todas as planilhas das 51 pastas e subpastas conferidas. Desde 23/11/2026 entrou a SEDEC, a SIN preencheu a Identificação e o Controle art. 4, e GVG, PC/RN, SEMJIDH e SETUR atualizaram abas de detalhe; antes disso, em 23/11, tinham entrado SETHAS e GVG, e em 19/11 IPERN e SAPE. A CAERN informou o patrimônio item a item (266 mil linhas); no painel esses itens foram somados por tipo, município e estado de conservação, sem alterar o valor total (R$ 2,82 bi). Quando uma unidade envia formulários de subunidades diferentes (como a CONTROL, com ASTEC, NMI, OUGE, UIFP, Integridade e Transparência), as linhas de cada aba são somadas; quando são cópias ou versões do mesmo formulário, vale a mais completa. Alterações feitas depois nas planilhas só aparecem quando os arquivos forem lidos de novo.</li>
     </ul>
   </details>
 </div>
@@ -1088,14 +1088,14 @@ dash.calc('c_contr_sit', {
   }
 });
 dash.calc('c_contr_venc', {
-  title: 'Fim de vigência dos contratos', description: 'Contratos não encerrados por faixa da data de fim de vigência, tomando 23/11/2026 (data da leitura) como referência.',
+  title: 'Fim de vigência dos contratos', description: 'Contratos não encerrados por faixa da data de fim de vigência, tomando 25/11/2026 (data da leitura) como referência.',
   inputs: ['contratos'],
   fn: (contratos) => {
     const faixas = ['Já vencido', 'Até 31/12/2026', '1º semestre de 2027', 'Depois de jun/2027', 'Sem data de fim'];
     const m = new Map();
     for (const c of contratos) {
       if (c.situacao === 'Encerrado') continue;
-      const f = !c.fim_iso ? faixas[4] : c.fim_iso < '2026-11-23' ? faixas[0] : c.fim_iso <= '2026-12-31' ? faixas[1] : c.fim_iso <= '2027-06-30' ? faixas[2] : faixas[3];
+      const f = !c.fim_iso ? faixas[4] : c.fim_iso < '2026-11-25' ? faixas[0] : c.fim_iso <= '2026-12-31' ? faixas[1] : c.fim_iso <= '2027-06-30' ? faixas[2] : faixas[3];
       const k = c.pasta + '|' + f; const r = m.get(k) || { pasta: c.pasta, faixa: f, ordem: faixas.indexOf(f), contratos: 0, valor: 0 }; r.contratos++; r.valor += Number(c.valor_contratado) || 0; m.set(k, r);
     }
     return [...m.values()];
@@ -1540,7 +1540,7 @@ const TXPDF = (() => {
 window.TXPDF = TXPDF;
 // ===== Relatório: monta um documento a partir de recorte + seções + filtros, com prévia e PDF =====
 const TXREL = (() => {
-  const LEIT = '2026-11-23', LEIT_BR = '23/11/2026';
+  const LEIT = '2026-11-25', LEIT_BR = '25/11/2026';
   const SECS = [
     { id: 'ident', t: 'Identificação e recebimento', d: 'Quem preencheu, SEI, titular e o percentual de recebimento.' },
     { id: 'resumo', t: 'Resumo em números', d: 'Totais de contratos, obras, convênios, bens e incisos.' },
@@ -1797,7 +1797,32 @@ const TXREL = (() => {
     const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = nome; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 120000);
     return 'baixado';
   };
-  return { S, SECS, PRESETS, OSIT, CVIG, CTRL, RECORTES, EIXOS, ready, modelo, prevHTML, pdf, nomeArq, salvar, dataBR };
+  // ---------- CSV (Excel em português: separador ';', BOM UTF-8) ----------
+  const csvCel = (v) => { let s = v == null ? '' : String(v); if (/^[=+@\t\r]/.test(s) || /^-[^\d.,\s]/.test(s)) s = "'" + s; return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const csvNum = (v) => { const s = String(v == null ? '' : v).trim(); const m = s.match(/^(-?)\s*(?:R\$\s*)?(-?[\d.]+(?:,\d+)?)\s*(%?)$/); return m ? m[1] + m[2] + m[3] : s; };
+  const csv = (M) => {
+    const L = []; const row = (a) => L.push(a.map(csvCel).join(';'));
+    row(['Monitor da Transição RN', M.titulo]); row(['Leitura dos formulários', LEIT_BR]); row(['Gerado em', agora()]); L.push('');
+    let sec = '', sub = '';
+    for (const b of M.blocos) {
+      if (b.k === 'h1') { sec = b.t; sub = ''; }
+      else if (b.k === 'h2') { sec = b.t; sub = ''; }
+      else if (b.k === 'h3') sub = b.t;
+      else if (b.k === 'kv' || b.k === 'kpis') {
+        const it = b.k === 'kv' ? b.rows : b.items; if (!it || !it.length) continue;
+        row([[sec, sub].filter(Boolean).join(' · ') || 'Resumo']); row(['Item', 'Valor']);
+        for (const [a, c] of it) row([a, c == null ? '' : c]); L.push('');
+      } else if (b.k === 'table' && b.rows && b.rows.length) {
+        row([[sec, sub].filter(Boolean).join(' · ') || 'Tabela']);
+        row(b.cols.map((c) => c[0]));
+        for (const r of b.rows) row(r.map((v, j) => { const k = b.cols[j] && b.cols[j][1]; return k && k !== 'w' && k !== 'sig' ? csvNum(v) : v; }));
+        if (b.nota) row(['Nota: ' + b.nota]); L.push('');
+      }
+    }
+    return new Blob(['﻿' + L.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  };
+  const nomeCsv = (M) => nomeArq(M).replace(/\.pdf$/, '.csv');
+  return { S, SECS, PRESETS, OSIT, CVIG, CTRL, RECORTES, EIXOS, ready, modelo, prevHTML, pdf, nomeArq, salvar, dataBR, csv, nomeCsv };
 })();
 window.TXREL = TXREL;
 
@@ -1853,8 +1878,8 @@ dash.draw('rel', (el) => {
   const lAg = mk('label', 'tx-relck tx-relck1'); lAg.append(oAg, mk('span', '', 'Separar as tabelas por órgão'));
   const opts = mk('div', 'tx-relrow'); opts.append(lab('Tamanho das tabelas', oLim), lab('Orientação da página', oOr), lab('Título do relatório', oTi), lAg);
   // ações
-  const acts = mk('div', 'tx-relact'); const bPdf = mk('button', 'tx-relgo', 'Gerar PDF'); bPdf.type = 'button'; const bPr = mk('button', 'tx-btn', 'Imprimir ou salvar pela impressão'); bPr.type = 'button'; const st = mk('span', 'tx-muted'); st.setAttribute('aria-live', 'polite');
-  acts.append(bPdf, bPr, st);
+  const acts = mk('div', 'tx-relact'); const bPdf = mk('button', 'tx-relgo', 'Gerar PDF'); bPdf.type = 'button'; const bCsv = mk('button', 'tx-btn', 'Baixar CSV (planilha)'); bCsv.type = 'button'; bCsv.title = 'Todas as tabelas do relatório num arquivo CSV (separador ponto e vírgula), que abre no Excel ou no Google Planilhas'; const bPr = mk('button', 'tx-btn', 'Imprimir ou salvar pela impressão'); bPr.type = 'button'; const st = mk('span', 'tx-muted'); st.setAttribute('aria-live', 'polite');
+  acts.append(bPdf, bCsv, bPr, st);
   if (/claudeusercontent\.com$/.test(location.hostname)) bPr.hidden = true;
   const sec = (t, ...xs) => { const d = mk('div', 'tx-relblk'); d.append(mk('h3', '', t), ...xs); return d; };
   form.append(sec('1. Recorte', rec, alvo), sec('2. Seções do relatório', secBox, secAc), sec('3. Filtros', filt), sec('4. Opções', opts), acts);
@@ -1888,6 +1913,15 @@ dash.draw('rel', (el) => {
       st.textContent = 'Não deu para gerar o PDF: ' + (e && e.message ? e.message : e) + '.';
     }
     bPdf.disabled = false;
+  });
+  bCsv.addEventListener('click', async () => {
+    if (!M) prev();
+    bCsv.disabled = true; st.textContent = 'Gerando o CSV…';
+    try {
+      const blob = TXREL.csv(M); const r = await TXREL.salvar(blob, TXREL.nomeCsv(M));
+      st.textContent = r === 'recusado' ? 'Download cancelado.' : r === 'aguarde' ? 'Já há um download aguardando confirmação.' : 'CSV pronto (' + Math.max(1, Math.round(blob.size / 1024)) + ' KB): ' + TXREL.nomeCsv(M);
+    } catch (e) { st.textContent = 'Não deu para gerar o CSV: ' + (e && e.message ? e.message : e) + '.'; }
+    bCsv.disabled = false;
   });
   bPr.addEventListener('click', () => { try { window.print(); } catch (e) { st.textContent = 'A impressão não está disponível nesta visualização.'; } });
   sync(); prev();
